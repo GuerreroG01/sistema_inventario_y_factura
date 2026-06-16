@@ -1,6 +1,23 @@
 import Product from "../models/Product.js";
 import { ValidationError, UniqueConstraintError, fn, col, literal, Op } from "sequelize";
 
+let categoriesCache= null;
+let categoriesCacheTime= 0;
+const CACHE_TTL = 1000 * 60 * 60 * 24;
+
+export const checkCategoryCache = (newCategory) => {
+    if (!newCategory) return;
+
+    if (!categoriesCache) return;
+
+    const exists = categoriesCache.includes(newCategory);
+
+    if (exists) return;
+
+    categoriesCache = null;
+    categoriesCacheTime = 0;
+};
+
 const generateBarcode = async () => {
     let barcode;
     let exists = true;
@@ -53,7 +70,7 @@ export const createProduct = async (req, res) => {
             expirationDate: normalizeDate(expirationDate),
             active,
         });
-
+        checkCategoryCache(category);
         return res.status(201).json(product);
 
     } catch (error) {
@@ -84,12 +101,54 @@ export const getProducts = async (req, res) => {
         const limit = 10;
         const offset = (page - 1) * limit;
 
+        const { name, barcode, category, active, priceMin, priceMax, costMin, costMax } = req.query;
+        const where = {};
+
+        if (name) {
+            where.name = {
+                [Op.iLike]: `%${name}%`
+            };
+        }
+
+        if (barcode) {
+            where.barcode = barcode;
+        }
+
+        if (category) {
+            where.category = category;
+        }
+
+        if (active !== undefined) {
+            where.active = active === "true";
+        }
+
+        if (priceMin || priceMax) {
+            where.price = {};
+            if (priceMin) {
+                where.price[Op.gte] = parseFloat(priceMin);
+            }
+            if (priceMax) {
+                where.price[Op.lte] = parseFloat(priceMax);
+            }
+        }
+
+        if (costMin || costMax) {
+            where.cost = {};
+            if (costMin) {
+                where.cost[Op.gte] = parseFloat(costMin);
+            }
+            if (costMax) {
+                where.cost[Op.lte] = parseFloat(costMax);
+            }
+        }
+
         const { count, rows: products } = await Product.findAndCountAll({
-            order: [['id', 'DESC']],
+            where,
+            order: [["id", "DESC"]],
             limit,
             offset
         });
-
+        checkCategoryCache(category);
         return res.json({
             total: count,
             page,
@@ -98,6 +157,7 @@ export const getProducts = async (req, res) => {
         });
 
     } catch (error) {
+        console.error("getProducts error:", error);
         return res.status(500).json({
             error: "internal_error",
             message: error.message
@@ -206,6 +266,8 @@ export const deleteProduct = async (req, res) => {
         }
 
         await product.destroy();
+        categoriesCache = null;
+        categoriesCacheTime = 0;
 
         return res.json({
             message: `Producto con id ${id} eliminado correctamente.`
@@ -240,5 +302,49 @@ export const getProductStats = async (req, res) => {
         });
     }
 };
+export const getCategories = async (req, res) => {
+    try {
+        const now = Date.now();
 
-export default { createProduct, getProducts, getProductById, updateProduct, deleteProduct, getProductStats };
+        if (categoriesCache && now - categoriesCacheTime < CACHE_TTL) {
+            return res.json({
+                source: "cache",
+                categories: categoriesCache
+            });
+        }
+
+        const categories = await Product.findAll({
+            attributes: [
+                [fn("DISTINCT", col("category")), "category"]
+            ],
+            where: {
+                category: {
+                    [Op.ne]: null
+                }
+            },
+            raw: true
+        });
+
+        const clean = categories
+            .map(c => c.category)
+            .filter(Boolean);
+
+        categoriesCache = clean;
+        categoriesCacheTime = now;
+
+        return res.json({
+            source: "db",
+            categories: clean
+        });
+
+    } catch (error) {
+        console.error("getCategories error:", error);
+
+        return res.status(500).json({
+            error: "internal_error",
+            message: "Error al obtener categorías"
+        });
+    }
+};
+
+export default { createProduct, getProducts, getProductById, updateProduct, deleteProduct, getProductStats, getCategories };

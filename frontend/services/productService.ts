@@ -14,7 +14,19 @@ const api = axios.create({
   },
 });
 
-export async function getProducts(page: number = 1, limit: number = 10) {
+export async function getProducts(
+  page: number = 1,
+  filters: {
+    name?: string;
+    barcode?: string;
+    category?: string;
+    active?: string;
+    priceMin?: string;
+    priceMax?: string;
+    costMin?: string;
+    costMax?: string;
+  } = {}
+) {
   try {
     const { data } = await api.get<{
       total: number;
@@ -22,11 +34,22 @@ export async function getProducts(page: number = 1, limit: number = 10) {
       totalPages: number;
       products: Product[];
     }>("/", {
-      params: { page, limit },
+      params: {
+        page,
+        ...Object.fromEntries(
+          Object.entries(filters).filter(
+            ([_, v]) => v !== "" && v !== undefined && v !== null
+          )
+        )
+      }
     });
+
     return data;
+
   } catch (error: any) {
-    throw new Error(error.response?.data?.error || "Error al obtener productos");
+    throw new Error(
+      error.response?.data?.error || "Error al obtener productos"
+    );
   }
 }
 
@@ -95,6 +118,24 @@ export async function getProductStats(): Promise<{
       error?.response?.data?.message ||
       error.message ||
       "Error al obtener estadísticas de productos";
+    throw new Error(message);
+  }
+}
+
+export async function getCategories(): Promise<string[]> {
+  try {
+    const { data } = await api.get<{
+      source: string;
+      categories: string[];
+    }>("/getCategories");
+
+    return data.categories;
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error.message ||
+      "Error al obtener categorías";
+
     throw new Error(message);
   }
 }

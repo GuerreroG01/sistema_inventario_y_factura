@@ -7,7 +7,8 @@ import { useProductCard } from "../hooks/useProductCard";
 import Pagination from "./Pagination";
 import { ConfirmDeleteModal } from "@/components/ConfirmDelete";
 import { ProductDetailModal } from "./ProductDetailModal";
-import ProductModal from "./ProductModal"; // 1. Importamos el modal de formulario
+import ProductModal from "./ProductModal";
+import ProductFilters from "./ProductFilters";
 
 export default function ProductCards() {
   const {
@@ -15,7 +16,7 @@ export default function ProductCards() {
     isDeleteModalOpen, isDeleting, isDetailModalOpen, selectedProduct, isFormModalOpen, productToEdit,
     handlePageChange, openDeleteModal, openDetailModal, openEditModal, handleConfirmDelete, fetchProducts,
     setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen,
-    setProductToEdit
+    setProductToEdit, updateFilter, filters, applyFilters, filtersOpen, setFiltersOpen, categories
   } = useProductCard();
 
   return (
@@ -30,6 +31,14 @@ export default function ProductCards() {
         </div>
       ) : (
         <>
+        <ProductFilters
+          filters={filters}
+          updateFilter={updateFilter}
+          applyFilters={applyFilters}
+          open={filtersOpen}
+          setOpen={setFiltersOpen}
+          categories={categories}
+        />
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {products.map((p: Product) => (
               <div

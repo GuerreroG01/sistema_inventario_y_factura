@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
-import { getProducts, deleteProduct } from "@/services/productService";
+import { getProducts, deleteProduct, getCategories } from "@/services/productService";
 
-export function useProductCard(){
+const emptyFilters = {
+    name: "",
+    barcode: "",
+    category: "",
+    active: "",
+    priceMin: "",
+    priceMax: "",
+    costMin: "",
+    costMax: ""
+};
+
+export function useProductCard() {
     const [products, setProducts] = useState<Product[]>([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -19,11 +30,36 @@ export function useProductCard(){
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [productToEdit, setProductToEdit] = useState<Product | null>(null);
 
+    const [filters, setFilters] = useState(emptyFilters);
+    const [filtersOpen, setFiltersOpen] = useState(false);
+
+    const [appliedFilters, setAppliedFilters] = useState(emptyFilters);
+    const [categories, setCategories] = useState<string[]>([]);
+
+    const updateFilter = (key: string, value: string) => {
+        setFilters(prev => ({
+            ...prev,
+            [key]: value
+        }));
+    };
+
+    const applyFilters = () => {
+        setPage(1);
+        setAppliedFilters(filters);
+    };
+
+    const clearFilters = () => {
+        setFilters(emptyFilters);
+        setAppliedFilters(emptyFilters);
+        setPage(1);
+    };
+
     const fetchProducts = async (pageToFetch: number) => {
         setLoading(true);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+
         try {
-            const data = await getProducts(pageToFetch, 10);
+            const data = await getProducts(pageToFetch, appliedFilters);
+
             setProducts(data.products || []);
             setTotalPages(data.totalPages || 1);
             setTotalItems(data.total || 0);
@@ -31,6 +67,7 @@ export function useProductCard(){
             if (pageToFetch > data.totalPages && data.totalPages > 0) {
                 setPage(data.totalPages);
             }
+
         } catch (err) {
             console.error("Error fetching products:", err);
         } finally {
@@ -40,11 +77,12 @@ export function useProductCard(){
 
     useEffect(() => {
         fetchProducts(page);
-    }, [page]);
+    }, [page, appliedFilters]);
 
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setPage(newPage);
+            window.scrollTo({ top: 0, behavior: "smooth" });
         }
     };
 
@@ -65,28 +103,47 @@ export function useProductCard(){
 
     const handleConfirmDelete = async () => {
         if (productIdToDelete === null) return;
-            setIsDeleting(true);
-            try {
-                await deleteProduct(productIdToDelete);
-                const isLastItemOnPage = products.length === 1;
-                if (isLastItemOnPage && page > 1) {
-                    setPage(page - 1); 
-                } else {
-                    await fetchProducts(page);
-                }
-                setIsDeleteModalOpen(false);
-                setProductIdToDelete(null);
-            } catch (error) {
-                console.error("Error deleting product:", error);
-                alert("Error al eliminar el producto");
-            } finally {
-                setIsDeleting(false);
+
+        setIsDeleting(true);
+
+        try {
+            await deleteProduct(productIdToDelete);
+
+            const isLastItemOnPage = products.length === 1;
+
+            if (isLastItemOnPage && page > 1) {
+                setPage(page - 1);
+            } else {
+                await fetchProducts(page);
+            }
+
+            setIsDeleteModalOpen(false);
+            setProductIdToDelete(null);
+
+        } catch (error) {
+            console.error("Error deleting product:", error);
+            alert("Error al eliminar el producto");
+        } finally {
+            setIsDeleting(false);
         }
     };
+    const fetchCategories = async () => {
+        try {
+            const data = await getCategories();
+            setCategories(data || []);
+        } catch (err) {
+            console.error("Error fetching categories:", err);
+        }
+    };
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
     return {
-        products, loading, page, totalPages,
+        products, loading, page, totalPages, totalItems,
+        filters, updateFilter, applyFilters, clearFilters, filtersOpen, setFiltersOpen,
         isDeleteModalOpen, isDeleting, isDetailModalOpen, selectedProduct, isFormModalOpen, productToEdit,
         handlePageChange, openDeleteModal, openDetailModal, openEditModal, handleConfirmDelete, fetchProducts,
-        setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen, setProductToEdit
+        setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen, setProductToEdit, categories
     };
 }
