@@ -1,15 +1,12 @@
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import { Boxes, Package, BarChart3, CheckCircle2, AlertTriangle, Plus, FileText } from "lucide-react";
+import Link from "next/link";
+import { Package, BarChart3, CheckCircle2, AlertTriangle, Plus, FileText } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <Header />
+    <div className="font-sans">
 
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
 
-        {/* HERO / Bienvenida */}
         <section className="rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 p-10 shadow-2xl flex flex-col lg:flex-row items-center gap-8 text-white">
           <div className="flex-1">
             <h1 className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">
@@ -20,15 +17,13 @@ export default function Home() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-4">
-              <button className="inline-flex items-center gap-2 rounded-2xl bg-white/20 px-6 py-3 font-semibold text-white shadow-lg backdrop-blur-md transition hover:bg-white/30 hover:scale-105">
-                <Plus className="w-5 h-5" />
-                Nuevo Producto
-              </button>
-
-              <button className="inline-flex items-center gap-2 rounded-2xl bg-white/20 px-6 py-3 font-semibold text-white shadow-lg backdrop-blur-md transition hover:bg-white/30 hover:scale-105">
+              <Link
+                href="/sales/create"
+                className="inline-flex items-center gap-2 rounded-2xl bg-white/20 px-6 py-3 font-semibold text-white shadow-lg backdrop-blur-md transition hover:bg-white/30 hover:scale-105"
+              >
                 <FileText className="w-5 h-5" />
-                Nueva Factura
-              </button>
+                Registrar Venta
+              </Link>
             </div>
           </div>
 
@@ -43,7 +38,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ACCESOS RÁPIDOS / KPIs */}
         <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card icon={<Package className="w-8 h-8 text-indigo-500" />} title="Productos" value="—" />
           <Card icon={<BarChart3 className="w-8 h-8 text-purple-500" />} title="Stock Total" value="—" />
@@ -51,7 +45,6 @@ export default function Home() {
           <Card icon={<AlertTriangle className="w-8 h-8 text-orange-500" />} title="Bajo Stock" value="—" />
         </section>
 
-        {/* ACCIONES RÁPIDAS */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <ActionCard title="Agregar Producto" icon={<Plus />} description="Registra un nuevo producto en tu inventario" />
           <ActionCard title="Generar Factura" icon={<FileText />} description="Crea facturas rápidamente para tus clientes" />
@@ -59,13 +52,10 @@ export default function Home() {
         </section>
 
       </main>
-
-      <Footer />
     </div>
   );
 }
 
-/* ---------- COMPONENTES ---------- */
 
 function Card({ icon, title, value }: any) {
   return (

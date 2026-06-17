@@ -1,22 +1,7 @@
 import Product from "../models/Product.js";
 import { ValidationError, UniqueConstraintError, fn, col, literal, Op } from "sequelize";
-
-let categoriesCache= null;
-let categoriesCacheTime= 0;
-const CACHE_TTL = 1000 * 60 * 60 * 24;
-
-export const checkCategoryCache = (newCategory) => {
-    if (!newCategory) return;
-
-    if (!categoriesCache) return;
-
-    const exists = categoriesCache.includes(newCategory);
-
-    if (exists) return;
-
-    categoriesCache = null;
-    categoriesCacheTime = 0;
-};
+import { normalizeDate } from "../utils/formatters.js"
+import { invalidateCategoryCache, clearCategoryCache, getCategoryCache, setCategoryCache  } from "../utils/categoryCache.js";
 
 const generateBarcode = async () => {
     let barcode;
@@ -29,11 +14,6 @@ const generateBarcode = async () => {
     }
 
     return barcode;
-};
-const normalizeDate = (value) => {
-    if (!value || value === "") return null;
-    const date = new Date(value);
-    return isNaN(date.getTime()) ? null : date;
 };
 
 export const createProduct = async (req, res) => {
@@ -70,7 +50,7 @@ export const createProduct = async (req, res) => {
             expirationDate: normalizeDate(expirationDate),
             active,
         });
-        checkCategoryCache(category);
+        invalidateCategoryCache(category);
         return res.status(201).json(product);
 
     } catch (error) {
@@ -148,7 +128,7 @@ export const getProducts = async (req, res) => {
             limit,
             offset
         });
-        checkCategoryCache(category);
+        invalidateCategoryCache(category);
         return res.json({
             total: count,
             page,
@@ -181,7 +161,7 @@ export const getProductById = async (req, res) => {
         return res.json(product);
 
     } catch (error) {
-        console.error("❌ getProductById error:", error);
+        console.error("getProductById error:", error);
         return res.status(500).json({
             error: "internal_error",
             message: "Ocurrió un error al obtener el producto"
@@ -216,6 +196,8 @@ export const updateProduct = async (req, res) => {
             });
         }
 
+        const oldCategory = product.category;
+
         await product.update({
             name: name ?? product.name,
             barcode: barcode ?? product.barcode,
@@ -228,6 +210,11 @@ export const updateProduct = async (req, res) => {
             expirationDate: normalizeDate(expirationDate) ?? product.expirationDate,
             active: active ?? product.active,
         });
+
+        // 🔥 invalidación de cache (simple y segura)
+        if (category !== undefined && oldCategory !== product.category) {
+            clearCategoryCache();
+        }
 
         return res.json(product);
 
@@ -266,8 +253,7 @@ export const deleteProduct = async (req, res) => {
         }
 
         await product.destroy();
-        categoriesCache = null;
-        categoriesCacheTime = 0;
+        clearCategoryCache();
 
         return res.json({
             message: `Producto con id ${id} eliminado correctamente.`
@@ -302,14 +288,15 @@ export const getProductStats = async (req, res) => {
         });
     }
 };
+
 export const getCategories = async (req, res) => {
     try {
-        const now = Date.now();
+        const cached = getCategoryCache();
 
-        if (categoriesCache && now - categoriesCacheTime < CACHE_TTL) {
+        if (cached) {
             return res.json({
                 source: "cache",
-                categories: categoriesCache
+                categories: cached
             });
         }
 
@@ -329,8 +316,7 @@ export const getCategories = async (req, res) => {
             .map(c => c.category)
             .filter(Boolean);
 
-        categoriesCache = clean;
-        categoriesCacheTime = now;
+        setCategoryCache(clean);
 
         return res.json({
             source: "db",
@@ -347,4 +333,55 @@ export const getCategories = async (req, res) => {
     }
 };
 
-export default { createProduct, getProducts, getProductById, updateProduct, deleteProduct, getProductStats, getCategories };
+export const getProductsAutocomplete = async (req, res) => {
+    try {
+        const { name, barcode } = req.query;
+
+        if (!name && !barcode) {
+            return res.json([]);
+        }
+
+        const where = {
+            active: true
+        };
+
+        if (barcode) {
+            where.barcode = barcode;
+
+            const products = await Product.findAll({
+                where,
+                attributes: ["id", "name", "barcode", "price", "stock", "category"],
+                limit: 10
+            });
+
+            return res.json(products);
+        }
+
+        if (name) {
+            where.name = {
+                [Op.iLike]: `%${name}%`
+            };
+
+            const products = await Product.findAll({
+                where,
+                attributes: ["id", "name", "barcode", "price", "stock", "category"],
+                limit: 10,
+                order: [["name", "ASC"]]
+            });
+
+            return res.json(products);
+        }
+        return res.json([]);
+    } catch (error) {
+        console.error("getProductsAutocomplete error:", error);
+        return res.status(500).json({
+            error: "internal_error",
+            message: error.message
+        });
+    }
+};
+
+export default { 
+    createProduct, getProducts, getProductById, updateProduct, deleteProduct, getProductStats, 
+    getCategories, getProductsAutocomplete
+};

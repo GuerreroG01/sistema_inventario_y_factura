@@ -139,3 +139,29 @@ export async function getCategories(): Promise<string[]> {
     throw new Error(message);
   }
 }
+
+export async function autocompleteProducts(query: {
+  name?: string;
+  barcode?: string;
+}): Promise<Product[]> {
+  try {
+    const { data } = await api.get<Product[]>("/autocompleteProd", {
+      params: {
+        ...Object.fromEntries(
+          Object.entries(query).filter(
+            ([_, v]) => v !== "" && v !== undefined && v !== null
+          )
+        )
+      }
+    });
+
+    return data;
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error.message ||
+      "Error en autocomplete de productos";
+
+    throw new Error(message);
+  }
+}

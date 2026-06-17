@@ -19,7 +19,7 @@ export default function Header() {
 
     const navItems: NavItem[] = [
         { label: "Productos", href: "/products" },
-        { label: "Categorías", href: "#" },
+        { label: "Ventas", href: "/sales" },
         { label: "Reportes", href: "#" },
     ];
 
@@ -27,7 +27,6 @@ export default function Header() {
         <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-lg shadow-md border-b border-slate-200 transition-all">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
 
-                {/* Logo */}
                 <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl transform transition-all hover:scale-105">
                         📦

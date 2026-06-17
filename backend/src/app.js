@@ -3,7 +3,9 @@ import cors from "cors";
 import sequelize from "./config/database.js";
 import Product from "./models/Product.js";
 import productRoutes from "./routes/productRoutes.js";
+import salesRoutes from "./routes/salesRoutes.js"
 import { syncSequence } from "./utils/syncSequence.js";
+import "./models/associations.js";
 
 const app = express();
 
@@ -14,7 +16,8 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use("/api", productRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/sales", salesRoutes);
 
 export default app;
 
@@ -29,7 +32,7 @@ export const startServer = async (PORT = 5000) => {
         });
 
     } catch (error) {
-        console.error("❌ Error starting server:", error);
+        console.error("Error starting server:", error);
         process.exit(1);
     }
 };

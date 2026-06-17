@@ -18,9 +18,7 @@ export default function HomeClient({ productsData }: HomeClientProps) {
   const { products } = productsData;
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
-      <Header />
-
+    <div className="font-sans flex flex-col">
       <main className="flex-1 w-full px-4 md:px-8 py-3 space-y-8">
         <section className="bg-white rounded-3xl p-2 border border-gray-100 shadow-sm">
           <Dashboard products={products} />
@@ -30,8 +28,6 @@ export default function HomeClient({ productsData }: HomeClientProps) {
           <ProductCard />
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }
