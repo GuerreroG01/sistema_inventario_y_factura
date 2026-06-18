@@ -18,10 +18,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | InventarioPro",
-    default: "InventarioPro - Sistema de Gestión de Almacén",
+    template: "%s | Inventarium",
+    default: "Inventarium System",
   },
-  description: "Control total de stock, productos y categorías en tiempo real.",
+  description: "Control de Inventario y Facturación de tu negocio.",
   keywords: ["inventario", "stock", "gestión", "almacén", "productos"],
   authors: [{ name: "InventarioPro Team" }],
 };

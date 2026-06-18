@@ -4,8 +4,9 @@ import React from "react";
 import { Product } from "@/types/product";
 import { 
     X, Package, DollarSign, Layers, Tag, 
-    Barcode, Calendar, Clock, CheckCircle2, AlertTriangle, TrendingUp 
+    Barcode as BarCodeIcon, Calendar, Clock, CheckCircle2, AlertTriangle, TrendingUp 
 } from "lucide-react";
+import Barcode from "react-barcode";
 
 interface ProductDetailModalProps {
     isOpen: boolean;
@@ -117,11 +118,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <div className="bg-slate-50/60 rounded-2xl border border-slate-100 p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-0.5">
                         <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                        <Barcode className="w-3.5 h-3.5" /> Código de Barras
+                            <BarCodeIcon className="w-3.5 h-3.5" /> Código de Barras
                         </span>
-                        <span className="text-sm font-mono font-bold text-slate-800 break-all">
-                        {product.barcode || <span className="text-slate-400 font-sans font-normal">No asignado</span>}
-                        </span>
+
+                        {product.barcode ? (
+                            <div className="bg-white p-2 rounded">
+                                <Barcode
+                                    value={product.barcode}
+                                    format="CODE128"
+                                    width={1.5}
+                                    height={50}
+                                    displayValue={true}
+                                    fontSize={12}
+                                />
+                            </div>
+                        ) : (
+                            <span className="text-slate-400 font-sans font-normal">
+                                No asignado
+                            </span>
+                        )}
                     </div>
 
                     <div className="flex flex-col gap-0.5">
