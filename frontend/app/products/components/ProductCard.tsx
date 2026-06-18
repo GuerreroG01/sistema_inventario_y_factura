@@ -15,7 +15,7 @@ export default function ProductCards() {
     products, loading, page, totalPages,
     isDeleteModalOpen, isDeleting, isDetailModalOpen, selectedProduct, isFormModalOpen, productToEdit,
     handlePageChange, openDeleteModal, openDetailModal, openEditModal, handleConfirmDelete, fetchProducts,
-    setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen,
+    setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen, setPage,
     setProductToEdit, updateFilter, filters, applyFilters, filtersOpen, setFiltersOpen, categories
   } = useProductCard();
 
@@ -131,7 +131,10 @@ export default function ProductCards() {
           setIsFormModalOpen(false);
           setProductToEdit(null);
         }}
-        onSubmitSuccess={() => fetchProducts(page)}
+        onSubmitSuccess={() => {
+          setPage(1);
+          fetchProducts(1);
+        }}
       />
     </>
   );

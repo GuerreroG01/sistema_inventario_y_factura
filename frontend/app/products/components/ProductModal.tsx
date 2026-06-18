@@ -1,19 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-    X,
-    Tag,
-    QrCode,
-    Layers,
-    DollarSign,
-    TrendingUp,
-    Package,
-    Scale,
-    Calendar,
-    CalendarClock,
-    Loader2,
-} from "lucide-react";
+import { X, Tag, QrCode, Layers, DollarSign, TrendingUp, Package, Scale, Calendar, CalendarClock,
+    Loader2 } from "lucide-react";
 import { createProduct, updateProduct } from "@/services/productService";
 
 type ProductModalProps = {
@@ -42,10 +31,10 @@ export default function ProductModal({
     onSubmitSuccess,
     productToEdit = null,
 }: ProductModalProps) {
+    console.log("Modal recibió onSubmitSuccess:", onSubmitSuccess);
     const today = new Date().toISOString().split("T")[0];
     const [formData, setFormData] = useState(initialFormState(today));
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const isEditMode = Boolean(productToEdit && productToEdit.id);
 
     useEffect(() => {
@@ -84,21 +73,17 @@ export default function ProductModal({
             };
 
             if (isEditMode && productToEdit) {
-                console.log(`Actualizando producto ID ${productToEdit.id}:`, payload);
                 await updateProduct(productToEdit.id, payload);
             } else {
-                console.log("Creando nuevo producto:", payload);
                 await createProduct(payload);
+                window.location.reload();
             }
-
             if (onSubmitSuccess) {
                 onSubmitSuccess();
             }
-            
             onClose();
         } catch (error) {
-            console.error("Error al procesar el formulario del producto:", error);
-            alert("Ocurrió un error al guardar el producto. Por favor intenta de nuevo.");
+            console.error("ERROR REAL:", error);
         } finally {
             setIsSubmitting(false);
         }
@@ -113,7 +98,6 @@ export default function ProductModal({
 
             <div className="relative bg-white rounded-2xl w-full max-w-3xl shadow-2xl border border-slate-100 overflow-hidden z-10 transform transition-all duration-300 scale-100 max-h-[92vh] flex flex-col">
                 
-                {/* CABECERA DINÁMICA */}
                 <div className="px-6 py-5 border-b flex items-center justify-between bg-slate-50/70 flex-shrink-0">
                     <div>
                         <h2 className="text-xl font-black text-slate-900 tracking-tight">
@@ -133,14 +117,11 @@ export default function ProductModal({
                     </button>
                 </div>
 
-                {/* FORMULARIO */}
                 <form
                     onSubmit={handleSubmit}
                     className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5 overflow-y-auto flex-1 bg-white"
                 >
-                    {/* COLUMNA IZQUIERDA */}
                     <div className="space-y-4">
-                        {/* NOMBRE */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Nombre
@@ -156,7 +137,6 @@ export default function ProductModal({
                             />
                         </div>
 
-                        {/* CÓDIGO DE BARRAS */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Código de barras
@@ -171,7 +151,6 @@ export default function ProductModal({
                             />
                         </div>
 
-                        {/* CATEGORÍA */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Categoría
@@ -186,7 +165,6 @@ export default function ProductModal({
                             />
                         </div>
 
-                        {/* UNIDAD */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Unidad de Medida
@@ -201,7 +179,6 @@ export default function ProductModal({
                             />
                         </div>
 
-                        {/* INTERRUPTOR DE ESTADO (ACTIVO) */}
                         <div className="pt-2">
                             <span className="text-xs font-bold text-slate-500 uppercase block mb-1">Estado Operativo</span>
                             <button
@@ -219,9 +196,7 @@ export default function ProductModal({
                         </div>
                     </div>
 
-                    {/* COLUMNA DERECHA */}
                     <div className="space-y-4">
-                        {/* PRECIO */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Precio de Venta
@@ -239,7 +214,6 @@ export default function ProductModal({
                             />
                         </div>
 
-                        {/* COSTO */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Costo Base (Compra)
@@ -256,7 +230,6 @@ export default function ProductModal({
                             />
                         </div>
 
-                        {/* STOCK */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Stock Inicial / Disponible
@@ -273,7 +246,6 @@ export default function ProductModal({
                             />
                         </div>
 
-                        {/* FECHA ENTRADA */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Fecha de Ingreso
@@ -288,7 +260,6 @@ export default function ProductModal({
                             />
                         </div>
 
-                        {/* FECHA VENCIMIENTO */}
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Fecha de Vencimiento / Caducidad
@@ -304,7 +275,6 @@ export default function ProductModal({
                         </div>
                     </div>
 
-                    {/* BOTONES DE ACCIÓN INFERIORES */}
                     <div className="sm:col-span-2 flex justify-end gap-3 pt-4 border-t border-slate-100 flex-shrink-0">
                         <button
                             type="button"

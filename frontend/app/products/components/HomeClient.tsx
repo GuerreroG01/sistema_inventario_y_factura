@@ -1,33 +1,35 @@
 "use client";
 
-import Header from "../../../components/layout/Header";
-import Footer from "../../../components/layout/Footer";
+import { useState } from "react";
 import Dashboard from "./Dashboard";
 import ProductCard from "./ProductCard";
+import ProductModal from "./ProductModal";
 
-type HomeClientProps = {
-  productsData: {
-    products: any[];
-    totalPages: number;
-    page?: number;
-    total?: number;
+export default function HomeClient() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const handleProductCreated = () => {
+    console.log("Producto creado correctamente");
+    setIsModalOpen(false);
   };
-};
-
-export default function HomeClient({ productsData }: HomeClientProps) {
-  const { products } = productsData;
 
   return (
     <div className="font-sans flex flex-col">
       <main className="flex-1 w-full px-4 md:px-8 py-3 space-y-8">
         <section className="bg-white rounded-3xl p-2 border border-gray-100 shadow-sm">
-          <Dashboard products={products} />
+          <Dashboard
+            onAddProduct={() => setIsModalOpen(true)}
+          />
         </section>
 
         <section>
           <ProductCard />
         </section>
       </main>
+      <ProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmitSuccess={handleProductCreated}
+      />
     </div>
   );
 }

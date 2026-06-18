@@ -1,25 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Boxes,
-  Package,
-  BarChart3,
-  CheckCircle2,
-  AlertTriangle,
-  Plus,
-} from "lucide-react";
-import { Product } from "@/types/product";
-import ProductModal from "./ProductModal";
-import { getProductStats } from "../../../services/productService"
+import { Boxes, Package, BarChart3, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { useProductStats } from "../hooks/useProductStats";
 
 type DashboardProps = {
-  products: Product[];
+  onAddProduct: () => void;
 };
 
-export default function Dashboard({ products }: DashboardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function Dashboard({  onAddProduct }: DashboardProps) {
 
   const { stats } = useProductStats();
 
@@ -43,7 +32,7 @@ export default function Dashboard({ products }: DashboardProps) {
             </div>
             
             <button 
-              onClick={() => setIsModalOpen(true)} 
+              onClick={onAddProduct}
               className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition-all duration-200 hover:bg-indigo-500 active:scale-95 group/btn"
             >
               <Plus className="w-3.5 h-3.5 transition-transform duration-200 group-hover/btn:rotate-90" />
@@ -105,12 +94,6 @@ export default function Dashboard({ products }: DashboardProps) {
           </div>
         </div>
       </div>
-
-      <ProductModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
-      />
-
     </div>
   );
 }

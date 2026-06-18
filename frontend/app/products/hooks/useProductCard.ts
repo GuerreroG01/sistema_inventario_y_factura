@@ -54,19 +54,19 @@ export function useProductCard() {
         setPage(1);
     };
 
-    const fetchProducts = async (pageToFetch: number) => {
+    const fetchProducts = async (pageToFetch = page) => {
         setLoading(true);
 
         try {
+            console.log("🔥 Ejecutando fetchProducts página:", pageToFetch);
+
             const data = await getProducts(pageToFetch, appliedFilters);
+
+            console.log("📦 Productos recibidos:", data.products);
 
             setProducts(data.products || []);
             setTotalPages(data.totalPages || 1);
             setTotalItems(data.total || 0);
-
-            if (pageToFetch > data.totalPages && data.totalPages > 0) {
-                setPage(data.totalPages);
-            }
 
         } catch (err) {
             console.error("Error fetching products:", err);
@@ -143,7 +143,7 @@ export function useProductCard() {
         products, loading, page, totalPages, totalItems,
         filters, updateFilter, applyFilters, clearFilters, filtersOpen, setFiltersOpen,
         isDeleteModalOpen, isDeleting, isDetailModalOpen, selectedProduct, isFormModalOpen, productToEdit,
-        handlePageChange, openDeleteModal, openDetailModal, openEditModal, handleConfirmDelete, fetchProducts,
+        handlePageChange, openDeleteModal, openDetailModal, openEditModal, handleConfirmDelete, fetchProducts, setPage,
         setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen, setProductToEdit, categories
     };
 }
