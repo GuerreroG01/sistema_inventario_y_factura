@@ -1,22 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import MobileHeader from "./MobileHeader";
+import { Layers } from "lucide-react";
 
 type NavItem = {
     label: string;
     href: string;
 };
 
-type ActionItem = {
-    label: string;
-    onClick?: () => void;
-    href?: string;
-    variant?: "primary" | "secondary";
-};
-
 export default function Header() {
-    const [menuOpen, setMenuOpen] = useState(false);
-
     const navItems: NavItem[] = [
         { label: "Productos", href: "/products" },
         { label: "Ventas", href: "/sales" },
@@ -24,65 +16,61 @@ export default function Header() {
     ];
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-lg shadow-md border-b border-slate-200 transition-all">
-            <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-
-                <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl transform transition-all hover:scale-105">
-                        📦
+        <header className="sticky top-0 z-50 w-full border-b border-slate-200/40 bg-white/70 backdrop-blur-xl transition-all duration-500 hover:bg-white/80">
+            <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+                
+                <a 
+                    href="/" 
+                    className="flex items-center gap-3 group cursor-pointer select-none"
+                >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-blue-600 to-blue-700 text-white shadow-md shadow-blue-500/10 transition-all duration-300 group-hover:scale-[1.04] group-hover:shadow-lg group-hover:shadow-blue-500/20 active:scale-95">
+                        <Layers className="h-5 w-5 stroke-[2.2] transition-transform duration-500 group-hover:rotate-[6deg]" />
                     </div>
-
-                    <div>
-                        <h1 className="text-lg font-extrabold text-slate-900 sm:text-xl tracking-wide">
-                            InventarioPro
+                    
+                    <div className="flex flex-col">
+                        <h1 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg transition-colors duration-300 group-hover:text-blue-600">
+                            Inventarium<span className="text-blue-600 font-black"> System</span>
                         </h1>
-                        <p className="hidden text-xs text-slate-500 sm:block">
-                            Gestión inteligente de inventario
+                        <p className="hidden text-[10px] font-bold uppercase tracking-wider text-slate-400 sm:block leading-none mt-0.5 transition-colors duration-300 group-hover:text-slate-600">
+                            Inventario y Facturación
                         </p>
                     </div>
+                </a>
+
+                <nav className="hidden items-center gap-1 bg-slate-200/40 p-1 rounded-full border border-slate-200/20 md:flex shadow-inner">
+                    {navItems.map((item) => (
+                        <a
+                            key={item.label}
+                            href={item.href}
+                            className="
+                                group
+                                relative
+                                px-4
+                                py-1.5
+                                text-sm
+                                font-semibold
+                                text-slate-600 
+                                rounded-full
+                                transition-all 
+                                duration-300
+                                hover:text-blue-600
+                                active:scale-95
+                                overflow-hidden
+                            "
+                        >
+                            <span className="relative z-10 block transition-transform duration-300 group-hover:-translate-y-[2px]">
+                                {item.label}
+                            </span>
+                            <span className="absolute inset-x-1 bottom-1 top-1 z-0 rounded-full bg-white opacity-0 shadow-sm transition-all duration-300 cubic-bezier(0.25, 1, 0.5, 1) translate-y-full group-hover:translate-y-0 group-hover:opacity-100" />
+                            <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 scale-0 rounded-full bg-blue-600 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100" />
+                        </a>
+                    ))}
+                </nav>
+
+                <div className="flex items-center md:hidden">
+                    <MobileHeader navItems={navItems} />
                 </div>
 
-                {/* Desktop nav */}
-                <nav className="hidden items-center gap-8 md:flex">
-                    {navItems.map((item) => (
-                        <a
-                            key={item.label}
-                            href={item.href}
-                            className="relative font-medium text-slate-600 transition-all hover:text-blue-600 after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:scale-x-0 after:bg-blue-500 after:transition-transform hover:after:scale-x-100"
-                        >
-                            {item.label}
-                        </a>
-                    ))}
-                </nav>
-
-                {/* Mobile menu button */}
-                <button
-                    className="rounded-xl p-2 text-slate-700 md:hidden transition hover:bg-slate-100"
-                    onClick={() => setMenuOpen(!menuOpen)}
-                    aria-label="Toggle menu"
-                >
-                    {menuOpen ? "✕" : "☰"}
-                </button>
-            </div>
-
-            {/* Mobile menu */}
-            <div
-                className={`md:hidden overflow-hidden border-t border-slate-200 bg-white transition-all duration-300 ${
-                    menuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                }`}
-            >
-                <nav className="flex flex-col gap-4 px-6 py-5">
-                    {navItems.map((item) => (
-                        <a
-                            key={item.label}
-                            href={item.href}
-                            className="font-medium text-slate-600 hover:text-blue-600 transition-colors"
-                            onClick={() => setMenuOpen(false)}
-                        >
-                            {item.label}
-                        </a>
-                    ))}
-                </nav>
             </div>
         </header>
     );
