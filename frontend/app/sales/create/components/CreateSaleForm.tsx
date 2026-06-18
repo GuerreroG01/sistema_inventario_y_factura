@@ -3,7 +3,7 @@ import { useCreateSale } from "../hooks/useCretateSale";
 import ModalSuccess from "./ModalSuccess";
 export default function CreateSaleForm() {
     const { category,  setCategory, setClientId,  items,
-        searchProduct, productResults, searchLoading, searchProducts, addProductDirect,
+        searchProduct, productResults, searchLoading, setSearchProduct, addProductDirect,
         removeItem, updateItemQuantity, now, total, loading, submit, successOpen, setSuccessOpen,
 } = useCreateSale();
 
@@ -58,7 +58,7 @@ export default function CreateSaleForm() {
                             <input
                                 value={category}
                                 onChange={e => setCategory(e.target.value)}
-                                placeholder="Categoría. Ej: ordinario, crédito, etc."
+                                placeholder="Categoría. Ej: Normal, crédito, etc."
                                 className="input-premium"
                             />
 
@@ -83,15 +83,28 @@ export default function CreateSaleForm() {
                         <div className="relative">
                             <input
                                 value={searchProduct}
-                                onChange={e => searchProducts(e.target.value)}
+                                onChange={e => setSearchProduct(e.target.value)}
                                 placeholder="Buscar producto..."
-                                className="input-premium w-full"
+                                className="input-premium w-full pr-10"
                             />
 
                             {searchLoading && (
-                                <p className="text-xs text-slate-400 mt-2">
-                                    Buscando productos...
-                                </p>
+                                <div className="
+                                    absolute 
+                                    right-3 
+                                    top-1/2 
+                                    -translate-y-1/2
+                                ">
+                                    <div className="
+                                        h-4 
+                                        w-4 
+                                        animate-spin 
+                                        rounded-full 
+                                        border-2 
+                                        border-slate-300 
+                                        border-t-indigo-600
+                                    " />
+                                </div>
                             )}
 
                             {productResults.length > 0 && (
@@ -116,6 +129,7 @@ export default function CreateSaleForm() {
                                             <p className="text-sm font-semibold text-slate-900">
                                                 {p.name}
                                             </p>
+
                                             <p className="text-xs text-slate-500">
                                                 ${p.price} · Stock {p.stock}
                                             </p>

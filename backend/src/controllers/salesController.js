@@ -219,15 +219,6 @@ export const updateSaleStatus = async (req, res) => {
             });
         }
 
-        const allowedStatus = await getSaleStatuses();
-
-        if (!allowedStatus.includes(status)) {
-            return res.status(400).json({
-                error: "validation_error",
-                message: `Status inválido. Valores permitidos: ${allowedStatus.join(", ")}`
-            });
-        }
-
         const sale = await Sales.findByPk(id);
 
         if (!sale) {

@@ -4,12 +4,21 @@ import { Sale } from "@/types/Sale";
 import SalesLeftPanel from "./SalesLeftPanel";
 import SalesRightPanel from "./SalesRightPanel";
 
+type StatusOption = {
+    value: string;
+    label: string;
+    description: string;
+};
 type Props = {
     sales: Sale[];
     selected: Sale | null;
     setSelected: (id: number) => void;
     loading: boolean;
 
+    page: number;
+    totalPages: number;
+    setPage: (page: number) => void;
+    
     startDate: string;
     setStartDate: (value: string) => void;
 
@@ -18,6 +27,8 @@ type Props = {
 
     fetchSales: () => void;
     statusStyle: (status: string) => string;
+    handleStatusChange: (status: string) => Promise<void>;
+    statusOptions: StatusOption[];
 };
 
 export default function SalesPage(props: Props) {
@@ -26,7 +37,7 @@ export default function SalesPage(props: Props) {
         <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 gap-4">
             <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin" />
             <p className="text-sm font-medium text-slate-500 tracking-wide">
-            Filtrando y cargando transacciones...
+                Filtrando y cargando transacciones...
             </p>
         </div>
         );

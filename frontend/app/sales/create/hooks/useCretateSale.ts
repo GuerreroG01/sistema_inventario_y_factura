@@ -48,27 +48,37 @@ export function useCreateSale() {
     }, []);
 
     const searchProducts = async (value: string) => {
-        setSearchProduct(value);
-
-        if (!value) {
-            setProductResults([]);
-            return;
-        }
 
         try {
-            setSearchLoading(true);
-
             const data = await autocompleteProducts({
                 name: value
             });
 
             setProductResults(data);
+
         } catch (error) {
             console.error("Error autocomplete:", error);
         } finally {
             setSearchLoading(false);
         }
     };
+
+    useEffect(() => {
+
+        if (searchProduct.length === 0) {
+            setProductResults([]);
+            setSearchLoading(false);
+            return;
+        }
+        setSearchLoading(true);
+
+        const timeout = setTimeout(() => {
+            searchProducts(searchProduct);
+        }, 500);
+
+        return () => clearTimeout(timeout);
+
+    }, [searchProduct]);
 
     const addProductDirect = (product: any) => {
         setItems(prev => {
@@ -179,7 +189,7 @@ export function useCreateSale() {
 
     return {
         fecha, category, client_id, setCategory, setClientId, items, setItems, item, setItem,
-        searchProduct, setSearchProduct, productResults, setProductResults, searchLoading, searchProducts,
+        searchProduct, setSearchProduct, productResults, setProductResults, searchLoading,
         addProductDirect, addItem, removeItem, updateItemQuantity, updateItem, now,
         total, loading, message, submit, successOpen, setSuccessOpen,
     };

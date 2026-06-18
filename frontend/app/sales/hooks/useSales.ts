@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSales, getSale } from "@/services/salesService";
+import { getSales, getSale, updateSaleStatus } from "@/services/salesService";
 import { Sale } from "@/types/Sale";
 
 export function useSales() {
@@ -12,10 +12,50 @@ export function useSales() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalSales, setTotalSales] = useState(0);
 
+    const statusOptions = [
+        {
+            value: "PENDING",
+            label: "Pendiente",
+            description: "Venta creada pero aún no procesada o pagada.",
+        },
+        {
+            value: "PAID",
+            label: "Pagada",
+            description: "El pago fue recibido correctamente.",
+        },
+        {
+            value: "COMPLETED",
+            label: "Completada",
+            description: "La venta fue entregada/finalizada con éxito.",
+        },
+        {
+            value: "CANCELLED",
+            label: "Cancelada",
+            description: "La venta fue cancelada antes de completarse.",
+        },
+        {
+            value: "REFUNDED",
+            label: "Devolución",
+            description: "Se devolvió el dinero al cliente.",
+        }
+    ];
+
+    const statusStyle = (status: string) => {
+        switch (status) {
+            case "COMPLETED":
+                return "bg-emerald-50 text-emerald-700 border-emerald-200/60 ring-emerald-500/10";
+            case "PENDING":
+                return "bg-amber-50 text-amber-700 border-amber-200/60 ring-amber-500/10";
+            case "CANCELLED":
+                return "bg-rose-50 text-rose-700 border-rose-200/60 ring-rose-500/10";
+            default:
+                return "bg-slate-50 text-slate-700 border-slate-200/60 ring-slate-500/10";
+        }
+    };
 
     const [startDate, setStartDate] = useState<string>(() => {
         const date = new Date();
-        date.setDate(date.getDate() - 30);
+        date.setDate(date.getDate() - 7 );
         return date.toISOString().split("T")[0];
     });
 
@@ -66,22 +106,28 @@ export function useSales() {
         fetchSales();
     }, [page, startDate, endDate]);
 
-    // 🔹 estilos de estado
-    const statusStyle = (status: string) => {
-        switch (status) {
-            case "COMPLETED":
-                return "bg-emerald-50 text-emerald-700 border-emerald-200/60 ring-emerald-500/10";
-            case "PENDING":
-                return "bg-amber-50 text-amber-700 border-amber-200/60 ring-amber-500/10";
-            case "CANCELLED":
-                return "bg-rose-50 text-rose-700 border-rose-200/60 ring-rose-500/10";
-            default:
-                return "bg-slate-50 text-slate-700 border-slate-200/60 ring-slate-500/10";
+    const handleStatusChange = async (status: string) => {
+        if (!selected) return;
+
+        try {
+            const updatedSale = await updateSaleStatus(
+                selected.id,
+                status
+            );
+
+            setSelected(updatedSale);
+
+            setSales((prev) =>
+                prev.map((sale) =>
+                    sale.id === updatedSale.id ? updatedSale : sale
+                )
+            );
+        } catch (error) {
+            console.error(error);
         }
     };
-
     return {
         sales, selected, setSelected: selectSale, loading, startDate, setStartDate, endDate, setEndDate, page, setPage,
-        totalPages, totalSales, fetchSales, statusStyle
+        totalPages, totalSales, fetchSales, statusStyle, handleStatusChange, statusOptions
     };
 }
