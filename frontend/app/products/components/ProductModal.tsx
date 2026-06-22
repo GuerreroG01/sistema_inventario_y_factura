@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { X, Tag, QrCode, Layers, DollarSign, TrendingUp, Package, Scale, Calendar, CalendarClock,
     Loader2 } from "lucide-react";
 import { createProduct, updateProduct } from "@/services/productService";
+import ModalError from "@/components/ModaError";
+import StockReasonModal from "@/components/StockReasonModal";
 
 type ProductModalProps = {
     isOpen: boolean;
@@ -36,6 +38,11 @@ export default function ProductModal({
     const [formData, setFormData] = useState(initialFormState(today));
     const [isSubmitting, setIsSubmitting] = useState(false);
     const isEditMode = Boolean(productToEdit && productToEdit.id);
+    const [showError, setShowError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [showStockReasonModal, setShowStockReasonModal] = useState(false);
+    const [pendingPayload, setPendingPayload] = useState<any>(null);
+    const [stockObservation, setStockObservation] = useState("");
 
     useEffect(() => {
         if (isOpen) {
@@ -65,28 +72,76 @@ export default function ProductModal({
         setIsSubmitting(true);
 
         try {
+            const oldStock = productToEdit?.stock ?? 0;
+            const newStock = Number(formData.stock);
+
+            const diff = newStock - oldStock;
+            
             const payload = {
                 ...formData,
                 price: Number(formData.price),
                 cost: formData.cost ? Number(formData.cost) : undefined,
-                stock: Number(formData.stock),
+                stock: newStock,
+                stockObservation: undefined,
             };
 
             if (isEditMode && productToEdit) {
-                await updateProduct(productToEdit.id, payload);
+                if (diff < 0) {
+                    setPendingPayload(payload);
+                    setShowStockReasonModal(true);
+                    setIsSubmitting(false);
+                    return;
+                }
+                const res = await updateProduct(productToEdit.id, payload);
+
+                if (res && typeof res === "object" && "ok" in res) {
+                    if (!res.ok) {
+                        setErrorMessage(res.message);
+                        setShowError(true);
+                        return;
+                    }
+                }
             } else {
                 await createProduct(payload);
                 window.location.reload();
             }
-            if (onSubmitSuccess) {
-                onSubmitSuccess();
-            }
+
+            onSubmitSuccess?.();
             onClose();
-        } catch (error) {
+
+        } catch (error: any) {
             console.error("ERROR REAL:", error);
+
+            setErrorMessage(
+                error?.message ||
+                "No se pudo procesar la solicitud"
+            );
+
+            setShowError(true);
+
         } finally {
             setIsSubmitting(false);
         }
+    };
+    const handleStockReasonConfirm = async (reason: string) => {
+        if (!pendingPayload || !productToEdit) return;
+
+        const res = await updateProduct(productToEdit.id, {
+            ...pendingPayload,
+            stockObservation: reason,
+        });
+
+        if (!res.ok) {
+            setErrorMessage(res.message);
+            setShowError(true);
+            return;
+        }
+
+        setShowStockReasonModal(false);
+        setPendingPayload(null);
+
+        onSubmitSuccess?.();
+        onClose();
     };
 
     const inputClass =
@@ -304,6 +359,17 @@ export default function ProductModal({
                     </div>
                 </form>
             </div>
+            <ModalError
+                open={showError}
+                title="Error al actualizar producto"
+                message={errorMessage}
+                onClose={() => setShowError(false)}
+            />
+            <StockReasonModal
+                open={showStockReasonModal}
+                onClose={() => setShowStockReasonModal(false)}
+                onConfirm={handleStockReasonConfirm}
+            />
         </div>
     );
 }

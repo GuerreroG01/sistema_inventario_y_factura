@@ -11,6 +11,10 @@ export function useSales() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalSales, setTotalSales] = useState(0);
+    const [showRefundModal, setShowRefundModal] = useState(false);
+    const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState("");
+    
 
     const statusOptions = [
         {
@@ -109,25 +113,61 @@ export function useSales() {
     const handleStatusChange = async (status: string) => {
         if (!selected) return;
 
-        try {
-            const updatedSale = await updateSaleStatus(
-                selected.id,
-                status
-            );
+        const res = await updateSaleStatus(selected.id, status);
 
-            setSelected(updatedSale);
+        if (!res.ok) {
+            setErrorMessage(res.message);
 
-            setSales((prev) =>
-                prev.map((sale) =>
-                    sale.id === updatedSale.id ? updatedSale : sale
-                )
-            );
-        } catch (error) {
-            console.error(error);
+            // 👇 ahora depende del "code", no de requiresObservation
+            if (
+                res.code === "REFUND_OBSERVATION_REQUIRED" &&
+                status === "REFUNDED"
+            ) {
+                setPendingStatus(status);
+                setShowRefundModal(true);
+                return;
+            }
+
+            console.error(res.message);
+            return;
         }
+
+        setSelected(res.data);
+
+        setSales((prev) =>
+            prev.map((sale) =>
+                sale.id === res.data.id ? res.data : sale
+            )
+        );
+    };
+    const confirmRefund = async (observation: string) => {
+        if (!selected || !pendingStatus) return;
+
+        const res = await updateSaleStatus(
+            selected.id,
+            pendingStatus,
+            observation
+        );
+
+        if (!res.ok) {
+            setErrorMessage(res.message);
+            return;
+        }
+
+        setSelected(res.data);
+
+        setSales((prev) =>
+            prev.map((sale) =>
+                sale.id === res.data.id ? res.data : sale
+            )
+        );
+
+        setShowRefundModal(false);
+        setPendingStatus(null);
     };
     return {
         sales, selected, setSelected: selectSale, loading, startDate, setStartDate, endDate, setEndDate, page, setPage,
-        totalPages, totalSales, fetchSales, statusStyle, handleStatusChange, statusOptions
+        totalPages, totalSales, fetchSales, statusStyle, handleStatusChange, statusOptions, showRefundModal, setShowRefundModal,
+        pendingStatus, confirmRefund, errorMessage
     };
 }

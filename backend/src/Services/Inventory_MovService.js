@@ -78,6 +78,29 @@ class InventoryMovService {
             }
         };
     }
+    static async updateStockOnly({
+        product_id,
+        quantity
+    }, transaction = null) {
+
+        const product = await Product.findByPk(product_id, { transaction });
+
+        if (!product) {
+            throw new Error(`Producto no encontrado: ${product_id}`);
+        }
+
+        const newStock = Number(product.stock) + Number(quantity);
+
+        if (newStock < 0) {
+            throw new Error(`Stock insuficiente para producto ${product_id}`);
+        }
+
+        await product.update({
+            stock: newStock
+        }, { transaction });
+
+        return product;
+    }
 }
 
 export default InventoryMovService;

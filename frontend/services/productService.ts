@@ -79,16 +79,22 @@ export async function getProduct(id: number): Promise<Product> {
   }
 }
 
-export async function updateProduct(id: number, product: Partial<Omit<Product, "id">>): Promise<Product> {
+export async function updateProduct(
+  id: number,
+  product: Partial<Omit<Product, "id">>
+): Promise<{ ok: true; data: Product } | { ok: false; message: string }> {
   try {
     const { data } = await api.put<Product>(`/${id}`, product);
-    return data;
+
+    return { ok: true, data};
   } catch (error: any) {
-    const message =
-      error?.response?.data?.message ||
-      error.message ||
-      "Error al actualizar producto";
-    throw new Error(message);
+    return {
+      ok: false,
+      message:
+        error?.response?.data?.message ||
+        error.message ||
+        "Error al actualizar producto",
+    };
   }
 }
 

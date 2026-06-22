@@ -18,23 +18,19 @@ type Props = {
     setEndDate: (value: string) => void;
 
     statusStyle: (status: string) => string;
+
+    statusOptions: {
+        value: string;
+        label: string;
+        description: string;
+    }[];
 };
 
-
 export default function SalesLeftPanel({
-    sales,
-    selected,
-    setSelected,
-    page,
-    totalPages,
-    setPage,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    statusStyle,
+    sales, selected, setSelected, page, totalPages, setPage, startDate, setStartDate, endDate, setEndDate, statusStyle, statusOptions 
 }: Props) {
-
+    const getStatusLabel = (status: string) =>
+        statusOptions.find((opt) => opt.value === status)?.label ?? status;
     return (
         <div
             className="
@@ -49,9 +45,6 @@ export default function SalesLeftPanel({
                 overflow-hidden
             "
         >
-
-            {/* HEADER */}
-
             <div
                 className="
                     p-5
@@ -104,9 +97,6 @@ export default function SalesLeftPanel({
                     </div>
 
                 </div>
-
-
-                {/* FILTROS */}
 
                 <div
                     className="
@@ -193,10 +183,6 @@ export default function SalesLeftPanel({
                 </div>
 
             </div>
-
-
-
-            {/* LISTADO */}
 
             <div
                 className="
@@ -348,7 +334,7 @@ export default function SalesLeftPanel({
                                             ${statusStyle(sale.status)}
                                         `}
                                     >
-                                        {sale.status}
+                                        {getStatusLabel(sale.status)}
                                     </span>
 
                                 </div>
@@ -406,11 +392,6 @@ export default function SalesLeftPanel({
                 )}
 
             </div>
-
-
-
-
-            {/* PAGINACIÓN */}
 
             <div
                 className="

@@ -66,9 +66,6 @@ export default function SalesRightPanel({
                                                 const isSelected = option.value === selected.status;
 
                                                 return (
-
-                                                    /* Usamos ListboxOption directamente en lugar de Listbox.Option */
-
                                                     <ListboxOption
 
                                                         key={option.value}
@@ -96,10 +93,6 @@ export default function SalesRightPanel({
                                                     >
 
                                                         <span>{option.label}</span>
-
-
-                                                        {/* Indicador sutil de selección usando el cyan corporativo */}
-
                                                         {isSelected && (
 
                                                             <svg className="h-3.5 w-3.5 text-[#00A7E1]" fill="currentColor" viewBox="0 0 20 20">
@@ -115,8 +108,6 @@ export default function SalesRightPanel({
                                     </Listbox>
                                 </div>
                             </div>
-
-                            {/* CARDS */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-white/70 border border-slate-200/60 rounded-xl p-5 shadow-sm hover:shadow-md transition">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">

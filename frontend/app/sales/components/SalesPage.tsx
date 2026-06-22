@@ -3,7 +3,7 @@
 import { Sale } from "@/types/Sale";
 import SalesLeftPanel from "./SalesLeftPanel";
 import SalesRightPanel from "./SalesRightPanel";
-
+import StockReasonModal from "@/components/StockReasonModal";
 type StatusOption = {
     value: string;
     label: string;
@@ -29,6 +29,15 @@ type Props = {
     statusStyle: (status: string) => string;
     handleStatusChange: (status: string) => Promise<void>;
     statusOptions: StatusOption[];
+
+    showRefundModal: boolean;
+    setShowRefundModal: (value: boolean) => void;
+
+    pendingStatus: string | null;
+
+    confirmRefund: (observation: string) => Promise<void>;
+
+    errorMessage: string;
 };
 
 export default function SalesPage(props: Props) {
@@ -49,7 +58,11 @@ export default function SalesPage(props: Props) {
             
             <SalesLeftPanel {...props} />
             <SalesRightPanel {...props} />
-
+            <StockReasonModal
+                open={props.showRefundModal}
+                onClose={() => props.setShowRefundModal(false)}
+                onConfirm={props.confirmRefund}
+            />
         </div>
         </div>
     );

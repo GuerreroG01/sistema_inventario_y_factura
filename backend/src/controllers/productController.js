@@ -183,7 +183,7 @@ export const getProductById = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, barcode, category, unit, price, cost, stock, entryDate, expirationDate, active } = req.body;
+        const { name, barcode, category, unit, price, cost, stock, entryDate, expirationDate, active, stockObservation } = req.body;
 
         const product = await Product.findByPk(id);
         if (!product) {
@@ -210,6 +210,26 @@ export const updateProduct = async (req, res) => {
         const oldStock = product.stock;
         const oldCategory = product.category;
 
+        if (stock !== undefined && Number(stock) !== Number(oldStock)) {
+
+            const diff = Number(stock) - Number(oldStock);
+
+            if (diff < 0 && (!stockObservation || stockObservation.trim() === "")) {
+                return res.status(400).json({
+                    error: "validation_error",
+                    message: "Debe ingresar una razón cuando se reduce el inventario."
+                });
+            }
+
+            await InventoryMovService.create({
+                product_id: product.id,
+                tipo: "ajuste",
+                cantidad: diff,
+                observacion: diff < 0
+                    ? stockObservation
+                    : "Aumento manual de stock"
+            });
+        }
         await product.update({
             name: name ?? product.name,
             barcode: barcode ?? product.barcode,
@@ -222,18 +242,6 @@ export const updateProduct = async (req, res) => {
             expirationDate: normalizeDate(expirationDate) ?? product.expirationDate,
             active: active ?? product.active,
         });
-
-        if (stock !== undefined && Number(stock) !== Number(oldStock)) {
-
-            const diff = Number(stock) - Number(oldStock);
-
-            await InventoryMovService.create({
-                product_id: product.id,
-                tipo: "ajuste",
-                cantidad: diff,
-                observacion: "Ajuste manual de stock"
-            });
-        }
 
         if (category !== undefined && oldCategory !== product.category) {
             clearCategoryCache();

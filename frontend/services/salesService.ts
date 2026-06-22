@@ -79,19 +79,34 @@ export async function createSale(
 
 export async function updateSaleStatus(
     id: number,
-    status: string
-): Promise<Sale> {
+    status: string,
+    refundObservation?: string
+): Promise<
+    | { ok: true; data: Sale }
+    | { ok: false; message: string; code?: string }
+> {
     try {
         const { data } = await api.patch<{
-        message: string;
-        sale: Sale;
-        }>(`/${id}/status`, { status });
+            message: string;
+            sale: Sale;
+        }>(`/${id}/status`, {
+            status,
+            refundObservation,
+        });
 
-        return data.sale;
+        return { ok: true, data: data.sale };
+
     } catch (error: any) {
-        throw new Error(
-        error.response?.data?.message || "Error al actualizar status"
-        );
+        const code = error?.response?.data?.code;
+        const message =
+            error?.response?.data?.message ||
+            "Error al actualizar el status de la venta";
+
+        return {
+            ok: false,
+            message,
+            code,
+        };
     }
 }
 

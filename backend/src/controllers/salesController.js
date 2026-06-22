@@ -225,9 +225,11 @@ export const getCategories = async (req, res) => {
 };
 
 export const updateSaleStatus = async (req, res) => {
+    const t = await sequelize.transaction();
+
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, refundObservation } = req.body;
 
         if (!status) {
             return res.status(400).json({
@@ -236,19 +238,84 @@ export const updateSaleStatus = async (req, res) => {
             });
         }
 
-        const sale = await Sales.findByPk(id);
+        if (status === "REFUNDED" && (!refundObservation || refundObservation.trim() === "")) {
+            return res.status(400).json({
+                error: "validation_error",
+                code: "REFUND_OBSERVATION_REQUIRED",
+                message: "Debe ingresar una observación cuando se procesa un reembolso."
+            });
+        }
+
+        const sale = await Sales.findByPk(id, { transaction: t });
 
         if (!sale) {
+            await t.rollback();
             return res.status(404).json({
                 error: "not_found",
                 message: `No se encontró una venta con id ${id}`
             });
         }
 
+        const previousStatus = sale.status;
+
         sale.status = status;
-        await sale.save();
+
+        if (status === "REFUNDED") {
+            sale.observation = refundObservation;
+        }
+
+        await sale.save({ transaction: t });
+
+        if (status === "CANCELLED" && previousStatus !== "CANCELLED") {
+
+            const details = await SaleDetail.findAll({
+                where: { sale_id: id },
+                transaction: t
+            });
+
+            for (const item of details) {
+
+                const product = await Product.findByPk(item.product_id, { transaction: t });
+
+                if (!product) {
+                    throw new Error(`Producto no encontrado: ${item.product_id}`);
+                }
+
+                await product.update({
+                    stock: Number(product.stock) + Number(item.cantidad)
+                }, { transaction: t });
+
+                await InventoryMovService.create({
+                    product_id: item.product_id,
+                    tipo: "entrada",
+                    cantidad: item.cantidad,
+                    referencia: sale.id,
+                    observacion: "Cancelación de venta"
+                }, t);
+            }
+        }
+
+        if (status === "REFUNDED" && previousStatus !== "REFUNDED") {
+
+            const details = await SaleDetail.findAll({
+                where: { sale_id: id },
+                transaction: t
+            });
+
+            for (const item of details) {
+                await InventoryMovService.create({
+                    product_id: item.product_id,
+                    tipo: "devolución",
+                    cantidad: item.cantidad,
+                    referencia: sale.id,
+                    observacion: refundObservation
+                }, t);
+            }
+        }
 
         clearStatusCache();
+
+        await t.commit();
 
         return res.json({
             message: "Status actualizado correctamente",
@@ -256,6 +323,8 @@ export const updateSaleStatus = async (req, res) => {
         });
 
     } catch (error) {
+        await t.rollback();
+
         console.error("updateSaleStatus error:", error);
 
         return res.status(500).json({
