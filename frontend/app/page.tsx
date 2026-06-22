@@ -5,15 +5,15 @@ export default function Home() {
   return (
     <div className="font-sans">
 
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
+      <main className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8 space-y-12">
 
         <section className="rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-400 p-10 shadow-2xl flex flex-col lg:flex-row items-center gap-8 text-white">
           <div className="flex-1">
             <h1 className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">
-              Bienvenido a InventarioPro
+              Bienvenido a Inventarium
             </h1>
             <p className="mt-4 text-indigo-100 text-lg sm:text-xl max-w-lg">
-              Administra tu inventario y facturación de manera eficiente. Visualiza el estado de tu negocio en tiempo real y toma decisiones rápidas.
+              Administra tu inventario y facturación de manera eficiente. Visualiza el estado de tu negocio y toma decisiones rápidas.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-4">

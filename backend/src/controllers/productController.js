@@ -2,6 +2,7 @@ import Product from "../models/Product.js";
 import { ValidationError, UniqueConstraintError, fn, col, literal, Op } from "sequelize";
 import { normalizeDate } from "../utils/formatters.js"
 import { invalidateCategoryCache, clearCategoryCache, getCategoryCache, setCategoryCache  } from "../utils/categoryCache.js";
+import InventoryMovService from "../Services/Inventory_MovService.js";
 
 const generateBarcode = async () => {
     let barcode;
@@ -50,6 +51,16 @@ export const createProduct = async (req, res) => {
             expirationDate: normalizeDate(expirationDate),
             active,
         });
+
+        if (stock && Number(stock) > 0) {
+            await InventoryMovService.create({
+                product_id: product.id,
+                tipo: "entrada",
+                cantidad: stock,
+                observacion: null
+            });
+        }
+
         invalidateCategoryCache(category);
         return res.status(201).json(product);
 
@@ -196,6 +207,7 @@ export const updateProduct = async (req, res) => {
             });
         }
 
+        const oldStock = product.stock;
         const oldCategory = product.category;
 
         await product.update({
@@ -211,7 +223,18 @@ export const updateProduct = async (req, res) => {
             active: active ?? product.active,
         });
 
-        // 🔥 invalidación de cache (simple y segura)
+        if (stock !== undefined && Number(stock) !== Number(oldStock)) {
+
+            const diff = Number(stock) - Number(oldStock);
+
+            await InventoryMovService.create({
+                product_id: product.id,
+                tipo: "ajuste",
+                cantidad: diff,
+                observacion: "Ajuste manual de stock"
+            });
+        }
+
         if (category !== undefined && oldCategory !== product.category) {
             clearCategoryCache();
         }

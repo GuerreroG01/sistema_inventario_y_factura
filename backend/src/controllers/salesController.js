@@ -5,6 +5,8 @@ import { normalizeDate } from "../utils/formatters.js";
 import { clearCategoryCache } from "../utils/categoryCache.js";
 import { getSaleStatuses, clearStatusCache } from "../utils/salesStatusCache.js";
 import SaleDetail from "../models/SalesDetail.js";
+import InventoryMovService from "../Services/Inventory_MovService.js";
+import Product from "../models/Product.js";
 export const getSales = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -111,11 +113,36 @@ export const createSale = async (req, res) => {
 
         let total = 0;
 
-        const details = items.map(item => {
+        const details = [];
+
+        for (const item of items) {
+
+            const product = await Product.findByPk(item.product_id, { transaction: t });
+
+            if (!product) {
+                throw new Error(`Producto no encontrado: ${item.product_id}`);
+            }
+
+            if (product.stock < item.cantidad) {
+                throw new Error(`Stock insuficiente para el producto ${product.name}`);
+            }
+
             const subtotal = item.cantidad * item.precio_unitario;
             total += subtotal;
 
-            return {
+            await product.update({
+                stock: product.stock - item.cantidad
+            }, { transaction: t });
+
+            await InventoryMovService.create({
+                product_id: product.id,
+                tipo: "salida",
+                cantidad: item.cantidad,
+                referencia: sale.id,
+                observacion: null
+            }, t);
+
+            details.push({
                 sale_id: sale.id,
                 product_id: item.product_id,
                 descripcion: item.descripcion || null,
@@ -123,8 +150,8 @@ export const createSale = async (req, res) => {
                 precio_unitario: item.precio_unitario,
                 subtotal,
                 tipo_item: item.tipo_item
-            };
-        });
+            });
+        }
 
         await SaleDetail.bulkCreate(details, { transaction: t });
 
@@ -141,23 +168,13 @@ export const createSale = async (req, res) => {
     } catch (error) {
         await t.rollback();
 
-        if (error instanceof ValidationError) {
-            return res.status(400).json({
-                error: "validation_error",
-                message: error.errors.map(err => err.message)
-            });
-        }
-
-        if (error instanceof UniqueConstraintError) {
-            return res.status(400).json({
-                error: "unique_constraint_error",
-                message: error.errors.map(err => err.message)
-            });
-        }
+        console.error("🔥 CREATE SALE ERROR FULL:", error);
+        console.error("STACK:", error?.stack);
 
         return res.status(500).json({
             error: "create_sale_error",
-            message: "Ocurrió un error inesperado al crear la venta."
+            message: error.message,
+            stack: error.stack
         });
     }
 };
