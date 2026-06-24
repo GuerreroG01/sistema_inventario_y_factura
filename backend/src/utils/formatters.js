@@ -1,5 +1,15 @@
 export const normalizeDate = (value) => {
-    if (!value || value === "") return null;
-    const date = new Date(value);
-    return isNaN(date.getTime()) ? null : date;
+    if (!value || value === "") {
+        return null;
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return value;
+    }
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+
+        const [day, month, year] = value.split("/");
+
+        return `${year}-${month}-${day}`;
+    }
+    return null;
 };

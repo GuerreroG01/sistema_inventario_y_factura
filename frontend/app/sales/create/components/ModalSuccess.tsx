@@ -26,7 +26,7 @@ export default function ModalSuccess({
                 onClose();
             }, 300);
 
-        }, 3000);
+        }, 1000);
 
         return () => clearTimeout(timer);
 
@@ -142,7 +142,7 @@ export default function ModalSuccess({
                             to-emerald-500
                         "
                         style={{
-                            animation: "progress 3s linear forwards"
+                            animation: "progress 1s linear forwards"
                         }}
                     />
                 </div>

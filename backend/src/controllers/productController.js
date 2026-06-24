@@ -1,4 +1,4 @@
-import Product from "../models/Product.js";
+import Product from "../models/Products.js";
 import { ValidationError, UniqueConstraintError, fn, col, literal, Op } from "sequelize";
 import { normalizeDate } from "../utils/formatters.js"
 import { invalidateCategoryCache, clearCategoryCache, getCategoryCache, setCategoryCache  } from "../utils/categoryCache.js";

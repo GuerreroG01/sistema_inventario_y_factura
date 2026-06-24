@@ -4,9 +4,9 @@ import { ValidationError, UniqueConstraintError, Op } from "sequelize";
 import { normalizeDate } from "../utils/formatters.js";
 import { clearCategoryCache } from "../utils/categoryCache.js";
 import { getSaleStatuses, clearStatusCache } from "../utils/salesStatusCache.js";
-import SaleDetail from "../models/SalesDetail.js";
+import SaleDetail from "../models/SaleDetails.js";
 import InventoryMovService from "../Services/Inventory_MovService.js";
-import Product from "../models/Product.js";
+import Product from "../models/Products.js";
 export const getSales = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -168,7 +168,7 @@ export const createSale = async (req, res) => {
     } catch (error) {
         await t.rollback();
 
-        console.error("🔥 CREATE SALE ERROR FULL:", error);
+        console.error("CREATE SALE ERROR FULL:", error);
         console.error("STACK:", error?.stack);
 
         return res.status(500).json({

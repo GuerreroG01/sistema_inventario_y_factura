@@ -1,6 +1,6 @@
 import Sales from "./Sales.js";
-import SaleDetail from "./SalesDetail.js";
-import Product from "./Product.js";
+import SaleDetail from "./SaleDetails.js";
+import Product from "./Products.js";
 import InventoryMov from "./Inventory_mov.js";
 
 Sales.hasMany(SaleDetail, {
@@ -16,6 +16,16 @@ SaleDetail.belongsTo(Sales, {
 Product.hasMany(InventoryMov, {
     foreignKey: "product_id",
     as: "movements"
+});
+
+Product.hasMany(SaleDetail, {
+    foreignKey: "product_id",
+    as: "details"
+});
+
+SaleDetail.belongsTo(Product, {
+    foreignKey: "product_id",
+    as: "product"
 });
 
 InventoryMov.belongsTo(Product, {

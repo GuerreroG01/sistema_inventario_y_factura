@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import InventoryMov from "../models/Inventory_mov.js";
-import Product from "../models/Product.js";
+import Product from "../models/Products.js";
 import Sales from "../models/Sales.js";
 
 class InventoryMovService {

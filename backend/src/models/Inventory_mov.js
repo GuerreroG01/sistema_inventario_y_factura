@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
-import Product from "./Product.js";
+import Product from "./Products.js";
 const Inventory_mov = sequelize.define("Inventory_mov", {
     id: {
         type: DataTypes.INTEGER,

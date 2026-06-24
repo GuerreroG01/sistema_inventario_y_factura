@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Tag, QrCode, Layers, DollarSign, TrendingUp, Package, Scale, Calendar, CalendarClock,
     Loader2 } from "lucide-react";
 import { createProduct, updateProduct } from "@/services/productService";
-import ModalError from "@/components/ModaError";
+import ModalError from "@/components/ModalError";
 import StockReasonModal from "@/components/StockReasonModal";
 
 type ProductModalProps = {

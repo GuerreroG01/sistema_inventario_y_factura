@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Product = sequelize.define("Product", {
+const Product = sequelize.define("Products", {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -58,6 +58,9 @@ const Product = sequelize.define("Product", {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
+},
+{
+    tableName:"Products"
 });
 
 export default Product;
