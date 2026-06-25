@@ -85,7 +85,7 @@ export const getDashboardMetrics = async () => {
             }
         } catch (error) {
             console.error(
-                "[DashboardService] Error productos activos",
+                "[getDashboardMetrics] Error productos activos",
                 error
             );
 
@@ -105,7 +105,7 @@ export const getDashboardMetrics = async () => {
             });
         } catch (error) {
             console.error(
-                "[DashboardService] Error stock bajo",
+                "[getDashboardMetrics] Error stock bajo",
                 error
             );
 
@@ -145,7 +145,7 @@ export const getDashboardMetrics = async () => {
             }
         } catch (error) {
             console.error(
-                "[DashboardService] Error ganancia",
+                "[getDashboardMetrics] Error ganancia",
                 error
             );
 
@@ -163,7 +163,7 @@ export const getDashboardMetrics = async () => {
         };
     } catch (error) {
         console.error(
-            "[DashboardService] ❌ Error general",
+            "[getDashboardMetrics]: Error general",
             error
         );
 
@@ -178,5 +178,535 @@ export const getDashboardMetrics = async () => {
                 },
             ],
         };
+    }
+};
+export const getProfitabilityMetrics = async (month, year) => {
+    const warnings = [];
+    const errors = [];
+
+    const response = {
+        ventas: 0,
+        costos: 0,
+        ganancia: 0,
+        margen: 0,
+        ratioRetornoCosto: 0,
+        roi: 0,
+    };
+
+    try {
+        const result = await db.query(
+            `
+            SELECT
+                COALESCE(SUM(s.total), 0) AS ventas,
+                COALESCE(
+                    SUM(sd.cantidad * p.cost),
+                    0
+                ) AS costos
+            FROM "Sales" s
+            INNER JOIN "SaleDetails" sd
+                ON sd.sale_id = s.id
+            INNER JOIN "Products" p
+                ON p.id = sd.product_id
+            WHERE s.status IN ('COMPLETED', 'PAID')
+                AND EXTRACT(MONTH FROM s."createdAt") = :month
+                AND EXTRACT(YEAR FROM s."createdAt") = :year
+            `,
+            {
+                replacements: {
+                    month,
+                    year,
+                },
+                type: QueryTypes.SELECT,
+            }
+        );
+
+        const ventas = Number(result[0]?.ventas || 0);
+        const costos = Number(result[0]?.costos || 0);
+        const ganancia = ventas - costos;
+
+        const margen = ventas > 0
+            ? (ganancia / ventas) * 100
+            : 0;
+
+        const ratioRetornoCosto = costos > 0
+            ? ganancia / costos
+            : 0;
+
+        const roi = costos > 0
+            ? (ganancia / costos) * 100
+            : 0;
+
+        response.ventas = Number(ventas.toFixed(2)); //Total en ventas
+        response.costos = Number(costos.toFixed(2)); //Total en Costos
+        response.ganancia = Number(ganancia.toFixed(2)); //Total de ganancia (ventas-costos)
+        response.margen = Number(margen.toFixed(2)); //Margen de ganancia
+        response.ratioRetornoCosto = Number(
+            ratioRetornoCosto.toFixed(2)
+        ); // Retorno de lo invertido. Por ejemplo si invertí un dolar y gane 3 entonces recuperé 3 veces el costo
+        response.roi = Number(
+            roi.toFixed(2)
+        ); // Porcentaje del retorno.
+
+        if (ventas === 0) {
+            warnings.push(
+                "No existen ventas registradas para el período seleccionado"
+            );
+        }
+
+        return {
+            success: true,
+            data: response,
+            warnings,
+            errors,
+        };
+    } catch (error) {
+        console.error(
+            "[getProfitabilityMetrics] Error rentabilidad",
+            error
+        );
+
+        return {
+            success: false,
+            data: response,
+            warnings,
+            errors: [
+                {
+                    module: "rentabilidad",
+                    message: error.message,
+                },
+            ],
+        };
+    }
+};
+
+export const getProfitabilityTrendMetrics = async () => {
+    try {
+        const today = new Date();
+
+        const month = today.getMonth() + 1;
+        const year = today.getFullYear();
+        const current = await getProfitabilityMetrics(
+            month,
+            year
+        );
+
+        let previousMonth = month - 1;
+        let previousYear = year;
+
+        if (previousMonth === 0) {
+            previousMonth = 12;
+            previousYear--;
+        }
+
+        const previous = await getProfitabilityMetrics(
+            previousMonth,
+            previousYear
+        );
+
+        const calculateTrend = (currentValue, previousValue) => {
+            if (previousValue === 0) {
+                return {
+                    change: currentValue,
+                    percentage: currentValue > 0 ? 100 : 0,
+                    direction:
+                        currentValue > 0
+                            ? "up"
+                            : "neutral",
+                };
+            }
+
+            const change = currentValue - previousValue;
+            const percentage =
+                (change / previousValue) * 100;
+
+            return {
+                change: Number(change.toFixed(2)),
+                percentage: Number(
+                    percentage.toFixed(2)
+                ),
+                direction:
+                    change > 0
+                        ? "up"
+                        : change < 0
+                            ? "down"
+                            : "neutral",
+            };
+        };
+
+        return {
+            success: true,
+            data: {
+                current: current.data,
+                previous: previous.data,
+                trend: {
+                    ventas: calculateTrend(
+                        current.data.ventas,
+                        previous.data.ventas
+                    ),
+                    costos: calculateTrend(
+                        current.data.costos,
+                        previous.data.costos
+                    ),
+                    ganancia: calculateTrend(
+                        current.data.ganancia,
+                        previous.data.ganancia
+                    ),
+                    margen: calculateTrend(
+                        current.data.margen,
+                        previous.data.margen
+                    ),
+                    ratioRetornoCosto: calculateTrend(
+                        current.data.ratioRetornoCosto,
+                        previous.data.ratioRetornoCosto
+                    ),
+                    roi: calculateTrend(
+                        current.data.roi,
+                        previous.data.roi
+                    ),
+                },
+            },
+            warnings: [
+                ...(current.warnings || []),
+                ...(previous.warnings || []),
+            ],
+            errors: [],
+        };
+    } catch (error) {
+        return {
+            success: false,
+            data: null,
+            warnings: [],
+            errors: [
+                {
+                    module: "rentabilidad_trend",
+                    message: error.message,
+                },
+            ],
+        };
+    }
+};
+
+export const getSalesRankingMetrics = async () => {
+    const warnings = [];
+    const errors = [];
+    const response = {
+        topProductos: [],
+        topCategorias: [],
+    };
+
+    try {
+        try {
+
+            const productos = await db.query(
+                `
+                SELECT
+                    p.name AS producto,
+
+                    COALESCE(
+                        SUM(sd.cantidad),
+                        0
+                    ) AS "unidadesVendidas",
+
+                    COALESCE(
+                        SUM(sd.subtotal),
+                        0
+                    ) AS ingresos
+                FROM "SaleDetails" sd
+                INNER JOIN "Products" p
+                    ON p.id = sd.product_id
+                INNER JOIN "Sales" s
+                    ON s.id = sd.sale_id
+                WHERE s.status = 'COMPLETED'
+                GROUP BY 
+                    p.id,
+                    p.name
+                ORDER BY "unidadesVendidas" DESC
+                LIMIT 5
+                `,
+                {
+                    type: QueryTypes.SELECT,
+                }
+            );
+
+            response.topProductos = productos.map((item, index) => ({
+                posicion: index + 1,
+                producto: item.producto,
+                unidadesVendidas: Number(
+                    item.unidadesVendidas
+                ),
+                ingresos: Number(
+                    Number(item.ingresos).toFixed(2)
+                ),
+            }));
+
+        } catch(error) {
+
+            errors.push({
+                module: "topProductos",
+                message: error.message,
+            });
+
+        }
+        try {
+
+            const categorias = await db.query(
+                `
+                SELECT
+                    COALESCE(
+                        p.category,
+                        'Sin categoría'
+                    ) AS categoria,
+                    COALESCE(
+                        SUM(sd.subtotal),
+                        0
+                    ) AS ventas
+                FROM "SaleDetails" sd
+                INNER JOIN "Products" p
+                    ON p.id = sd.product_id
+                INNER JOIN "Sales" s
+                    ON s.id = sd.sale_id
+                WHERE s.status = 'COMPLETED'
+                GROUP BY p.category
+                ORDER BY ventas DESC
+                LIMIT 5
+                `,
+                {
+                    type: QueryTypes.SELECT,
+                }
+            );
+
+            response.topCategorias = categorias.map((item, index) => ({
+                posicion: index + 1,
+                categoria: item.categoria,
+                ventas: Number(
+                    Number(item.ventas).toFixed(2)
+                ),
+            }));
+        } catch(error) {
+
+            errors.push({
+                module: "topCategorias",
+                message: error.message,
+            });
+
+        }
+        if (
+            response.topProductos.length === 0 &&
+            response.topCategorias.length === 0
+        ) {
+            warnings.push(
+                "No existen datos de ventas para generar rankings"
+            );
+        }
+        return {
+            success: errors.length === 0,
+            data: response,
+            warnings,
+            errors,
+        };
+    } catch(error) {
+
+        console.error(
+            "[getSalesRankingMetrics] Error ranking ventas",
+            error
+        );
+        return {
+            success: false,
+            data: response,
+            warnings,
+            errors: [
+                {
+                    module: "rankingVentas",
+                    message: error.message,
+                }
+            ],
+        };
+
+    }
+};
+export const getInventoryAlertsMetrics = async () => {
+    const warnings = [];
+    const errors = [];
+    const response = {
+        stockCritico: 0,
+        agotados: 0,
+    };
+
+    try {
+        try {
+            response.stockCritico = await Product.count({
+                where: {
+                    active: true,
+                    stock: {
+                        [Op.gt]: 0,
+                        [Op.lte]: 5,
+                    },
+                },
+            });
+        } catch(error) {
+
+            errors.push({
+                module: "stockCritico",
+                message: error.message,
+            });
+
+        }
+        try {
+            response.agotados = await Product.count({
+                where: {
+                    active: true,
+                    stock: 0,
+                },
+            });
+        } catch(error) {
+
+            errors.push({
+                module: "agotados",
+                message: error.message,
+            });
+
+        }
+
+        if (
+            response.stockCritico === 0 &&
+            response.agotados === 0
+        ) {
+
+            warnings.push(
+                "No existen alertas de inventario"
+            );
+
+        }
+        return {
+            success: errors.length === 0,
+            data: response,
+            warnings,
+            errors,
+        };
+    } catch(error) {
+        console.error(
+            "[getInventoryAlertsMetrics] Error alertas inventario",
+            error
+        );
+        return {
+            success: false,
+            data: response,
+            warnings,
+            errors: [
+                {
+                    module: "inventario",
+                    message: error.message,
+                }
+            ],
+        };
+
+    }
+};
+export const getExpiringProductsMetrics = async (page = 1, limit = 10) => {
+    const warnings = [];
+    const errors = [];
+    const response = {
+        products: [],
+        pagination: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+        },
+    };
+
+    try {
+        const offset = (page - 1) * limit;
+        const total = await Product.count({
+            where: {
+                active: true,
+                expirationDate: {
+                    [Op.lte]: db.literal(
+                        "CURRENT_DATE + INTERVAL '30 days'"
+                    ),
+                    [Op.gte]: db.literal(
+                        "CURRENT_DATE"
+                    ),
+                },
+            },
+        });
+        response.pagination.total = total;
+        response.pagination.totalPages = Math.ceil(
+            total / limit
+        );
+
+        const products = await Product.findAll({
+            where: {
+                active: true,
+                expirationDate: {
+                    [Op.lte]: db.literal(
+                        "CURRENT_DATE + INTERVAL '30 days'"
+                    ),
+
+                    [Op.gte]: db.literal(
+                        "CURRENT_DATE"
+                    ),
+                },
+            },
+            attributes: [
+                "id",
+                "name",
+                "barcode",
+                "category",
+                "stock",
+                "expirationDate",
+            ],
+            order: [
+                [
+                    "expirationDate",
+                    "ASC"
+                ]
+            ],
+            limit,
+            offset,
+
+        });
+
+        response.products = products.map(product => ({
+            id: product.id,
+            nombre: product.name,
+            codigo: product.barcode,
+            categoria: product.category,
+            stock: product.stock,
+            fechaVencimiento: product.expirationDate,
+        }));
+
+        if (products.length === 0) {
+
+            warnings.push(
+                "No existen productos próximos a vencer"
+            );
+
+        }
+
+        return {
+            success: errors.length === 0,
+            data: response,
+            warnings,
+            errors,
+        };
+
+    } catch(error) {
+        console.error(
+            "[getExpiringProductsMetrics] Error productos próximos a vencer",
+            error
+        );
+        return {
+            success:false,
+            data:response,
+            warnings,
+            errors:[
+                {
+                    module:"productosVencimiento",
+                    message:error.message
+                }
+            ],
+        };
+
     }
 };

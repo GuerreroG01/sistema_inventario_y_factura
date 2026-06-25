@@ -1,0 +1,43 @@
+export default function RankingSkeleton(){
+    return (
+        <div
+            className="
+                rounded-3xl
+                border
+                border-gray-200/80
+                bg-white
+                p-6
+                animate-pulse
+            "
+        >
+            <div
+                className="
+                    h-6
+                    bg-gray-200
+                    rounded-lg
+                    w-56
+                    mb-8
+                "
+            />
+            <div
+                className="
+                    grid
+                    grid-cols-2
+                    gap-5
+                "
+            >
+                {[1,2].map(i=>(
+
+                    <div
+                        key={i}
+                        className="
+                            h-72
+                            rounded-2xl
+                            bg-gray-50
+                        "
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}

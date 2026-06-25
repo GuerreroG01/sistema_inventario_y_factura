@@ -6,6 +6,10 @@ import {
 } from "lucide-react";
 
 import DashboardMetricsCards from "./dashboard/Components/DashboardMetricsCards";
+import ProfitabilityMetrics from "./dashboard/Components/ProfibilityMetrics/ProfitabilityMetrics";
+import SalesRankingMetrics from "./dashboard/SalesRankingMetrics/SalesRankingMetrics";
+import InventoryAlerts from "./dashboard/Components/InventoryAlerts/InventoryAlerts";
+import ExpiringProductsMetrics from "./dashboard/Components/ExpiringProductsMetrics/ExpiringProductsMetrics";
 
 export default function Home() {
   return (
@@ -51,56 +55,11 @@ export default function Home() {
           </div>
 
         </section>
-
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <ActionCard
-            title="Agregar Producto"
-            icon={<Plus />}
-            description="Registra un nuevo producto en tu inventario"
-          />
-
-          <ActionCard
-            title="Generar Factura"
-            icon={<FileText />}
-            description="Crea facturas rápidamente para tus clientes"
-          />
-
-          <ActionCard
-            title="Ver Reportes"
-            icon={<BarChart3 />}
-            description="Consulta el estado de tu inventario y ventas"
-          />
-        </section>
-
+        <ProfitabilityMetrics />
+        <SalesRankingMetrics />
+        <InventoryAlerts />
+        <ExpiringProductsMetrics />
       </main>
-    </div>
-  );
-}
-
-interface ActionCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
-function ActionCard({
-  title,
-  description,
-  icon,
-}: ActionCardProps) {
-  return (
-    <div className="rounded-2xl bg-white p-6 shadow hover:shadow-lg transition flex flex-col items-start gap-4">
-      <div className="text-indigo-600">
-        {icon}
-      </div>
-
-      <h3 className="font-bold text-lg">
-        {title}
-      </h3>
-
-      <p className="text-gray-500 text-sm">
-        {description}
-      </p>
     </div>
   );
 }

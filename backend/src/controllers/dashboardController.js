@@ -1,12 +1,14 @@
-import { getDashboardMetrics } from "../services/dashboardService.js";
+import { 
+    getDashboardMetrics, getProfitabilityTrendMetrics, getSalesRankingMetrics, getInventoryAlertsMetrics, getExpiringProductsMetrics
+} from "../services/dashboardService.js";
 
-export const dashboardController = async (req, res) => {
+export const dashboardMetrics = async (req, res) => {
     try {
         const result = await getDashboardMetrics();
 
         if (!result.success) {
             console.warn(
-                "[DashboardController] Dashboard con errores",
+                "[dashboardMetrics] Dashboard con errores",
                 result.errors
             );
         }
@@ -17,6 +19,70 @@ export const dashboardController = async (req, res) => {
             warnings: result.warnings,
             errors: result.errors,
         });
+
+    } catch (error) {
+        console.error(
+            "[dashboardMetrics] Error crítico",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Error obteniendo métricas del dashboard",
+            error: error.message,
+        });
+    }
+};
+
+export const profitabilityMetrics = async (req, res) => {
+    try {
+        const result = await getProfitabilityTrendMetrics();
+
+        if (!result.success) {
+            console.warn(
+                "[profitabilityMetrics] Error obteniendo rentabilidad",
+                result.errors
+            );
+        }
+
+        return res.status(200).json({
+            success: result.success,
+            data: result.data,
+            warnings: result.warnings,
+            errors: result.errors,
+        });
+
+    } catch (error) {
+        console.error(
+            "[profitabilityMetrics] Error crítico rentabilidad",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Error obteniendo métricas de rentabilidad",
+            error: error.message,
+        });
+    }
+};
+export const rankingMetrics = async (req, res) => {
+    try {
+        const result = await getSalesRankingMetrics();
+
+        if (!result.success) {
+            console.warn(
+                "[DashboardController] Error obteniendo los rankings",
+                result.errors
+            );
+        }
+
+        return res.status(200).json({
+            success: result.success,
+            data: result.data,
+            warnings: result.warnings,
+            errors: result.errors,
+        });
+
     } catch (error) {
         console.error(
             "[DashboardController] Error crítico",
@@ -25,7 +91,61 @@ export const dashboardController = async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Error obteniendo métricas del dashboard",
+            message: "Error obteniendo métricas",
+            error: error.message,
+        });
+    }
+};
+export const InventoryAlertsMetrics = async (req, res) => {
+    try {
+        const result = await getInventoryAlertsMetrics();
+        if (!result.success) {
+            console.warn(
+                "[InventoryAlertsMetrics] Error obteniendo los rankings",
+                result.errors
+            );
+        }
+        return res.status(200).json({
+            success: result.success,
+            data: result.data,
+            warnings: result.warnings,
+            errors: result.errors,
+        });
+    } catch (error) {
+        console.error(
+            "[InventoryAlertsMetrics] Error crítico",
+            error
+        );
+        return res.status(500).json({
+            success: false,
+            message: "Error obteniendo métricas",
+            error: error.message,
+        });
+    }
+};
+export const ExpiringProductsMetrics = async (req, res) => {
+    try {
+        const result = await getExpiringProductsMetrics();
+        if (!result.success) {
+            console.warn(
+                "[InventoryAlertsMetrics] Error obteniendo los rankings",
+                result.errors
+            );
+        }
+        return res.status(200).json({
+            success: result.success,
+            data: result.data,
+            warnings: result.warnings,
+            errors: result.errors,
+        });
+    } catch (error) {
+        console.error(
+            "[ExpiringProductsMetrics] Error crítico",
+            error
+        );
+        return res.status(500).json({
+            success: false,
+            message: "Error obteniendo métricas",
             error: error.message,
         });
     }
