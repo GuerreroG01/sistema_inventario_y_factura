@@ -124,7 +124,7 @@ export default function SalesRankingMetrics(){
                                     `${producto.unidadesVendidas} unidades vendidas`
                                 }
                                 value={
-                                    `$${producto.ingresos.toFixed(2)}`
+                                    `C$${producto.ingresos.toFixed(2)}`
                                 }
                             />
                         ))
@@ -143,7 +143,7 @@ export default function SalesRankingMetrics(){
                                 name={categoria.categoria}
                                 description="Ingresos generados"
                                 value={
-                                    `$${categoria.ventas.toFixed(2)}`
+                                    `C$${categoria.ventas.toFixed(2)}`
                                 }
                             />
 

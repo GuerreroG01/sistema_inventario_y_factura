@@ -40,7 +40,7 @@ export default function CreateSaleForm() {
                     </p>
 
                     <p className="text-3xl font-bold tracking-tight">
-                        ${total.toFixed(2)}
+                        C${total.toFixed(2)}
                     </p>
                 </div>
             </div>
@@ -131,7 +131,7 @@ export default function CreateSaleForm() {
                                             </p>
 
                                             <p className="text-xs text-slate-500">
-                                                ${p.price} · Stock {p.stock}
+                                                C${p.price} · Stock {p.stock}
                                             </p>
                                         </div>
                                     ))}
@@ -208,13 +208,11 @@ export default function CreateSaleForm() {
                                                 text-xs
                                             "
                                         />
-
                                         <span className="text-xs text-slate-500">
-                                            × ${i.precio_unitario}
+                                            × C${i.precio_unitario}
                                         </span>
                                     </div>
                                 </div>
-
                                 <button
                                     onClick={() => removeItem(index)}
                                     className="

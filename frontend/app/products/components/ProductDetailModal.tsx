@@ -86,7 +86,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         <DollarSign className="w-3.5 h-3.5" /> Precio al Público
                     </span>
                     <span className="text-2xl font-black text-indigo-950 tracking-tight">
-                        ${Number(product.price).toFixed(2)}
+                        C${Number(product.price).toFixed(2)}
                     </span>
                     </div>
 
@@ -158,7 +158,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                         <span className="text-xs font-medium text-slate-500">Costo Base de Compra</span>
                         <span className="text-sm font-semibold text-slate-700">
-                        {product.cost ? `$${Number(product.cost).toFixed(2)}` : "—"}
+                        {product.cost ? `C$${Number(product.cost).toFixed(2)}` : "—"}
                         </span>
                     </div>
                     

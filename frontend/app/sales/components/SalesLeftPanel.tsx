@@ -55,9 +55,7 @@ export default function SalesLeftPanel({
                     space-y-4
                 "
             >
-
                 <div className="flex justify-between items-center">
-
                     <div>
                         <h1
                             className="
@@ -80,8 +78,6 @@ export default function SalesLeftPanel({
                             Mostrando {sales.length} registros
                         </p>
                     </div>
-
-
                     <div
                         className="
                             px-3
@@ -95,9 +91,7 @@ export default function SalesLeftPanel({
                     >
                         {page}/{totalPages}
                     </div>
-
                 </div>
-
                 <div
                     className="
                         grid grid-cols-2
@@ -108,7 +102,6 @@ export default function SalesLeftPanel({
                         border border-slate-200/60
                     "
                 >
-
                     <div>
                         <label
                             className="
@@ -121,7 +114,6 @@ export default function SalesLeftPanel({
                         >
                             Desde
                         </label>
-
                         <input
                             type="date"
                             value={startDate}
@@ -143,8 +135,6 @@ export default function SalesLeftPanel({
                             "
                         />
                     </div>
-
-
                     <div>
                         <label
                             className="
@@ -157,7 +147,6 @@ export default function SalesLeftPanel({
                         >
                             Hasta
                         </label>
-
                         <input
                             type="date"
                             value={endDate}
@@ -179,11 +168,8 @@ export default function SalesLeftPanel({
                             "
                         />
                     </div>
-
                 </div>
-
             </div>
-
             <div
                 className="
                     flex-1
@@ -193,9 +179,7 @@ export default function SalesLeftPanel({
                     custom-scrollbar
                 "
             >
-
                 {sales.length === 0 ? (
-
                     <div
                         className="
                             h-full
@@ -222,8 +206,6 @@ export default function SalesLeftPanel({
                             >
                                 📄
                             </div>
-
-
                             <p
                                 className="
                                     mt-3
@@ -233,18 +215,11 @@ export default function SalesLeftPanel({
                             >
                                 No hay ventas disponibles
                             </p>
-
                         </div>
-
                     </div>
-
                 ) : (
-
                     sales.map((sale) => {
-
                         const active = selected?.id === sale.id;
-
-
                         return (
                             <div
                                 key={sale.id}
@@ -264,7 +239,6 @@ export default function SalesLeftPanel({
                                     }
                                 `}
                             >
-
                                 <div
                                     className="
                                         flex
@@ -272,9 +246,7 @@ export default function SalesLeftPanel({
                                         items-start
                                     "
                                 >
-
                                     <div>
-
                                         <div
                                             className="
                                                 flex
@@ -282,7 +254,6 @@ export default function SalesLeftPanel({
                                                 gap-2
                                             "
                                         >
-
                                             <h3
                                                 className="
                                                     font-bold
@@ -292,8 +263,6 @@ export default function SalesLeftPanel({
                                             >
                                                 Venta #{sale.id}
                                             </h3>
-
-
                                             {active && (
                                                 <span
                                                     className="
@@ -305,10 +274,7 @@ export default function SalesLeftPanel({
                                                     "
                                                 />
                                             )}
-
                                         </div>
-
-
                                         <p
                                             className="
                                                 text-[11px]
@@ -320,9 +286,6 @@ export default function SalesLeftPanel({
                                         </p>
 
                                     </div>
-
-
-
                                     <span
                                         className={`
                                             text-[10px]
@@ -336,11 +299,7 @@ export default function SalesLeftPanel({
                                     >
                                         {getStatusLabel(sale.status)}
                                     </span>
-
                                 </div>
-
-
-
                                 <div
                                     className="
                                         mt-4
@@ -349,7 +308,6 @@ export default function SalesLeftPanel({
                                         items-end
                                     "
                                 >
-
                                     <p
                                         className="
                                             text-[10px]
@@ -361,8 +319,6 @@ export default function SalesLeftPanel({
                                     >
                                         Total
                                     </p>
-
-
                                     <p
                                         className={`
                                             font-bold
@@ -374,7 +330,7 @@ export default function SalesLeftPanel({
                                             }
                                         `}
                                     >
-                                        $
+                                        C$
                                         {Number(sale.total).toLocaleString(
                                             "en-US",
                                             {
@@ -382,17 +338,12 @@ export default function SalesLeftPanel({
                                             }
                                         )}
                                     </p>
-
                                 </div>
-
                             </div>
                         );
                     })
-
                 )}
-
             </div>
-
             <div
                 className="
                     border-t
@@ -404,7 +355,6 @@ export default function SalesLeftPanel({
                     justify-between
                 "
             >
-
                 <button
                     disabled={page === 1}
                     onClick={() => setPage(page - 1)}
@@ -424,8 +374,6 @@ export default function SalesLeftPanel({
                 >
                     Anterior
                 </button>
-
-
                 <span
                     className="
                         text-xs
@@ -435,8 +383,6 @@ export default function SalesLeftPanel({
                 >
                     Página {page} de {totalPages}
                 </span>
-
-
                 <button
                     disabled={page === totalPages}
                     onClick={() => setPage(page + 1)}
@@ -456,9 +402,7 @@ export default function SalesLeftPanel({
                 >
                     Siguiente
                 </button>
-
             </div>
-
         </div>
     );
 }

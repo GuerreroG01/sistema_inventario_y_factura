@@ -163,7 +163,7 @@ function MetricCard({ title, value, isCurrency = false, Icon, variant, highlight
     };
 
     const formattedValue = isCurrency
-        ? `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        ? `C$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : value.toLocaleString();
 
     return (

@@ -55,7 +55,7 @@ export default function ProductCards() {
                     <div className="mt-5 space-y-3 text-gray-700">
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500">Precio</span>
-                        <span className="font-bold text-slate-900">${p.price}</span>
+                        <span className="font-bold text-slate-900">C${p.price}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500">Stock</span>
