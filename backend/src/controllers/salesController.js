@@ -164,6 +164,7 @@ export const createSale = async (req, res) => {
         cacheService.del(CacheKeys.PROFITABILITY);
         cacheService.del(CacheKeys.RANKINGMETRICS);
         cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.del(CacheKeys.PRODUCTSALERTS);
         cacheService.delByPrefix(CacheKeys.EXPIRINGPRODUCTS);
         return res.status(201).json({
             message: "Venta creada correctamente",
@@ -339,6 +340,7 @@ export const updateSaleStatus = async (req, res) => {
         cacheService.del(CacheKeys.PROFITABILITY);
         cacheService.del(CacheKeys.RANKINGMETRICS);
         cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.del(CacheKeys.PRODUCTSALERTS);
         cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
 
         return res.json({

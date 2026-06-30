@@ -1,3 +1,5 @@
+import { StockAlertProduct } from "../product";
+
 export interface InventoryAlertsData {
     stockCritico: number;
     agotados: number;

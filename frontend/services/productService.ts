@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Product } from "@/types/product";
+import { Product, StockAlerts } from "@/types/product";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -167,6 +167,24 @@ export async function autocompleteProducts(query: {
       error?.response?.data?.message ||
       error.message ||
       "Error en autocomplete de productos";
+
+    throw new Error(message);
+  }
+}
+export async function getStockAlerts(): Promise<StockAlerts> {
+  try {
+    const { data } = await api.get<{
+      success: boolean;
+      data: StockAlerts;
+    }>("/getStockAlerts");
+
+    return data.data;
+
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message ||
+      error.message ||
+      "Error al obtener alertas de stock";
 
     throw new Error(message);
   }

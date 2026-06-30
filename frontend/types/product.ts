@@ -15,3 +15,15 @@ export type Product = {
     createdAt?: string;
     updatedAt?: string;
 };
+export type StockAlertProduct = {
+    barcode?: string;
+    name: string;
+    category?: string;
+    price: number;
+    stock: number;
+};
+
+export type StockAlerts = {
+    exhausted: StockAlertProduct[];
+    critical: StockAlertProduct[];
+};

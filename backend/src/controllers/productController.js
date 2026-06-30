@@ -4,6 +4,7 @@ import { normalizeDate } from "../utils/formatters.js"
 import { invalidateCategoryCache, clearCategoryCache, getCategoryCache, setCategoryCache  } from "../utils/categoryCache.js";
 import InventoryMovService from "../Services/Inventory_MovService.js";
 import { cacheService, CacheKeys } from "../services/cache/index.js";
+import { getCriticalStockProducts } from "../services/ProductService.js";
 
 const generateBarcode = async () => {
     let barcode;
@@ -67,6 +68,7 @@ export const createProduct = async (req, res) => {
         cacheService.del(CacheKeys.PROFITABILITY);
         cacheService.del(CacheKeys.RANKINGMETRICS);
         cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.del(CacheKeys.PRODUCTSALERTS);
         cacheService.delByPrefix(CacheKeys.EXPIRINGPRODUCTS);
         return res.status(201).json(product);
 
@@ -256,6 +258,7 @@ export const updateProduct = async (req, res) => {
         cacheService.del(CacheKeys.PROFITABILITY);
         cacheService.del(CacheKeys.RANKINGMETRICS);
         cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.del(CacheKeys.PRODUCTSALERTS);
         cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
         return res.json(product);
 
@@ -301,6 +304,7 @@ export const deleteProduct = async (req, res) => {
         cacheService.del(CacheKeys.PROFITABILITY);
         cacheService.del(CacheKeys.RANKINGMETRICS);
         cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.del(CacheKeys.PRODUCTSALERTS);
         cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
         clearCategoryCache();
 
@@ -432,7 +436,24 @@ export const getProductsAutocomplete = async (req, res) => {
     }
 };
 
+export const getStockAlerts = async (req, res) => {
+    try {
+        const alerts = await getCriticalStockProducts();
+
+        res.status(200).json({
+            success: true,
+            data: alerts,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 export default { 
     createProduct, getProducts, getProductById, updateProduct, deleteProduct, getProductStats, 
-    getCategories, getProductsAutocomplete
+    getCategories, getProductsAutocomplete, getStockAlerts
 };

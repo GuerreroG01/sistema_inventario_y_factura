@@ -3,6 +3,7 @@ export const CacheKeys = {
     PROFITABILITY: "profitability.metrics",
     RANKINGMETRICS: "sales.ranking",
     INVENTORYALERTS: "inventory.alerts",
+    PRODUCTSALERTS: "products.alerts",
     EXPIRINGPRODUCTS: "products.expiring",
     PRODUCTS: "products",
     SALES: "sales",
