@@ -7,6 +7,8 @@ import { getSaleStatuses, clearStatusCache } from "../utils/salesStatusCache.js"
 import SaleDetail from "../models/SaleDetails.js";
 import InventoryMovService from "../Services/Inventory_MovService.js";
 import Product from "../models/Products.js";
+import { cacheService, CacheKeys } from "../services/cache/index.js";
+
 export const getSales = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -111,6 +113,7 @@ export const createSale = async (req, res) => {
             client_id
         }, { transaction: t });
 
+
         let total = 0;
 
         const details = [];
@@ -156,14 +159,18 @@ export const createSale = async (req, res) => {
         await SaleDetail.bulkCreate(details, { transaction: t });
 
         await sale.update({ total }, { transaction: t });
-
         await t.commit();
-
+        cacheService.del(CacheKeys.DASHBOARDCARDS);
+        cacheService.del(CacheKeys.PROFITABILITY);
+        cacheService.del(CacheKeys.RANKINGMETRICS);
+        cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.delByPrefix(CacheKeys.EXPIRINGPRODUCTS);
         return res.status(201).json({
             message: "Venta creada correctamente",
             sale,
             total
         });
+        
 
     } catch (error) {
         await t.rollback();
@@ -316,6 +323,11 @@ export const updateSaleStatus = async (req, res) => {
         clearStatusCache();
 
         await t.commit();
+        cacheService.del(CacheKeys.DASHBOARDCARDS);
+        cacheService.del(CacheKeys.PROFITABILITY);
+        cacheService.del(CacheKeys.RANKINGMETRICS);
+        cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
 
         return res.json({
             message: "Status actualizado correctamente",
@@ -324,7 +336,7 @@ export const updateSaleStatus = async (req, res) => {
 
     } catch (error) {
         await t.rollback();
-
+        
         console.error("updateSaleStatus error:", error);
 
         return res.status(500).json({

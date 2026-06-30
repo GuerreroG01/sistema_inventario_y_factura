@@ -8,7 +8,6 @@ import ProductModal from "./ProductModal";
 export default function HomeClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const handleProductCreated = () => {
-    console.log("Producto creado correctamente");
     setIsModalOpen(false);
   };
 

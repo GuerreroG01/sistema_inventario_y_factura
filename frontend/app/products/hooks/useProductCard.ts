@@ -58,11 +58,7 @@ export function useProductCard() {
         setLoading(true);
 
         try {
-            console.log("🔥 Ejecutando fetchProducts página:", pageToFetch);
-
             const data = await getProducts(pageToFetch, appliedFilters);
-
-            console.log("📦 Productos recibidos:", data.products);
 
             setProducts(data.products || []);
             setTotalPages(data.totalPages || 1);

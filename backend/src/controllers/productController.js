@@ -3,6 +3,7 @@ import { ValidationError, UniqueConstraintError, fn, col, literal, Op } from "se
 import { normalizeDate } from "../utils/formatters.js"
 import { invalidateCategoryCache, clearCategoryCache, getCategoryCache, setCategoryCache  } from "../utils/categoryCache.js";
 import InventoryMovService from "../Services/Inventory_MovService.js";
+import { cacheService, CacheKeys } from "../services/cache/index.js";
 
 const generateBarcode = async () => {
     let barcode;
@@ -62,6 +63,11 @@ export const createProduct = async (req, res) => {
         }
 
         invalidateCategoryCache(category);
+        cacheService.del(CacheKeys.DASHBOARDCARDS);
+        cacheService.del(CacheKeys.PROFITABILITY);
+        cacheService.del(CacheKeys.RANKINGMETRICS);
+        cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.delByPrefix(CacheKeys.EXPIRINGPRODUCTS);
         return res.status(201).json(product);
 
     } catch (error) {
@@ -246,7 +252,11 @@ export const updateProduct = async (req, res) => {
         if (category !== undefined && oldCategory !== product.category) {
             clearCategoryCache();
         }
-
+        cacheService.del(CacheKeys.DASHBOARDCARDS);
+        cacheService.del(CacheKeys.PROFITABILITY);
+        cacheService.del(CacheKeys.RANKINGMETRICS);
+        cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
         return res.json(product);
 
     } catch (error) {
@@ -283,14 +293,24 @@ export const deleteProduct = async (req, res) => {
             });
         }
 
-        await product.destroy();
+        await product.update({
+            active: false
+        });
+
+        cacheService.del(CacheKeys.DASHBOARDCARDS);
+        cacheService.del(CacheKeys.PROFITABILITY);
+        cacheService.del(CacheKeys.RANKINGMETRICS);
+        cacheService.del(CacheKeys.INVENTORYALERTS);
+        cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
         clearCategoryCache();
 
         return res.json({
-            message: `Producto con id ${id} eliminado correctamente.`
+            message: `Producto con id ${id} desactivado correctamente.`
         });
 
     } catch (error) {
+        console.error("[deleteProduct]", error);
+
         return res.status(500).json({
             error: "delete_product_error",
             message: "Ocurrió un error inesperado al eliminar el producto."

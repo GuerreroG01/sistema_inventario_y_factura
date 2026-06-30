@@ -33,7 +33,6 @@ export default function ProductModal({
     onSubmitSuccess,
     productToEdit = null,
 }: ProductModalProps) {
-    console.log("Modal recibió onSubmitSuccess:", onSubmitSuccess);
     const today = new Date().toISOString().split("T")[0];
     const [formData, setFormData] = useState(initialFormState(today));
     const [isSubmitting, setIsSubmitting] = useState(false);
