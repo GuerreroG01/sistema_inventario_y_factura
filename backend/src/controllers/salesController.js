@@ -302,20 +302,32 @@ export const updateSaleStatus = async (req, res) => {
             }
         }
 
-        if (status === "REFUNDED" && previousStatus !== "REFUNDED") {
-
+        if (status === "COMPLETED" && previousStatus === "CANCELLED") {
             const details = await SaleDetail.findAll({
                 where: { sale_id: id },
                 transaction: t
             });
-
             for (const item of details) {
+                const product = await Product.findByPk(item.product_id, { 
+                    transaction: t 
+                });
+
+                if (!product) {
+                    throw new Error(`Producto no encontrado: ${item.product_id}`);
+                }
+
+                await product.update({
+                    stock: Number(product.stock) - Number(item.cantidad)
+                }, { 
+                    transaction: t 
+                });
+
                 await InventoryMovService.create({
                     product_id: item.product_id,
-                    tipo: "devolución",
+                    tipo: "salida",
                     cantidad: item.cantidad,
                     referencia: sale.id,
-                    observacion: refundObservation
+                    observacion: "Reactivación de venta cancelada"
                 }, t);
             }
         }
