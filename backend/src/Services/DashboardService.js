@@ -32,45 +32,33 @@ export const getDashboardMetrics = async () => {
                 );
 
                 try {
-
-                    const ventas = await Sales.findOne({
-                        attributes: [
-                            [
-                                db.literal(`
-                                    COALESCE(
-                                        SUM(
-                                            CASE 
-                                                WHEN fecha >= '${startOfDay.toISOString()}'
-                                                THEN total
-                                                ELSE 0
-                                            END
-                                        ),0
-                                    )
-                                `),
-                                "ventasHoy",
-                            ],
-                            [
-                                db.literal(`
-                                    COALESCE(
-                                        SUM(
-                                            CASE 
-                                                WHEN fecha >= '${startOfMonth.toISOString()}'
-                                                THEN total
-                                                ELSE 0
-                                            END
-                                        ),0
-                                    )
-                                `),
-                                "ventasMes",
-                            ],
-                        ],
-                        raw: true,
+                    const ventasHoy = await Sales.sum("total", {
+                        where: {
+                            fecha: {
+                                [Op.gte]: startOfDay,
+                            },
+                            status: {
+                                [Op.in]: ["COMPLETED", "PAID"/*, "PENDING"*/],
+                            },
+                        },
                     });
-                    if (!ventas) {
+
+                    const ventasMes = await Sales.sum("total", {
+                        where: {
+                            fecha: {
+                                [Op.gte]: startOfMonth,
+                            },
+                            status: {
+                                [Op.in]: ["COMPLETED", "PAID"/*, "PENDING"*/],
+                            },
+                        },
+                    });
+
+                    response.ventasHoy = Number(ventasHoy ?? 0);
+                    response.ventasMes = Number(ventasMes ?? 0);
+
+                    if (ventasHoy === null && ventasMes === null) {
                         warnings.push("No se encontraron registros de ventas");
-                    } else {
-                        response.ventasHoy = Number(ventas.ventasHoy || 0);
-                        response.ventasMes = Number(ventas.ventasMes || 0);
                     }
                 } catch (error) {
                     errors.push({
@@ -121,24 +109,24 @@ export const getDashboardMetrics = async () => {
                         `
                         SELECT
                             COALESCE(
-                                SUM(
-                                    (sd.precio_unitario - p.cost)
-                                    * sd.cantidad
-                                ),
+                                SUM((sd.precio_unitario - p.cost) * sd.cantidad),
                                 0
                             ) AS ganancia
                         FROM "SaleDetails" sd
                         INNER JOIN "Products" p
                             ON p.id = sd.product_id
+                        INNER JOIN "Sales" s
+                            ON s.id = sd.sale_id
+                        WHERE s.status NOT IN ('PENDING', 'REFUNDED', 'CANCELLED')
                         `,
                         {
                             type: QueryTypes.SELECT,
                         }
                     );
-                    response.ganancia = Number(
-                        result?.[0]?.ganancia || 0
-                    );
-                    if (!result?.length) {
+
+                    response.ganancia = Number(result?.[0]?.ganancia ?? 0);
+
+                    if (response.ganancia === 0) {
                         warnings.push(
                             "No se encontraron datos para calcular la ganancia"
                         );
@@ -148,6 +136,7 @@ export const getDashboardMetrics = async () => {
                         "[getDashboardMetrics] Error ganancia",
                         error
                     );
+
                     errors.push({
                         module: "ganancia",
                         message: error.message,
@@ -601,6 +590,9 @@ export const getExpiringProductsMetrics = async (page = 1, limit = 10) => {
                         [Op.lte]: db.literal("CURRENT_DATE + INTERVAL '30 days'"),
                         [Op.gte]: db.literal("CURRENT_DATE"),
                     },
+                    stock: {
+                        [Op.ne]: 0,
+                    },
                 },
             });
 
@@ -613,6 +605,9 @@ export const getExpiringProductsMetrics = async (page = 1, limit = 10) => {
                     expirationDate: {
                         [Op.lte]: db.literal("CURRENT_DATE + INTERVAL '30 days'"),
                         [Op.gte]: db.literal("CURRENT_DATE"),
+                    },
+                    stock: {
+                        [Op.ne]: 0,
                     },
                 },
                 attributes: [

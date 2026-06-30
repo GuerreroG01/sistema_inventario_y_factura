@@ -53,7 +53,7 @@ export function ExpiringProductRow({product}:Props){
             <td className="px-6 py-4 text-right">
                 <div>
                     <p className="font-semibold text-red-600">
-                        {days} días
+                        {days === 0 ? "Expirado" : `${days} días`}
                     </p>
                     <p className="text-xs text-gray-400">
                         {new Date(product.fechaVencimiento)
