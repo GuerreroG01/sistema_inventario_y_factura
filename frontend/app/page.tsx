@@ -10,6 +10,7 @@ import ProfitabilityMetrics from "./dashboard/Components/ProfibilityMetrics/Prof
 import SalesRankingMetrics from "./dashboard/SalesRankingMetrics/SalesRankingMetrics";
 import InventoryAlerts from "./dashboard/Components/InventoryAlerts/InventoryAlerts";
 import ExpiringProductsMetrics from "./dashboard/Components/ExpiringProductsMetrics/ExpiringProductsMetrics";
+import InventoryMovements from "./dashboard/Components/InventoryMovements/InventoryMovements";
 
 export default function Home() {
   return (
@@ -59,6 +60,7 @@ export default function Home() {
         <SalesRankingMetrics />
         <InventoryAlerts />
         <ExpiringProductsMetrics />
+        <InventoryMovements />
       </main>
     </div>
   );

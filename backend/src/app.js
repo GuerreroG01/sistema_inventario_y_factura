@@ -5,6 +5,7 @@ import Product from "./models/Products.js";
 import productRoutes from "./routes/productRoutes.js";
 import salesRoutes from "./routes/salesRoutes.js"
 import dashboardRoutes from "./routes/dashboardRoutes.js"
+import inventoryMovRoutes from "./routes/inventoryMovRoutes.js";
 import { syncSequence } from "./utils/syncSequence.js";
 import "./models/associations.js";
 
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/api/products", productRoutes);
 app.use("/api/sales", salesRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/inventory-movements", inventoryMovRoutes);
 
 export default app;
 
