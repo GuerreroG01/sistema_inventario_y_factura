@@ -1,0 +1,93 @@
+import { createExpense, getAllExpenses, getExpenseById, updateExpense, deleteExpense } from "../services/expenseService.js";
+
+export const create = async (req, res) => {
+    try {
+        const expense = await createExpense(req.body);
+
+        return res.status(201).json({
+            message: "Egreso creado correctamente",
+            data: expense
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
+};
+
+export const getAll = async (req, res) => {
+    try {
+
+        const filters = {
+            page: req.query.page,
+            category: req.query.category,
+            from: req.query.from,
+            to: req.query.to
+        };
+
+        const { data, pagination } = await getAllExpenses(filters);
+
+        return res.status(200).json({
+            message: "Lista de expenses",
+            data,
+            pagination
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
+};
+
+export const getById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const expense = await getExpenseById(id);
+
+        return res.status(200).json({
+            message: "Egreso encontrado",
+            data: expense
+        });
+
+    } catch (error) {
+        return res.status(404).json({
+            message: error.message
+        });
+    }
+};
+
+export const update = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const updated = await updateExpense(id, req.body);
+
+        return res.status(200).json({
+            message: "Egreso actualizado correctamente",
+            data: updated
+        });
+
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message
+        });
+    }
+};
+
+export const deleteValue = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await deleteExpense(id);
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message
+        });
+    }
+};
