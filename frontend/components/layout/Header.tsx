@@ -12,6 +12,7 @@ export default function Header() {
     const navItems: NavItem[] = [
         { label: "Productos", href: "/products" },
         { label: "Ventas", href: "/sales" },
+        { label: "Gastos", href: "/expense" },
         //{ label: "Reportes", href: "#" },
     ];
 
