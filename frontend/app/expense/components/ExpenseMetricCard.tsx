@@ -1,17 +1,11 @@
 import { CostIcon } from "../../dashboard/Components/ProfibilityMetrics/Icons/CostIcon";
-import { ArrowUpTrend } from "../../dashboard/Components/ProfibilityMetrics/Icons/ArrowUpTrend";
-import { ArrowDownTrend } from "../../dashboard/Components/ProfibilityMetrics/Icons/ArrowDownTrend";
 
 interface Props {
     label: string;
     value: string;
-    change: {
-        percentage: number | null;
-        direction: "up" | "down" | "neutral";
-    };
     onCreate?: () => void;
 }
-export default function ExpenseMetricCard({ label, value, change, onCreate }: Props) {
+export default function ExpenseMetricCard({ label, value, onCreate }: Props) {
     return (
         <div className="
             group relative
@@ -43,58 +37,7 @@ export default function ExpenseMetricCard({ label, value, change, onCreate }: Pr
                         Registro de Egresos del Negocio
                     </p>
                 </div>
-
-                <div className="
-                    p-3 rounded-2xl
-                    bg-gray-100
-                    border border-gray-200
-                    shadow-sm
-                    group-hover:bg-gray-200
-                    transition
-                ">
-                    <CostIcon className="w-5 h-5 text-gray-700" />
-                </div>
-
-            </div>
-            <div className="relative flex justify-between items-end">
-                <div className="flex flex-col">
-                    <span className="
-                        text-4xl font-bold font-mono text-gray-900
-                        tracking-tight leading-none
-                    ">
-                        C${value}
-                    </span>
-
-                    <span className="text-xs text-gray-400 mt-1">
-                        Total acumulado
-                    </span>
-                </div>
                 <div className="flex flex-col items-end gap-2">
-                    {change.percentage !== null && (
-                        <span
-                            className={`
-                                inline-flex items-center gap-1
-                                text-xs font-semibold
-                                px-3 py-1.5 rounded-full
-                                shadow-sm border
-                                ${
-                                    change.direction === "up"
-                                        ? "bg-rose-50 text-rose-600 border-rose-100"
-                                        : change.direction === "down"
-                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                        : "bg-gray-50 text-gray-500 border-gray-200"
-                                }
-                            `}
-                        >
-                            {change.direction === "up" && <ArrowUpTrend />}
-                            {change.direction === "down" && <ArrowDownTrend />}
-
-                            <span className="font-mono">
-                                {change.percentage >= 0 ? "+" : ""}
-                                {change.percentage.toFixed(2)}%
-                            </span>
-                        </span>
-                    )}
                     <button
                         onClick={onCreate}
                         className="
@@ -118,7 +61,20 @@ export default function ExpenseMetricCard({ label, value, change, onCreate }: Pr
                         <span className="text-sm leading-none">+</span>
                         Nuevo egreso
                     </button>
+                </div>
+            </div>
+            <div className="relative flex justify-between items-end">
+                <div className="flex flex-col">
+                    <span className="
+                        text-4xl font-bold font-mono text-gray-900
+                        tracking-tight leading-none
+                    ">
+                        C${value}
+                    </span>
 
+                    <span className="text-xs text-gray-400 mt-1">
+                        Total acumulado
+                    </span>
                 </div>
             </div>
         </div>

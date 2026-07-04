@@ -76,8 +76,20 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
         }
     };
 
+    const updateFilter = (
+        key: keyof Filters,
+        value: string
+    ) => {
+        setFilters((prev) => ({
+            ...prev,
+            [key]: value,
+        }));
+
+        setPage(1);
+    };
+
     return {
-        expenses, pagination, loading, error, page, setPage, filters, setFilters, addExpense,
+        expenses, pagination, loading, error, page, setPage, filters, setFilters, updateFilter, addExpense,
         editExpense, removeExpense, refresh: fetchExpenses
     };
 }

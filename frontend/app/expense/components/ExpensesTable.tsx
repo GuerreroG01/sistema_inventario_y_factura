@@ -3,15 +3,22 @@ import { Pencil, Trash2 } from "lucide-react";
 
 interface Props {
     expenses: Expense[];
+    page: number;
+    pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    } | null;
+    onPageChange: (page: number) => void;
     onEdit: (expense: Expense) => void;
     onDelete: (id: number) => void;
 }
 
-export default function ExpensesTable({
-    expenses,
-    onEdit,
-    onDelete
-}: Props) {
+export default function ExpensesTable({ expenses, page, pagination, onPageChange, onEdit, onDelete }: Props) {
+    const pages = pagination
+        ? Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+        : [];
     return (
         <div className="rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden">
 
@@ -53,7 +60,7 @@ export default function ExpensesTable({
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-gray-600">
-                                    {new Date(exp.date).toLocaleString()}
+                                    {exp.date.split("-").reverse().join("/")}
                                 </td>
                                 <td className="px-6 py-4 text-right font-mono text-rose-600">
                                     C${Number(exp.amount).toFixed(2)}
@@ -106,10 +113,93 @@ export default function ExpensesTable({
                             </tr>
                         ))}
                     </tbody>
-
                 </table>
             </div>
-
+            {pagination && pagination.totalPages > 1 && (
+                <div className="border-t border-gray-100 px-6 py-4">
+                    <div className="mb-4 flex justify-between items-center text-sm text-gray-500">
+                        <span>
+                            Mostrando página{" "}
+                            <span className="font-semibold text-gray-700">
+                                {pagination.page}
+                            </span>{" "}
+                            de{" "}
+                            <span className="font-semibold text-gray-700">
+                                {pagination.totalPages}
+                            </span>
+                        </span>
+                        <span>
+                            {pagination.total} registros
+                        </span>
+                    </div>
+                    <div className="flex justify-center gap-2 flex-wrap">
+                        <button
+                            type="button"
+                            disabled={page === 1}
+                            onClick={() => onPageChange(page - 1)}
+                            className="
+                                px-4
+                                py-2
+                                rounded-xl
+                                bg-gray-100
+                                text-gray-700
+                                font-medium
+                                border border-gray-200
+                                shadow-sm
+                                hover:bg-gray-200
+                                disabled:opacity-50
+                                disabled:cursor-not-allowed
+                                transition-all
+                            "
+                        >
+                            Anterior
+                        </button>
+                        {pages.map((p) => (
+                            <button
+                                key={p}
+                                type="button"
+                                onClick={() => onPageChange(p)}
+                                className={`
+                                    min-w-[42px]
+                                    h-[42px]
+                                    rounded-xl
+                                    font-semibold
+                                    border
+                                    transition-all
+                                    ${
+                                        p === page
+                                            ? "bg-indigo-600 border-indigo-600 text-white shadow-md scale-105"
+                                            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                                    }
+                                `}
+                            >
+                                {p}
+                            </button>
+                        ))}
+                        <button
+                            type="button"
+                            disabled={page === pagination.totalPages}
+                            onClick={() => onPageChange(page + 1)}
+                            className="
+                                px-4
+                                py-2
+                                rounded-xl
+                                bg-gray-100
+                                text-gray-700
+                                font-medium
+                                border border-gray-200
+                                shadow-sm
+                                hover:bg-gray-200
+                                disabled:opacity-50
+                                disabled:cursor-not-allowed
+                                transition-all
+                            "
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

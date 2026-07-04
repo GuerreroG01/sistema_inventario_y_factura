@@ -5,20 +5,16 @@ import { useExpenses } from "./hooks/useExpense";
 import ExpenseMetricCard from "./components/ExpenseMetricCard";
 import ExpensesTable from "./components/ExpensesTable";
 import ExpenseForm from "./components/ExpensesForm";
+import ExpenseFilters from "./components/ExpenseFilters";
 import { Expense } from "@/types/Expense";
 
 export default function ExpensesPage() {
 
-    const {
-        expenses,
-        addExpense,
-        editExpense,
-        removeExpense
-    } = useExpenses();
+    const {expenses, pagination, page, setPage, addExpense, editExpense, removeExpense, filters, updateFilter, refresh} = useExpenses();
 
     const [isOpen, setIsOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-
+    const [filtersOpen, setFiltersOpen] = useState(false);
     const handleCreate = () => {
         setSelectedExpense(null);
         setIsOpen(true);
@@ -38,15 +34,27 @@ export default function ExpensesPage() {
                     .reduce((acc, e) => acc + Number(e.amount), 0)
                     .toFixed(2)
                 }
-                change={{
-                    percentage: 5.2,
-                    direction: "up"
-                }}
                 onCreate={handleCreate}
+            />
+            <ExpenseFilters
+                filters={filters}
+                updateFilter={updateFilter}
+                applyFilters={refresh}
+                open={filtersOpen}
+                setOpen={setFiltersOpen}
+                categories={[
+                    "Servicios",
+                    "Alquiler",
+                    "Compras",
+                    "Transporte",
+                ]}
             />
 
             <ExpensesTable
                 expenses={expenses}
+                page={page}
+                pagination={pagination}
+                onPageChange={setPage}
                 onEdit={handleEdit}
                 onDelete={removeExpense}
             />
