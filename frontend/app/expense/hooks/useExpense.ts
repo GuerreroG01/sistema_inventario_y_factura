@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getExpenses, createExpense, updateExpense, deleteExpense } from "@/services/expenseService";
+import { getExpenses, createExpense, updateExpense, deleteExpense, getExpenseCategories } from "@/services/expenseService";
 import { Expense } from "@/types/Expense"
 
 type Filters = {
@@ -22,7 +22,9 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
     const [filters, setFilters] = useState<Filters>(initialFilters);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<unknown>(null);
-
+    const [categories, setCategories] = useState<string[]>([]);
+    const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+    const [categoriesLoading, setCategoriesLoading] = useState(false);
     const fetchExpenses = async () => {
         try {
             setLoading(true);
@@ -37,6 +39,20 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
             setError(err);
         } finally {
             setLoading(false);
+        }
+    };
+    const fetchCategories = async () => {
+        try {
+            setCategoriesLoading(true);
+
+            const data = await getExpenseCategories();
+            setCategories(data);
+
+            setCategoriesLoaded(true);
+        } catch (err) {
+            setError(err);
+        } finally {
+            setCategoriesLoading(false);
         }
     };
 
@@ -90,6 +106,6 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
 
     return {
         expenses, pagination, loading, error, page, setPage, filters, setFilters, updateFilter, addExpense,
-        editExpense, removeExpense, refresh: fetchExpenses
+        editExpense, removeExpense, refresh: fetchExpenses, fetchCategories, categories, categoriesLoaded, categoriesLoading
     };
 }

@@ -10,7 +10,10 @@ import { Expense } from "@/types/Expense";
 
 export default function ExpensesPage() {
 
-    const {expenses, pagination, page, setPage, addExpense, editExpense, removeExpense, filters, updateFilter, refresh} = useExpenses();
+    const {
+        expenses, pagination, page, setPage, addExpense, editExpense, removeExpense, filters, updateFilter, refresh, 
+        categories, categoriesLoaded, categoriesLoading, fetchCategories
+    } = useExpenses();
 
     const [isOpen, setIsOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -42,12 +45,10 @@ export default function ExpensesPage() {
                 applyFilters={refresh}
                 open={filtersOpen}
                 setOpen={setFiltersOpen}
-                categories={[
-                    "Servicios",
-                    "Alquiler",
-                    "Compras",
-                    "Transporte",
-                ]}
+                categories={categories}
+                categoriesLoaded={categoriesLoaded}
+                categoriesLoading={categoriesLoading}
+                fetchCategories={fetchCategories}
             />
 
             <ExpensesTable

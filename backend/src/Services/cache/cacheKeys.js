@@ -7,5 +7,5 @@ export const CacheKeys = {
     EXPIRINGPRODUCTS: "products.expiring",
     PRODUCTS: "products",
     SALES: "sales",
-    CATEGORIES: "categories",
+    CATEGORIESEXP: "categories.expenses",
 };

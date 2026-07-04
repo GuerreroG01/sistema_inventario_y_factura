@@ -1,12 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import {
     Calendar,
     FolderOpen,
     SlidersHorizontal,
     ChevronDown,
-    ChevronUp,
-    X,
+    ChevronUp
 } from "lucide-react";
 
 type Filters = {
@@ -22,16 +22,21 @@ type Props = {
     open: boolean;
     setOpen: (v: boolean) => void;
     categories: string[];
+    categoriesLoaded: boolean;
+    categoriesLoading: boolean;
+    fetchCategories: () => void;
 };
 
 export default function ExpenseFilters({
-    filters,
-    updateFilter,
-    applyFilters,
-    open,
-    setOpen,
-    categories,
+    filters, updateFilter, applyFilters, open, setOpen, categories, categoriesLoaded, categoriesLoading, fetchCategories
 }: Props) {
+
+    useEffect(() => {
+        if (open && !categoriesLoaded) {
+            fetchCategories();
+        }
+    }, [open]);
+
     const hasActiveFilters = Object.values(filters).some(
         (v) => v !== "" && v !== undefined && v !== null
     );
@@ -113,16 +118,30 @@ export default function ExpenseFilters({
                             <div className="relative">
                                 <FolderOpen className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
 
+                                {categoriesLoading && (
+                                    <div className="absolute right-3 top-3">
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600" />
+                                    </div>
+                                )}
+
                                 <select
                                     value={filters.category ?? ""}
                                     onChange={(e) => updateFilter("category", e.target.value)}
-                                    className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                                    disabled={categoriesLoading}
+                                    className={`w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 ${
+                                        categoriesLoading ? "opacity-60 cursor-not-allowed" : ""
+                                    }`}
                                 >
-                                    <option value="">Todas las categorías</option>
+                                    <option value="">
+                                        {categoriesLoading ? "Cargando categorías..." : "Todas las categorías"}
+                                    </option>
 
-                                    {categories.map((cat) => (
-                                        <option key={cat}>{cat}</option>
-                                    ))}
+                                    {!categoriesLoading &&
+                                        categories.map((cat) => (
+                                            <option key={cat} value={cat}>
+                                                {cat}
+                                            </option>
+                                        ))}
                                 </select>
                             </div>
                         </div>

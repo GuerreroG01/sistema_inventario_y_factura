@@ -102,3 +102,13 @@ export async function deleteExpense(id: number): Promise<void> {
     );
   }
 }
+export async function getExpenseCategories(): Promise<string[]> {
+  try {
+    const { data } = await api.get<{ message: string; data: string[]; }>("/categories");
+    return data.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message || "Error al obtener categorías"
+    );
+  }
+}

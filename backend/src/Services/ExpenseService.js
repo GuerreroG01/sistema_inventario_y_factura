@@ -1,8 +1,8 @@
 import Expense from "../models/Expense.js";
 import { Op } from "sequelize";
+import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
 
 export const createExpense = async (data) => {
-
     const expense = await Expense.create({
         description: data.description,
         amount: data.amount,
@@ -10,6 +10,7 @@ export const createExpense = async (data) => {
         date: data.date,
         payment_method: data.payment_method
     });
+    cacheService.del(CacheKeys.CATEGORIESEXP);
 
     return expense;
 };
@@ -56,9 +57,7 @@ export const getAllExpenses = async ({ page = 1, limit = 10, category, from, to 
 };
 
 export const getExpenseById = async (id) => {
-
     const expense = await Expense.findByPk(id);
-
     if (!expense) {
         throw new Error("Egreso no encontrado");
     }
@@ -67,9 +66,7 @@ export const getExpenseById = async (id) => {
 };
 
 export const updateExpense = async (id, data) => {
-
     const expense = await Expense.findByPk(id);
-
     if (!expense) {
         throw new Error("Egreso no encontrado");
     }
@@ -81,21 +78,32 @@ export const updateExpense = async (id, data) => {
         date: data.date ?? expense.date,
         payment_method: data.payment_method ?? expense.payment_method
     });
-
+    cacheService.del(CacheKeys.CATEGORIESEXP);
     return expense;
 };
 
 export const deleteExpense = async (id) => {
-
     const expense = await Expense.findByPk(id);
-
     if (!expense) {
         throw new Error("Egreso no encontrado");
     }
-
     await expense.destroy();
-
     return {
         message: "Egreso eliminado correctamente"
     };
+};
+export const getAllCategories = async () => {
+    return cacheService.remember(
+        CacheKeys.CATEGORIESEXP,
+        async () => {
+            const categories = await Expense.findAll({
+                attributes: ["category"],
+                group: ["category"],
+                raw: true,
+            });
+
+            return categories.map((c) => c.category);
+        },
+        CacheTTL.ONE_DAY
+    );
 };
