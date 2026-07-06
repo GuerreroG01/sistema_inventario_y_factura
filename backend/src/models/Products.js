@@ -35,9 +35,9 @@ const Product = sequelize.define("Products", {
     },
 
     cost: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: true,
-    },
+        type: DataTypes.DECIMAL(10, 2), // Este valor de costo servirá solo para en el frontend
+        allowNull: true, // ver el margen de ganancia en base al costo y precio del producto.
+    }, // Lo mejor es que los costos sean manejados desde la tabla de egresos.
 
     stock: {
         type: DataTypes.INTEGER,

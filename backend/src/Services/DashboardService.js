@@ -190,14 +190,11 @@ export const getProfitabilityMetrics = async (month, year) => {
         const salesResult = await db.query(
             `
             SELECT
-                COALESCE(SUM(s.total), 0) AS ventas,
-                COALESCE(SUM(sd.cantidad * p.cost), 0) AS costos
-            FROM "Sales" s
-            INNER JOIN "SaleDetails" sd ON sd.sale_id = s.id
-            INNER JOIN "Products" p ON p.id = sd.product_id
-            WHERE s.status IN ('COMPLETED', 'PAID')
-                AND EXTRACT(MONTH FROM s."createdAt") = :month
-                AND EXTRACT(YEAR FROM s."createdAt") = :year
+                COALESCE(SUM(total), 0) AS ventas
+            FROM "Sales"
+            WHERE status IN ('COMPLETED', 'PAID')
+                AND EXTRACT(MONTH FROM "createdAt") = :month
+                AND EXTRACT(YEAR FROM "createdAt") = :year
             `,
             {
                 replacements: { month, year },
@@ -220,10 +217,9 @@ export const getProfitabilityMetrics = async (month, year) => {
         );
 
         const ventas = Number(salesResult[0]?.ventas || 0);
-        const costosProductos = Number(salesResult[0]?.costos || 0);
         const gastos = Number(expensesResult[0]?.gastos || 0);
 
-        const costosTotales = costosProductos + gastos;
+        const costosTotales = gastos;
 
         const ganancia = ventas - costosTotales;
 
