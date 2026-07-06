@@ -41,7 +41,7 @@ export const getAllExpenses = async ({ page = 1, limit = 10, category, from, to 
 
     const { count, rows } = await Expense.findAndCountAll({
         where,
-        order: [["date", "DESC"]],
+        order: [["id", "DESC"]],
         limit,
         offset
     });

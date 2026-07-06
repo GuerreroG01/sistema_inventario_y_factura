@@ -41,7 +41,7 @@ export default function ExpenseForm({
                 description: "",
                 amount: "",
                 category: "",
-                date: "",
+                date: new Date().toISOString().split("T")[0],
                 payment_method: ""
             });
         }
