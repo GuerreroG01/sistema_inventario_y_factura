@@ -11,7 +11,7 @@ import { Expense } from "@/types/Expense";
 export default function ExpensesPage() {
 
     const {
-        expenses, pagination, page, setPage, addExpense, editExpense, removeExpense, filters, updateFilter, refresh, 
+        expenses, pagination, page, setPage, addExpense, currentMonthTotal, editExpense, removeExpense, filters, updateFilter, refresh, 
         categories, categoriesLoaded, categoriesLoading, fetchCategories
     } = useExpenses();
 
@@ -33,10 +33,7 @@ export default function ExpensesPage() {
 
             <ExpenseMetricCard
                 label="Total Gastos"
-                value={expenses
-                    .reduce((acc, e) => acc + Number(e.amount), 0)
-                    .toFixed(2)
-                }
+                value={currentMonthTotal}
                 onCreate={handleCreate}
             />
             <ExpenseFilters

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Expense } from "../types/Expense";
+import { Expense, CurrentMonthTotal } from "../types/Expense";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -109,6 +109,21 @@ export async function getExpenseCategories(): Promise<string[]> {
   } catch (error: any) {
     throw new Error(
       error?.response?.data?.message || "Error al obtener categorías"
+    );
+  }
+}
+export async function getCurrentMonthTotal(): Promise<CurrentMonthTotal> {
+  try {
+    const { data } = await api.get<{
+      message: string;
+      data: CurrentMonthTotal;
+    }>("/current_month_total");
+
+    return data.data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+      "Error al obtener el total de egresos del mes"
     );
   }
 }

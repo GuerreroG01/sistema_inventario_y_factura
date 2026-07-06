@@ -107,3 +107,23 @@ export const getAllCategories = async () => {
         CacheTTL.ONE_DAY
     );
 };
+export const getCurrentMonthTotalExpenses = async () => {
+    const now = new Date();
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const total = await Expense.sum("amount", {
+        where: {
+            date: {
+                [Op.between]: [startOfMonth, endOfMonth]
+            }
+        }
+    });
+
+    return {
+        month: now.getMonth() + 1,
+        year: now.getFullYear(),
+        total: total || 0
+    };
+};

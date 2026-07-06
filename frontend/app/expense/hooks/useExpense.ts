@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getExpenses, createExpense, updateExpense, deleteExpense, getExpenseCategories } from "@/services/expenseService";
+import { getExpenses, createExpense, updateExpense, deleteExpense, getExpenseCategories, getCurrentMonthTotal } from "@/services/expenseService";
 import { Expense } from "@/types/Expense"
 
 type Filters = {
@@ -25,6 +25,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
     const [categories, setCategories] = useState<string[]>([]);
     const [categoriesLoaded, setCategoriesLoaded] = useState(false);
     const [categoriesLoading, setCategoriesLoading] = useState(false);
+    const [currentMonthTotal, setCurrentMonthTotal] = useState<number>(0);
     const fetchExpenses = async () => {
         try {
             setLoading(true);
@@ -55,15 +56,27 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
             setCategoriesLoading(false);
         }
     };
+    const fetchCurrentMonthTotal = async () => {
+        try {
+            const data = await getCurrentMonthTotal();
+            setCurrentMonthTotal(data.total);
+        } catch (err) {
+            setError(err);
+        }
+    };
 
     useEffect(() => {
         fetchExpenses();
     }, [page, filters]);
+    useEffect(() => {
+        fetchCurrentMonthTotal();
+    }, []);
 
     const addExpense = async (expense: Omit<Expense, "id">) => {
         try {
             await createExpense(expense);
             await fetchExpenses();
+            await fetchCurrentMonthTotal()
         } catch (err) {
             setError(err);
         }
@@ -75,6 +88,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
 
             if (res.ok) {
                 await fetchExpenses();
+                await fetchCurrentMonthTotal();
             } else {
                 setError(res.message);
             }
@@ -87,6 +101,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
         try {
             await deleteExpense(id);
             await fetchExpenses();
+            await fetchCurrentMonthTotal();
         } catch (err) {
             setError(err);
         }
@@ -105,7 +120,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
     };
 
     return {
-        expenses, pagination, loading, error, page, setPage, filters, setFilters, updateFilter, addExpense,
+        expenses, pagination, loading, error, page, setPage, filters, setFilters, updateFilter, addExpense, currentMonthTotal,
         editExpense, removeExpense, refresh: fetchExpenses, fetchCategories, categories, categoriesLoaded, categoriesLoading
     };
 }

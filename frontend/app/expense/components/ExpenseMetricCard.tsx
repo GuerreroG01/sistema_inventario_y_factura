@@ -2,10 +2,14 @@ import { CostIcon } from "../../dashboard/Components/ProfibilityMetrics/Icons/Co
 
 interface Props {
     label: string;
-    value: string;
+    value: number;
     onCreate?: () => void;
 }
 export default function ExpenseMetricCard({ label, value, onCreate }: Props) {
+    const currencyFormatter = new Intl.NumberFormat("es-NI", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
     return (
         <div className="
             group relative
@@ -69,7 +73,7 @@ export default function ExpenseMetricCard({ label, value, onCreate }: Props) {
                         text-4xl font-bold font-mono text-gray-900
                         tracking-tight leading-none
                     ">
-                        C${value}
+                        C${currencyFormatter.format(value)}
                     </span>
 
                     <span className="text-xs text-gray-400 mt-1">

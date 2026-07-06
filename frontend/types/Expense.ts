@@ -11,3 +11,8 @@ export type Expense = {
     createdAt?: string;
     updatedAt?: string;
 };
+export type CurrentMonthTotal = {
+    month: number;
+    year: number;
+    total: number;
+}

@@ -1,4 +1,4 @@
-import { createExpense, getAllExpenses, getExpenseById, updateExpense, deleteExpense, getAllCategories } from "../services/expenseService.js";
+import { createExpense, getAllExpenses, getExpenseById, updateExpense, deleteExpense, getAllCategories, getCurrentMonthTotalExpenses } from "../services/expenseService.js";
 
 export const create = async (req, res) => {
     try {
@@ -97,6 +97,20 @@ export const getCategories = async (req, res) => {
         return res.status(200).json({
             message: "Categorías de egresos encontradas",
             data: categories
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
+};
+export const getCurrentMonthTotal = async (req, res) => {
+    try {
+        const total = await getCurrentMonthTotalExpenses();
+
+        return res.status(200).json({
+            message: "Total de egresos del mes actual",
+            data: total
         });
     } catch (error) {
         return res.status(500).json({
