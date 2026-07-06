@@ -178,6 +178,7 @@ export const getProfitabilityMetrics = async (month, year) => {
     const response = {
         ventas: 0,
         costos: 0,
+        gastos: 0,
         ganancia: 0,
         margen: 0,
         ratioRetornoCosto: 0,
@@ -185,63 +186,67 @@ export const getProfitabilityMetrics = async (month, year) => {
     };
 
     try {
-        const result = await db.query(
+        // Ventas + costo de productos
+        const salesResult = await db.query(
             `
             SELECT
                 COALESCE(SUM(s.total), 0) AS ventas,
-                COALESCE(
-                    SUM(sd.cantidad * p.cost),
-                    0
-                ) AS costos
+                COALESCE(SUM(sd.cantidad * p.cost), 0) AS costos
             FROM "Sales" s
-            INNER JOIN "SaleDetails" sd
-                ON sd.sale_id = s.id
-            INNER JOIN "Products" p
-                ON p.id = sd.product_id
+            INNER JOIN "SaleDetails" sd ON sd.sale_id = s.id
+            INNER JOIN "Products" p ON p.id = sd.product_id
             WHERE s.status IN ('COMPLETED', 'PAID')
                 AND EXTRACT(MONTH FROM s."createdAt") = :month
                 AND EXTRACT(YEAR FROM s."createdAt") = :year
             `,
             {
-                replacements: {
-                    month,
-                    year,
-                },
+                replacements: { month, year },
                 type: QueryTypes.SELECT,
             }
         );
 
-        const ventas = Number(result[0]?.ventas || 0);
-        const costos = Number(result[0]?.costos || 0);
-        const ganancia = ventas - costos;
+        // Gastos adicionales (Expenses)
+        const expensesResult = await db.query(
+            `
+            SELECT COALESCE(SUM(amount), 0) AS gastos
+            FROM "Expenses"
+            WHERE EXTRACT(MONTH FROM date) = :month
+                AND EXTRACT(YEAR FROM date) = :year
+            `,
+            {
+                replacements: { month, year },
+                type: QueryTypes.SELECT,
+            }
+        );
 
-        const margen = ventas > 0
-            ? (ganancia / ventas) * 100
+        const ventas = Number(salesResult[0]?.ventas || 0);
+        const costosProductos = Number(salesResult[0]?.costos || 0);
+        const gastos = Number(expensesResult[0]?.gastos || 0);
+
+        const costosTotales = costosProductos + gastos;
+
+        const ganancia = ventas - costosTotales;
+
+        const margen = ventas > 0 ? (ganancia / ventas) * 100 : 0;
+
+        const ratioRetornoCosto = costosTotales > 0
+            ? ganancia / costosTotales
             : 0;
 
-        const ratioRetornoCosto = costos > 0
-            ? ganancia / costos
+        const roi = costosTotales > 0
+            ? (ganancia / costosTotales) * 100
             : 0;
 
-        const roi = costos > 0
-            ? (ganancia / costos) * 100
-            : 0;
-
-        response.ventas = Number(ventas.toFixed(2)); //Total en ventas
-        response.costos = Number(costos.toFixed(2)); //Total en Costos
-        response.ganancia = Number(ganancia.toFixed(2)); //Total de ganancia (ventas-costos)
-        response.margen = Number(margen.toFixed(2)); //Margen de ganancia
-        response.ratioRetornoCosto = Number(
-            ratioRetornoCosto.toFixed(2)
-        ); // Retorno de lo invertido. Por ejemplo si invertí un dolar y gane 3 entonces recuperé 3 veces el costo
-        response.roi = Number(
-            roi.toFixed(2)
-        ); // Porcentaje del retorno.
+        response.ventas = Number(ventas.toFixed(2));
+        response.costos = Number(costosTotales.toFixed(2));
+        response.gastos = Number(gastos.toFixed(2));
+        response.ganancia = Number(ganancia.toFixed(2));
+        response.margen = Number(margen.toFixed(2));
+        response.ratioRetornoCosto = Number(ratioRetornoCosto.toFixed(2));
+        response.roi = Number(roi.toFixed(2));
 
         if (ventas === 0) {
-            warnings.push(
-                "No existen ventas registradas para el período seleccionado"
-            );
+            warnings.push("No existen ventas registradas para el período seleccionado");
         }
 
         return {
@@ -250,11 +255,9 @@ export const getProfitabilityMetrics = async (month, year) => {
             warnings,
             errors,
         };
+
     } catch (error) {
-        console.error(
-            "[getProfitabilityMetrics] Error rentabilidad",
-            error
-        );
+        console.error("[getProfitabilityMetrics] Error rentabilidad", error);
 
         return {
             success: false,

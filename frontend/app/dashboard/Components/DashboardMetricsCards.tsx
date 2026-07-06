@@ -162,9 +162,22 @@ function MetricCard({ title, value, isCurrency = false, Icon, variant, highlight
         },
     };
 
+    const formatCurrency = (num: number) =>
+        new Intl.NumberFormat("es-NI", {
+            style: "currency",
+            currency: "NIO",
+            maximumFractionDigits: 0,
+        }).format(num);
+
+    const formatCompactNumber = (num: number) =>
+        new Intl.NumberFormat(undefined, {
+            notation: "compact",
+            maximumFractionDigits: 1,
+        }).format(num);
+
     const formattedValue = isCurrency
-        ? `C$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : value.toLocaleString();
+        ? formatCurrency(value)
+        : formatCompactNumber(value);
 
     return (
         <div 
