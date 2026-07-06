@@ -85,13 +85,8 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
     const editExpense = async (id: number, data: Partial<Expense>) => {
         try {
             const res = await updateExpense(id, data);
-
-            if (res.ok) {
-                await fetchExpenses();
-                await fetchCurrentMonthTotal();
-            } else {
-                setError(res.message);
-            }
+            await fetchExpenses();
+            await fetchCurrentMonthTotal();
         } catch (err) {
             setError(err);
         }

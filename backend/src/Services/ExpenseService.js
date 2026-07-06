@@ -11,6 +11,7 @@ export const createExpense = async (data) => {
         payment_method: data.payment_method
     });
     cacheService.del(CacheKeys.CATEGORIESEXP);
+    cacheService.del(CacheKeys.PROFITABILITY);
 
     return expense;
 };
@@ -79,6 +80,7 @@ export const updateExpense = async (id, data) => {
         payment_method: data.payment_method ?? expense.payment_method
     });
     cacheService.del(CacheKeys.CATEGORIESEXP);
+    cacheService.del(CacheKeys.PROFITABILITY);
     return expense;
 };
 
@@ -88,6 +90,8 @@ export const deleteExpense = async (id) => {
         throw new Error("Egreso no encontrado");
     }
     await expense.destroy();
+    cacheService.del(CacheKeys.CATEGORIESEXP);
+    cacheService.del(CacheKeys.PROFITABILITY);
     return {
         message: "Egreso eliminado correctamente"
     };
