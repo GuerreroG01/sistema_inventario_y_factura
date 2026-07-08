@@ -137,3 +137,21 @@ export const getSystemStatus = async () => {
         usersCount
     };
 };
+export const logout = async (userId) => {
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+        throw {
+            statusCode: 404,
+            message: "Usuario no encontrado"
+        };
+    }
+
+    await user.update({
+        UltimoAcceso: new Date()
+    });
+
+    return {
+        message: "Sesión cerrada correctamente"
+    };
+};

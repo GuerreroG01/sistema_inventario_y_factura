@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import { logout as logoutService } from "@/services/authService";
 import { useRouter } from "next/navigation";
 
 export function useAuth() {
@@ -17,14 +18,24 @@ export function useAuth() {
     }, []);
 
 
-    const logout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+    const logout = async () => {
+        const token = localStorage.getItem("token");
 
-        Cookies.remove("token");
+        try {
+            if (token) {
+                await logoutService(token);
+            }
+        } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+        } finally {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
 
-        router.push("/auth/login");
-        router.refresh();
+            Cookies.remove("token");
+
+            router.push("/auth/login");
+            router.refresh();
+        }
     };
 
     return {user,logout};

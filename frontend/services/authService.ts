@@ -45,3 +45,22 @@ export async function getSystemStatus(): Promise<SystemStatusResponse> {
         );
     }
 }
+
+export async function logout(token: string): Promise<void> {
+    try {
+        await api.post(
+            "/logout",
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+    } catch (error: any) {
+        throw new Error(
+            error?.response?.data?.message ||
+            "Error al cerrar sesión"
+        );
+    }
+}

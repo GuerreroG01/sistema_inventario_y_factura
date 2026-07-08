@@ -50,3 +50,12 @@ export const getSystemStatus = async (req, res) => {
         });
     }
 };
+export const logout = async (req, res, next) => {
+    try {
+        const result = await authService.logout(req.user.id);
+
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+};
