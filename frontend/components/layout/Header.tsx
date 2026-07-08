@@ -223,7 +223,7 @@ export default function Header() {
                     </div>
                 </nav>
                 <div className="flex items-center md:hidden">
-                    <MobileHeader navItems={navItems} />
+                    <MobileHeader navItems={navItems} user={user} logout={logout} />
                 </div>
             </div>
         </header>
