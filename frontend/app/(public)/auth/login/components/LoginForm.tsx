@@ -107,7 +107,7 @@ export default function LoginForm({ loading, error, onSubmit, showRegister }:Pro
                                         font-bold
                                     "
                                 >
-                                    Sistema Gestión
+                                    Inventarium System
                                 </h1>
                                 <p
                                     className="
@@ -127,7 +127,7 @@ export default function LoginForm({ loading, error, onSubmit, showRegister }:Pro
                                 max-w-md
                             "
                         >
-                            Controla tu negocio desde un solo lugar
+                            Administra el estado de tu negocio
                         </h2>
                         <p
                             className="
@@ -137,8 +137,9 @@ export default function LoginForm({ loading, error, onSubmit, showRegister }:Pro
                                 leading-relaxed
                             "
                         >
-                            Administra productos, ventas, inventario,
-                            rentabilidad y métricas importantes de tu negocio.
+                            Gestiona productos, ventas, inventario, egresos y métricas de
+                            rentabilidad con una plataforma diseñada para adaptarse a distintos
+                            tipos de negocios.
                         </p>
                     </div>
                     <div
