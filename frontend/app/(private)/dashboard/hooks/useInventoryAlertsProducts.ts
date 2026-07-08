@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { getStockAlerts } from "@/services/productService";
-import type { InventoryAlertsProductsData } from "../../../types/dashboard/inventoryAlertsProducts";
+import type { InventoryAlertsProductsData } from "../../../../types/dashboard/inventoryAlertsProducts";
 
 const initialData: InventoryAlertsProductsData = {
     exhausted: [],

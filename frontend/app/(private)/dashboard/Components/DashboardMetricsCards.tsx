@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ModalError from "../../../components/ModalError";
+import ModalError from "../../../../components/ModalError";
 import { DollarSign, TrendingUp, AlertTriangle, Activity, ShieldAlert } from "lucide-react";
 import { useDashboardMetrics } from "../hooks/useDashboardMetrics";
 

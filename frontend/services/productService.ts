@@ -1,18 +1,5 @@
-import axios from "axios";
+import api from "./api";
 import { Product, StockAlerts } from "@/types/product";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("La variable NEXT_PUBLIC_API_BASE_URL no está definida");
-}
-
-const api = axios.create({
-  baseURL: `${API_BASE_URL}/products`,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 
 export async function getProducts(
   page: number = 1,
@@ -33,7 +20,7 @@ export async function getProducts(
       page: number;
       totalPages: number;
       products: Product[];
-    }>("/", {
+    }>("/products/", {
       params: {
         page,
         ...Object.fromEntries(
@@ -47,15 +34,20 @@ export async function getProducts(
     return data;
 
   } catch (error: any) {
+
+    console.log("ERROR COMPLETO:", error);
+
     throw new Error(
-      error.response?.data?.error || "Error al obtener productos"
+        error?.response?.data?.error ||
+        error?.message ||
+        "Error al obtener productos"
     );
-  }
+}
 }
 
 export async function createProduct(product: Omit<Product, "id">): Promise<Product> {
   try {
-    const { data } = await api.post<Product>("/", product);
+    const { data } = await api.post<Product>("/products/", product);
     return data;
   } catch (error: any) {
     const message =
@@ -68,7 +60,7 @@ export async function createProduct(product: Omit<Product, "id">): Promise<Produ
 
 export async function getProduct(id: number): Promise<Product> {
   try {
-      const { data } = await api.get<Product>(`/${id}`);
+      const { data } = await api.get<Product>(`/products/${id}`);
       return data;
   } catch (error: any) {
       const message =
@@ -84,7 +76,7 @@ export async function updateProduct(
   product: Partial<Omit<Product, "id">>
 ): Promise<{ ok: true; data: Product } | { ok: false; message: string }> {
   try {
-    const { data } = await api.put<Product>(`/${id}`, product);
+    const { data } = await api.put<Product>(`/products/${id}`, product);
 
     return { ok: true, data};
   } catch (error: any) {
@@ -100,7 +92,7 @@ export async function updateProduct(
 
 export async function deleteProduct(id: number): Promise<void> {
   try {
-    await api.delete(`/${id}`);
+    await api.delete(`/products/${id}`);
   } catch (error: any) {
     const message =
       error?.response?.data?.message ||
@@ -117,7 +109,7 @@ export async function getProductStats(): Promise<{
   lowStock: number;
 }> {
   try {
-    const { data } = await api.get("/dashboardinfo");
+    const { data } = await api.get("/products/dashboardinfo");
     return data;
   } catch (error: any) {
     const message =
@@ -133,7 +125,7 @@ export async function getCategories(): Promise<string[]> {
     const { data } = await api.get<{
       source: string;
       categories: string[];
-    }>("/getCategories");
+    }>("/products/getCategories");
 
     return data.categories;
   } catch (error: any) {
@@ -151,7 +143,7 @@ export async function autocompleteProducts(query: {
   barcode?: string;
 }): Promise<Product[]> {
   try {
-    const { data } = await api.get<Product[]>("/autocompleteProd", {
+    const { data } = await api.get<Product[]>("/products/autocompleteProd", {
       params: {
         ...Object.fromEntries(
           Object.entries(query).filter(
@@ -176,7 +168,7 @@ export async function getStockAlerts(): Promise<StockAlerts> {
     const { data } = await api.get<{
       success: boolean;
       data: StockAlerts;
-    }>("/getStockAlerts");
+    }>("/products/getStockAlerts");
 
     return data.data;
 

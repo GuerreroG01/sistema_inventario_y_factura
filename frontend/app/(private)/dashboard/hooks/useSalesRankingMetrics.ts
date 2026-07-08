@@ -3,7 +3,7 @@ import {
     SalesRankingCategory,
     SalesRankingProduct,
     SalesRankingResponse,
-} from "../../../types/dashboard/salesRankingMetrics"
+} from "../../../../types/dashboard/salesRankingMetrics"
 
 import { getSalesRankingMetrics } from "@/services/dashboardService";
 

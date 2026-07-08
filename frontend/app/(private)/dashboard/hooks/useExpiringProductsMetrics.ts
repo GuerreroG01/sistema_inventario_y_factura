@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getExpiringProductsMetrics } from "../../../services/dashboardService"
-import type { DashboardError, ExpiringProductsData } from "../../../types/dashboard/expiringProductsMetrics"
+import { getExpiringProductsMetrics } from "../../../../services/dashboardService"
+import type { DashboardError, ExpiringProductsData } from "../../../../types/dashboard/expiringProductsMetrics"
 
 const initialData: ExpiringProductsData = {
     products: [],

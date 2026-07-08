@@ -1,17 +1,5 @@
-import axios from "axios";
+import api from "./api";
 import { Sale, CreateSaleRequest } from "@/types/Sale";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-if (!API_BASE_URL) {
-    throw new Error("La variable NEXT_PUBLIC_API_BASE_URL no está definida");
-}
-
-const api = axios.create({
-    baseURL: `${API_BASE_URL}/sales`,
-    headers: {
-        "Content-Type": "application/json",
-    },
-});
 
 export async function getSales(
     page: number = 1,
@@ -30,7 +18,7 @@ export async function getSales(
         page: number;
         totalPages: number;
         sales: Sale[];
-        }>("/", {
+        }>("/sales/", {
         params: {
             page,
             ...Object.fromEntries(
@@ -51,7 +39,7 @@ export async function getSales(
 
 export async function getSale(id: number): Promise<Sale> {
     try {
-        const { data } = await api.get<Sale>(`/${id}`);
+        const { data } = await api.get<Sale>(`/sales/${id}`);
         return data;
     } catch (error: any) {
         throw new Error(
@@ -65,7 +53,7 @@ export async function createSale(
 ): Promise<Sale> {
     try {
         const { data } = await api.post<{ sale: Sale }>(
-            "/",
+            "/sales/",
             sale
         );
 
@@ -89,7 +77,7 @@ export async function updateSaleStatus(
         const { data } = await api.patch<{
             message: string;
             sale: Sale;
-        }>(`/${id}/status`, {
+        }>(`/sales/${id}/status`, {
             status,
             refundObservation,
         });
@@ -115,7 +103,7 @@ export async function getSaleCategories(): Promise<string[]> {
         const { data } = await api.get<{
         source: string;
         categories: string[];
-        }>("/categories");
+        }>("/sales/categories");
 
         return data.categories;
     } catch (error: any) {

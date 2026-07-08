@@ -1,18 +1,6 @@
-import axios from "axios";
+import api from "./api";
 import { Expense, CurrentMonthTotal } from "../types/Expense";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("La variable NEXT_PUBLIC_API_BASE_URL no está definida");
-}
-
-const api = axios.create({
-  baseURL: `${API_BASE_URL}/expenses`,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 export async function getExpenses(
   page: number = 1,
   filters: {
@@ -31,7 +19,7 @@ export async function getExpenses(
         limit: number;
         totalPages: number;
       };
-    }>("/", {
+    }>("/expenses/", {
       params: {
         page,
         ...Object.fromEntries(
@@ -51,7 +39,7 @@ export async function getExpenses(
 }
 export async function getExpenseById(id: number): Promise<Expense> {
   try {
-    const { data } = await api.get<Expense>(`/${id}`);
+    const { data } = await api.get<Expense>(`/expenses/${id}`);
     return data;
   } catch (error: any) {
     const message =
@@ -67,7 +55,7 @@ export async function createExpense(
   expense: Omit<Expense, "id">
 ): Promise<Expense> {
   try {
-    const { data } = await api.post<Expense>("/", expense);
+    const { data } = await api.post<Expense>("/expenses/", expense);
     return data;
   } catch (error: any) {
     throw new Error(
@@ -95,7 +83,7 @@ export async function updateExpense(
 }
 export async function deleteExpense(id: number): Promise<void> {
   try {
-    await api.delete(`/${id}`);
+    await api.delete(`/expenses/${id}`);
   } catch (error: any) {
     throw new Error(
       error?.response?.data?.message || "Error al eliminar gasto"
@@ -104,7 +92,7 @@ export async function deleteExpense(id: number): Promise<void> {
 }
 export async function getExpenseCategories(): Promise<string[]> {
   try {
-    const { data } = await api.get<{ message: string; data: string[]; }>("/categories");
+    const { data } = await api.get<{ message: string; data: string[]; }>("/expenses/categories");
     return data.data;
   } catch (error: any) {
     throw new Error(
@@ -117,7 +105,7 @@ export async function getCurrentMonthTotal(): Promise<CurrentMonthTotal> {
     const { data } = await api.get<{
       message: string;
       data: CurrentMonthTotal;
-    }>("/current_month_total");
+    }>("/expenses/current_month_total");
 
     return data.data;
   } catch (error: any) {

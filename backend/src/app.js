@@ -6,7 +6,9 @@ import productRoutes from "./routes/productRoutes.js";
 import salesRoutes from "./routes/salesRoutes.js"
 import dashboardRoutes from "./routes/dashboardRoutes.js"
 import inventoryMovRoutes from "./routes/inventoryMovRoutes.js";
-import expenseRoutes from "./routes/expenseRoute.js";
+import expenseRoutes from "./routes/expenseRoutes.js";
+import authRoutes from "./routes/AuthRoutes.js";
+import { verifyToken } from "./middlewares/authMiddleware.js";
 import { syncSequence } from "./utils/syncSequence.js";
 import "./models/associations.js";
 
@@ -19,11 +21,12 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use("/api/products", productRoutes);
-app.use("/api/sales", salesRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/inventory-movements", inventoryMovRoutes);
-app.use("/api/expenses", expenseRoutes);
+app.use("/api/products", verifyToken, productRoutes);
+app.use("/api/sales", verifyToken, salesRoutes);
+app.use("/api/dashboard", verifyToken, dashboardRoutes);
+app.use("/api/inventory-movements", verifyToken, inventoryMovRoutes);
+app.use("/api/expenses", verifyToken, expenseRoutes);
+app.use("/api/auth", authRoutes);
 
 export default app;
 

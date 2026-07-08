@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getDashboardMetrics } from "../../../services/dashboardService";
-import { DashboardResponse } from "../../../types/dashboard/dashboardMetrics";
+import { getDashboardMetrics } from "../../../../services/dashboardService";
+import { DashboardResponse } from "../../../../types/dashboard/dashboardMetrics";
 
 const initialMetrics: DashboardResponse = {
     success: false,

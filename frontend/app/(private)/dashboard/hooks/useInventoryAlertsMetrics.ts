@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { getInventoryAlertsMetrics } from "../../../services/dashboardService";
-import type { InventoryAlertsData, DashboardError } from "../../../types/dashboard/inventoryAlertsMetrics";
+import { getInventoryAlertsMetrics } from "../../../../services/dashboardService";
+import type { InventoryAlertsData, DashboardError } from "../../../../types/dashboard/inventoryAlertsMetrics";
 
 interface UseInventoryAlertsMetricsReturn {
     data: InventoryAlertsData;

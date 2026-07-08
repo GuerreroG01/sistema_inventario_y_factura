@@ -1,19 +1,5 @@
-import axios from "axios";
+import api from "./api";
 import { InventoryMovementsResponse, InventoryMovementsFilters } from "../types/inventoryMov";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-if (!API_BASE_URL) {
-    throw new Error(
-        "La variable NEXT_PUBLIC_API_BASE_URL no está definida"
-    );
-}
-
-const api = axios.create({
-    baseURL: `${API_BASE_URL}/inventory-movements`,
-    headers: {
-        "Content-Type": "application/json",
-    }
-});
 
 export async function getInventoryMovements(
     filters: InventoryMovementsFilters = {}
@@ -21,7 +7,7 @@ export async function getInventoryMovements(
 
     try {
         const { data } = await api.get<InventoryMovementsResponse>(
-            "/",
+            "/inventory-movements/",
             {
                 params: {
                     page: filters.page ?? 1,

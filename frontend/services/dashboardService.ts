@@ -1,29 +1,14 @@
-import axios from "axios";
+import api from "./api";
 import { DashboardResponse } from "@/types/dashboard/dashboardMetrics";
 import { ProfitabilityResponse } from "@/types/dashboard/profitabilityMetrics";
 import { SalesRankingResponse } from "@/types/dashboard/salesRankingMetrics";
 import { InventoryAlertsResponse } from "@/types/dashboard/inventoryAlertsMetrics";
 import { ExpiringProductsResponse } from "@/types/dashboard/expiringProductsMetrics";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-if (!API_BASE_URL) {
-    throw new Error(
-        "La variable NEXT_PUBLIC_API_BASE_URL no está definida"
-    );
-}
-
-const api = axios.create({
-    baseURL: `${API_BASE_URL}/dashboard`,
-    headers: {
-        "Content-Type": "application/json",
-    }
-});
-
 export async function getDashboardMetrics(): Promise<DashboardResponse> {
     try {
         const { data } = await api.get<DashboardResponse>(
-            "/dashboardMetrics"
+            "/dashboard/dashboardMetrics"
         );
         return data;
 
@@ -39,7 +24,7 @@ export async function getDashboardMetrics(): Promise<DashboardResponse> {
 export async function getProfitabilityMetrics(): Promise<ProfitabilityResponse> {
     try {
         const { data } = await api.get<ProfitabilityResponse>(
-            "/profitabilityMetrics"
+            "/dashboard/profitabilityMetrics"
         );
         return data;
 
@@ -55,7 +40,7 @@ export async function getProfitabilityMetrics(): Promise<ProfitabilityResponse> 
 export async function getSalesRankingMetrics(): Promise<SalesRankingResponse> {
     try {
         const { data } = await api.get<SalesRankingResponse>(
-            "/salesRankingMetrics"
+            "/dashboard/salesRankingMetrics"
         );
         return data;
 
@@ -71,7 +56,7 @@ export async function getSalesRankingMetrics(): Promise<SalesRankingResponse> {
 export async function getInventoryAlertsMetrics(): Promise<InventoryAlertsResponse> {
     try {
         const { data } = await api.get<InventoryAlertsResponse>(
-            "/inventoryAlertsMetrics"
+            "/dashboard/inventoryAlertsMetrics"
         );
         return data;
 
@@ -91,7 +76,7 @@ export async function getExpiringProductsMetrics(
 
     try {
         const { data } = await api.get<ExpiringProductsResponse>(
-            "/expiringProductsMetrics",
+            "/dashboard/expiringProductsMetrics",
             {
                 params:{
                     page,

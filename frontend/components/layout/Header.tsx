@@ -2,6 +2,8 @@
 
 import MobileHeader from "./MobileHeader";
 import { Layers } from "lucide-react";
+import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
+import { ChevronDown, LogOut } from "lucide-react";
 
 type NavItem = {
     label: string;
@@ -9,12 +11,14 @@ type NavItem = {
 };
 
 export default function Header() {
+
     const navItems: NavItem[] = [
         { label: "Productos", href: "/products" },
         { label: "Ventas", href: "/sales" },
         { label: "Gastos", href: "/expense" },
         //{ label: "Reportes", href: "#" },
     ];
+    const { logout, user } = useAuth();
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-slate-200/40 bg-white/70 backdrop-blur-xl transition-all duration-500 hover:bg-white/80">
@@ -62,16 +66,165 @@ export default function Header() {
                             <span className="relative z-10 block transition-transform duration-300 group-hover:-translate-y-[2px]">
                                 {item.label}
                             </span>
-                            <span className="absolute inset-x-1 bottom-1 top-1 z-0 rounded-full bg-white opacity-0 shadow-sm transition-all duration-300 cubic-bezier(0.25, 1, 0.5, 1) translate-y-full group-hover:translate-y-0 group-hover:opacity-100" />
-                            <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 scale-0 rounded-full bg-blue-600 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100" />
+
+                            <span className="
+                                absolute
+                                inset-x-1
+                                bottom-1
+                                top-1
+                                z-0
+                                rounded-full
+                                bg-white
+                                opacity-0
+                                shadow-sm
+                                transition-all
+                                duration-300
+                                translate-y-full
+                                group-hover:translate-y-0
+                                group-hover:opacity-100
+                            " />
+
+                            <span className="
+                                absolute
+                                bottom-1
+                                left-1/2
+                                h-1
+                                w-1
+                                -translate-x-1/2
+                                scale-0
+                                rounded-full
+                                bg-blue-600
+                                opacity-0
+                                transition-all
+                                duration-300
+                                group-hover:scale-100
+                                group-hover:opacity-100
+                            " />
                         </a>
                     ))}
-                </nav>
+                    <div
+                        className="
+                            group
+                            relative
+                            flex
+                            items-center
+                        "
+                    >
+                        <button
+                            className="
+                                flex
+                                items-center
+                                gap-1
+                                px-3
+                                py-1.5
+                                text-sm
+                                font-semibold
+                                text-slate-600
+                                rounded-full
+                                transition-all
+                                duration-300
+                                hover:text-blue-600
+                                active:scale-95
+                            "
+                        >
+                            <ChevronDown
+                                className="
+                                    h-4
+                                    w-4
+                                    transition-transform
+                                    duration-300
+                                    group-hover:rotate-180
+                                "
+                            />
+                        </button>
+                        <div
+                            className="
+                                invisible
+                                absolute
+                                right-0
+                                top-full
+                                flex
+                                w-48
+                                flex-col
+                                gap-1
+                                pt-2
+                                opacity-0
+                                translate-y-2
+                                transition-all
+                                duration-300
+                                group-hover:visible
+                                group-hover:opacity-100
+                                group-hover:translate-y-0
+                            "
+                        >
+                            {user?.Rol?.toLowerCase() === "admin" && (
+                                <a
+                                    href="/auth/register"
+                                    className="
+                                        flex
+                                        items-center
+                                        rounded-xl
+                                        border
+                                        border-slate-200/60
+                                        bg-white/90
+                                        px-4
+                                        py-2.5
+                                        text-sm
+                                        font-semibold
+                                        text-slate-600
+                                        shadow-lg
+                                        backdrop-blur-xl
+                                        transition-all
+                                        duration-300
+                                        hover:bg-blue-50
+                                        hover:text-blue-600
+                                        active:scale-95
+                                    "
+                                >
+                                    Registrar usuario
+                                </a>
+                            )}
+                            <button
+                                onClick={logout}
+                                className="
+                                    flex
+                                    items-center
+                                    gap-2
+                                    rounded-xl
+                                    border
+                                    border-slate-200/60
+                                    bg-white/90
+                                    px-4
+                                    py-2.5
+                                    text-sm
+                                    font-semibold
+                                    text-slate-600
+                                    shadow-lg
+                                    backdrop-blur-xl
+                                    transition-all
+                                    duration-300
+                                    hover:bg-red-50
+                                    hover:text-red-600
+                                    active:scale-95
+                                "
+                            >
+                                <LogOut
+                                    className="
+                                        h-4
+                                        w-4
+                                        stroke-[2.2]
+                                    "
+                                />
 
+                                Cerrar sesión
+                            </button>
+
+                        </div>
+                    </div>
+                </nav>
                 <div className="flex items-center md:hidden">
                     <MobileHeader navItems={navItems} />
                 </div>
-
             </div>
         </header>
     );

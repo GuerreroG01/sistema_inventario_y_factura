@@ -1,0 +1,134 @@
+import User from "../models/User.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+
+
+export const register = async (datosUsuario) => {
+    const { Usuario, Clave, Email, Telefono } = datosUsuario;
+
+    if (!Usuario || !Clave || !Email || !Telefono) {
+        throw {
+            statusCode: 400,
+            message: "Todos los campos son obligatorios"
+        };
+    }
+
+    const existeUsuario = await User.findOne({
+        where: {
+            Usuario
+        }
+    });
+
+    if (existeUsuario) {
+        throw {
+            statusCode: 409,
+            message: "El usuario ya existe"
+        };
+    }
+
+    const existeEmail = await User.findOne({
+        where: {
+            Email
+        }
+    });
+
+    if (existeEmail) {
+        throw {
+            statusCode: 409,
+            message: "El email ya está registrado"
+        };
+    }
+
+    const claveHash = await bcrypt.hash(Clave, 10);
+
+    const nuevoUsuario = await User.create({
+        Usuario,
+        Clave: claveHash,
+        Email,
+        Telefono,
+        Rol: "Empleado"
+
+    });
+
+    return {
+        Id: nuevoUsuario.Id,
+        Usuario: nuevoUsuario.Usuario,
+        Email: nuevoUsuario.Email,
+        Telefono: nuevoUsuario.Telefono,
+        Rol: nuevoUsuario.Rol,
+        FechaIngreso: nuevoUsuario.FechaIngreso,
+        Activo: nuevoUsuario.Activo
+    };
+};
+
+
+
+export const login = async (usuario, clave) => {
+    if (!usuario || !clave) {
+        throw {
+            statusCode: 400,
+            message: "Usuario y contraseña son obligatorios"
+        };
+    }
+
+
+    const user = await User.findOne({
+        where: {
+            Usuario: usuario
+        }
+    });
+
+    if (!user) {
+        throw {
+            statusCode: 401,
+            message: "Usuario o contraseña incorrectos"
+        };
+    }
+
+    if (!user.Activo) {
+        throw {
+            statusCode: 403,
+            message: "El usuario está desactivado"
+        };
+    }
+
+    const coincide = await bcrypt.compare(
+        clave,
+        user.Clave
+    );
+
+    if (!coincide) {
+        throw {
+            statusCode: 401,
+            message: "Usuario o contraseña incorrectos"
+        };
+    }
+    await user.update({
+        UltimoAcceso: new Date()
+    });
+    const token = jwt.sign(
+        {
+            id: user.Id,
+            usuario: user.Usuario,
+            rol: user.Rol
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "24h"
+        }
+    );
+
+
+    return {
+        token,
+        usuario: {
+            Id: user.Id,
+            Usuario: user.Usuario,
+            Email: user.Email,
+            Telefono: user.Telefono,
+            Rol: user.Rol,
+            FechaIngreso: user.FechaIngreso,
+            Activo: user.Activo
+        }
+    };
+};
