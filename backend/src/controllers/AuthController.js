@@ -1,6 +1,5 @@
 import * as authService from "../services/AuthService.js";
 
-
 export const register = async (req, res) => {
     try {
         const usuario = await authService.register(req.body);
@@ -18,8 +17,6 @@ export const register = async (req, res) => {
     }
 };
 
-
-
 export const login = async (req, res) => {
     try {
         const { usuario, clave } = req.body;
@@ -30,6 +27,21 @@ export const login = async (req, res) => {
         res.status(200).json({
             success: true,
             ...data
+        });
+    } catch (error) {
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || "Error interno del servidor"
+        });
+    }
+};
+
+export const getSystemStatus = async (req, res) => {
+    try {
+        const status = await authService.getSystemStatus();
+        res.status(200).json({
+            success: true,
+            ...status
         });
     } catch (error) {
         res.status(error.statusCode || 500).json({

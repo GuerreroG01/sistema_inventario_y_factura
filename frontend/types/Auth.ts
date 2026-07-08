@@ -8,13 +8,11 @@ export interface User {
     Activo: boolean;
 }
 
-
 export interface LoginResponse {
     success: boolean;
     token: string;
     usuario: User;
 }
-
 
 export interface RegisterRequest {
 
@@ -22,9 +20,7 @@ export interface RegisterRequest {
     Clave: string;
     Email: string;
     Telefono: string;
-
 }
-
 
 export interface RegisterResponse {
 
@@ -32,4 +28,10 @@ export interface RegisterResponse {
     message: string;
     usuario: User;
 
+}
+
+export interface SystemStatusResponse {
+    success: boolean;
+    initialized: boolean;
+    usersCount: number;
 }

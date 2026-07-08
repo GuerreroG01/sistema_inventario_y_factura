@@ -8,9 +8,10 @@ interface Props {
     loading:boolean;
     error:string|null;
     onSubmit:(usuario:string,clave:string)=>void|Promise<void>;
+    showRegister:boolean;
 }
 
-export default function LoginForm({ loading, error, onSubmit }:Props){
+export default function LoginForm({ loading, error, onSubmit, showRegister }:Props){
     const [usuario,setUsuario] = useState("");
     const [clave,setClave] = useState("");
     const [errorOpen,setErrorOpen] = useState(false);
@@ -375,6 +376,30 @@ export default function LoginForm({ loading, error, onSubmit }:Props){
                                     }
                                 </span>
                             </button>
+                            {showRegister && (
+                                <a
+                                    href="/auth/register"
+                                    className="
+                                        mt-4
+                                        block
+                                        w-full
+                                        rounded-xl
+                                        border
+                                        border-blue-200
+                                        bg-blue-50
+                                        py-2
+                                        text-center
+                                        text-sm
+                                        font-bold
+                                        text-blue-700
+                                        transition-all
+                                        hover:bg-blue-100
+                                        active:scale-95
+                                    "
+                                >
+                                    Crear administrador inicial
+                                </a>
+                            )}
                         </form>
                     </div>
                 </div>

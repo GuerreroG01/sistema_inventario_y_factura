@@ -1,5 +1,5 @@
 import axios from "axios";
-import { LoginResponse, RegisterRequest, RegisterResponse } from "../types/Auth";
+import { LoginResponse, RegisterRequest, RegisterResponse, SystemStatusResponse } from "../types/Auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -29,5 +29,19 @@ export async function register( usuarioData: RegisterRequest ): Promise<Register
         return data;
     } catch (error: any) {
         throw new Error(error?.response?.data?.message ||"Error al registrar usuario");
+    }
+}
+
+export async function getSystemStatus(): Promise<SystemStatusResponse> {
+    try {
+        const { data } = await api.get<SystemStatusResponse>(
+            "/status"
+        );
+        return data;
+    } catch (error: any) {
+        throw new Error(
+            error?.response?.data?.message ||
+            "Error al obtener estado del sistema"
+        );
     }
 }

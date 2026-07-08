@@ -3,16 +3,13 @@
 import { useRouter } from "next/navigation";
 import LoginForm from "./components/LoginForm";
 import { useLogin } from "./hooks/useLogin";
+import { SystemStatus } from "../../Utils/SystemStatus";
 
 export default function LoginPage() {
     const router = useRouter();
 
-    const {
-        login,
-        loading,
-        error,
-    } = useLogin();
-
+    const { login, loading, error } = useLogin();
+    const { initialized, loading: loadingStatus } = SystemStatus();
     const handleLogin = async (
         usuario: string,
         clave: string
@@ -25,6 +22,10 @@ export default function LoginPage() {
             // El LoginForm muestra el ModalError automáticamente.
         }
     };
+
+    if (loadingStatus) {
+        return null;
+    }
 
     return (
         <main className="
@@ -39,6 +40,7 @@ export default function LoginPage() {
                 loading={loading}
                 error={error}
                 onSubmit={handleLogin}
+                showRegister={!initialized}
             />
         </main>
     );

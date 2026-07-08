@@ -13,14 +13,15 @@ interface Props {
     error: string | null;
     user: User | null;
     onChange: (
-        e: React.ChangeEvent<HTMLInputElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => void;
     onSubmit: (
         data: RegisterRequest
     ) => void;
+    initialized: boolean | null;
 }
 
-export default function RegisterForm({ data, loading, error, user, onChange, onSubmit }: Props) {
+export default function RegisterForm({ data, loading, error, user, onChange, onSubmit, initialized }: Props) {
     const submit = (
         e: React.FormEvent<HTMLFormElement>
     ) => {
@@ -283,7 +284,11 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
                 message={`El usuario "${user?.Usuario}" fue registrado correctamente.`}
                 onClose={() => {
                     setSuccessOpen(false);
-                    router.push("/");
+                    if (initialized === false) {
+                        router.push("/auth/login");
+                    } else {
+                        router.push("/");
+                    }
                 }}
             />
             <ModalError

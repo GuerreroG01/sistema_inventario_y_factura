@@ -2,7 +2,6 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-
 export const register = async (datosUsuario) => {
     const { Usuario, Clave, Email, Telefono } = datosUsuario;
 
@@ -61,8 +60,6 @@ export const register = async (datosUsuario) => {
     };
 };
 
-
-
 export const login = async (usuario, clave) => {
     if (!usuario || !clave) {
         throw {
@@ -118,7 +115,6 @@ export const login = async (usuario, clave) => {
         }
     );
 
-
     return {
         token,
         usuario: {
@@ -130,5 +126,14 @@ export const login = async (usuario, clave) => {
             FechaIngreso: user.FechaIngreso,
             Activo: user.Activo
         }
+    };
+};
+
+export const getSystemStatus = async () => {
+    const usersCount = await User.count();
+
+    return {
+        initialized: usersCount > 0,
+        usersCount
     };
 };
