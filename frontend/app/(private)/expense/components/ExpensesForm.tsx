@@ -135,12 +135,14 @@ export default function ExpenseForm({
                         <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">
                             Fecha
                         </label>
+
                         <Calendar className="w-4 h-4 absolute left-3 top-9 text-slate-400" />
+
                         <input
                             type="date"
-                            className={inputClass}
+                            className={`${inputClass} bg-slate-100 text-slate-400 cursor-not-allowed`}
                             value={form.date}
-                            onChange={(e) => setForm({ ...form, date: e.target.value })}
+                            readOnly
                         />
                     </div>
                     <div className="relative sm:col-span-2">

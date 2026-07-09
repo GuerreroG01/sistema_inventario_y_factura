@@ -35,6 +35,16 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
 
         return "Ocurrió un error inesperado";
     };
+
+    const canModifyExpense = (date: string) => {
+        const expenseDate = new Date(date);
+        const now = new Date();
+
+        return (
+            expenseDate.getMonth() === now.getMonth() &&
+            expenseDate.getFullYear() === now.getFullYear()
+        );
+    };
     
     const fetchExpenses = async () => {
         try {
@@ -139,6 +149,6 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
     return {
         expenses, pagination, loading, error, page, setPage, filters, setFilters, updateFilter, addExpense, currentMonthTotal,
         editExpense, removeExpense, refresh: fetchExpenses, fetchCategories, categories, categoriesLoaded, categoriesLoading,
-        setError, errorTitle, setErrorTitle
+        setError, errorTitle, setErrorTitle, canModifyExpense
     };
 }

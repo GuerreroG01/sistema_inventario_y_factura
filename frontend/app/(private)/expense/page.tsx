@@ -13,7 +13,7 @@ export default function ExpensesPage() {
 
     const {
         expenses, pagination, page, setPage, addExpense, currentMonthTotal, editExpense, removeExpense, filters, updateFilter, refresh, 
-        categories, categoriesLoaded, categoriesLoading, fetchCategories, error, setError, errorTitle, setErrorTitle
+        categories, categoriesLoaded, categoriesLoading, fetchCategories, error, setError, errorTitle, setErrorTitle, canModifyExpense
     } = useExpenses();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -56,6 +56,7 @@ export default function ExpensesPage() {
                 onPageChange={setPage}
                 onEdit={handleEdit}
                 onDelete={removeExpense}
+                canModifyExpense={canModifyExpense}
             />
             <ModalError
                 open={!!error}

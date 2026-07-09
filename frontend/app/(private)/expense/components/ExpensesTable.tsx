@@ -13,9 +13,10 @@ interface Props {
     onPageChange: (page: number) => void;
     onEdit: (expense: Expense) => void;
     onDelete: (id: number) => void;
+    canModifyExpense: (date: string) => boolean;
 }
 
-export default function ExpensesTable({ expenses, page, pagination, onPageChange, onEdit, onDelete }: Props) {
+export default function ExpensesTable({ expenses, page, pagination, onPageChange, onEdit, onDelete, canModifyExpense }: Props) {
     const pages = pagination
         ? Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
         : [];
@@ -68,44 +69,48 @@ export default function ExpensesTable({ expenses, page, pagination, onPageChange
 
                                 <td className="px-6 py-4">
                                     <div className="flex items-center justify-center gap-2">
-                                        <button
-                                            onClick={() => onEdit(exp)}
-                                            className="
-                                                inline-flex items-center justify-center
-                                                w-9 h-9
-                                                rounded-xl
-                                                bg-indigo-50 text-indigo-600
-                                                border border-indigo-100
-                                                shadow-sm
-                                                hover:bg-indigo-100
-                                                hover:shadow
-                                                hover:-translate-y-0.5
-                                                active:translate-y-0
-                                                transition-all duration-200
-                                            "
-                                            title="Editar"
-                                        >
-                                            <Pencil className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => onDelete(exp.id)}
-                                            className="
-                                                inline-flex items-center justify-center
-                                                w-9 h-9
-                                                rounded-xl
-                                                bg-rose-50 text-rose-600
-                                                border border-rose-100
-                                                shadow-sm
-                                                hover:bg-rose-100
-                                                hover:shadow
-                                                hover:-translate-y-0.5
-                                                active:translate-y-0
-                                                transition-all duration-200
-                                            "
-                                            title="Eliminar"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        {canModifyExpense(exp.date) && (
+                                            <>
+                                                <button
+                                                    onClick={() => onEdit(exp)}
+                                                    className="
+                                                        inline-flex items-center justify-center
+                                                        w-9 h-9
+                                                        rounded-xl
+                                                        bg-indigo-50 text-indigo-600
+                                                        border border-indigo-100
+                                                        shadow-sm
+                                                        hover:bg-indigo-100
+                                                        hover:shadow
+                                                        hover:-translate-y-0.5
+                                                        active:translate-y-0
+                                                        transition-all duration-200
+                                                    "
+                                                    title="Editar"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => onDelete(exp.id)}
+                                                    className="
+                                                        inline-flex items-center justify-center
+                                                        w-9 h-9
+                                                        rounded-xl
+                                                        bg-rose-50 text-rose-600
+                                                        border border-rose-100
+                                                        shadow-sm
+                                                        hover:bg-rose-100
+                                                        hover:shadow
+                                                        hover:-translate-y-0.5
+                                                        active:translate-y-0
+                                                        transition-all duration-200
+                                                    "
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </>
+                                        )}
 
                                     </div>
                                 </td>
