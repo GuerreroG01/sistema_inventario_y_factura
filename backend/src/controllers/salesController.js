@@ -110,7 +110,9 @@ export const createSale = async (req, res) => {
             fecha: normalizeDate(fecha),
             total: 0,
             category,
-            client_id
+            client_id,
+            created_by: req.user.id,
+            updated_by: req.user.id
         }, { transaction: t });
 
 
@@ -267,6 +269,7 @@ export const updateSaleStatus = async (req, res) => {
         const previousStatus = sale.status;
 
         sale.status = status;
+        sale.updated_by = req.user.id;
 
         if (status === "REFUNDED") {
             sale.observation = refundObservation;

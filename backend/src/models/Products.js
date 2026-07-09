@@ -58,6 +58,16 @@ const Product = sequelize.define("Products", {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
+
+    created_by: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+
+    updated_by: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    }
 },
 {
     tableName:"Products"

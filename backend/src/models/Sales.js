@@ -27,6 +27,16 @@ const Sales = sequelize.define ("Sales",{
     client_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+
+    created_by: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+
+    updated_by: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
     }
     /*client_id: {
         type: DataTypes.INTEGER,

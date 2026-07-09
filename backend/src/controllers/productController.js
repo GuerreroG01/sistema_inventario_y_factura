@@ -52,6 +52,8 @@ export const createProduct = async (req, res) => {
             entryDate: normalizeDate(entryDate),
             expirationDate: normalizeDate(expirationDate),
             active,
+            created_by: req.user.id,
+            updated_by: req.user.id
         });
 
         if (stock && Number(stock) > 0) {
@@ -249,6 +251,7 @@ export const updateProduct = async (req, res) => {
             entryDate: normalizeDate(entryDate) ?? product.entryDate,
             expirationDate: normalizeDate(expirationDate) ?? product.expirationDate,
             active: active ?? product.active,
+            updated_by: req.user.id
         });
 
         if (category !== undefined && oldCategory !== product.category) {
@@ -297,7 +300,8 @@ export const deleteProduct = async (req, res) => {
         }
 
         await product.update({
-            active: false
+            active: false,
+            updated_by: req.user.id
         });
 
         cacheService.del(CacheKeys.DASHBOARDCARDS);

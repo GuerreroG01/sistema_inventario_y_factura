@@ -8,7 +8,9 @@ export const createExpense = async (data) => {
         amount: data.amount,
         category: data.category,
         date: data.date,
-        payment_method: data.payment_method
+        payment_method: data.payment_method,
+        created_by: req.user.id,
+        updated_by: req.user.id
     });
     cacheService.del(CacheKeys.CATEGORIESEXP);
     cacheService.del(CacheKeys.PROFITABILITY);
@@ -77,7 +79,8 @@ export const updateExpense = async (id, data) => {
         amount: data.amount ?? expense.amount,
         category: data.category ?? expense.category,
         date: data.date ?? expense.date,
-        payment_method: data.payment_method ?? expense.payment_method
+        payment_method: data.payment_method ?? expense.payment_method,
+        updated_by: req.user.id
     });
     cacheService.del(CacheKeys.CATEGORIESEXP);
     cacheService.del(CacheKeys.PROFITABILITY);
