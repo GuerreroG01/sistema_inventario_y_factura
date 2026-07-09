@@ -38,6 +38,7 @@ type Props = {
     confirmRefund: (observation: string) => Promise<void>;
 
     errorMessage: string;
+    username: string;
 };
 
 export default function SalesPage(props: Props) {

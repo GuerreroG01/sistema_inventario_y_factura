@@ -64,3 +64,14 @@ export async function logout(token: string): Promise<void> {
         );
     }
 }
+export async function getUsernameById(id: number): Promise<string> {
+    try {
+        const { data } = await api.get<{ Usuario: string }>(`/username/${id}`);
+        return data.Usuario;
+    } catch (error: any) {
+        throw new Error(
+            error?.response?.data?.message ||
+            "Error al obtener el nombre de usuario"
+        );
+    }
+}

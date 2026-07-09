@@ -6,7 +6,7 @@ export interface Sale {
     status: string;
     client_id?: number;
     updatedAt: string;
-
+    created_by: number;
     details?: SaleDetail[];
 }
 export interface SaleDetail {

@@ -59,3 +59,12 @@ export const logout = async (req, res, next) => {
         next(error);
     }
 };
+export const getUsername = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const username = await authService.getUsernameById(id);
+        res.json({ Usuario: username });
+    } catch (error) {
+        next(error);
+    }
+};

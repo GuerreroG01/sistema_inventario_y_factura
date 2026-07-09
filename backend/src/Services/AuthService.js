@@ -155,3 +155,17 @@ export const logout = async (userId) => {
         message: "Sesión cerrada correctamente"
     };
 };
+export const getUsernameById = async (userId) => {
+    const user = await User.findByPk(userId, {
+        attributes: ["Usuario"]
+    });
+
+    if (!user) {
+        throw {
+            statusCode: 404,
+            message: "Usuario no encontrado"
+        };
+    }
+
+    return user.Usuario;
+};

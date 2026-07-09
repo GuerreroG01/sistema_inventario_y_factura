@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSales, getSale, updateSaleStatus } from "@/services/salesService";
+import { getUsernameById } from "@/services/authService";
 import { Sale } from "@/types/Sale";
 
 export function useSales() {
@@ -14,6 +15,7 @@ export function useSales() {
     const [showRefundModal, setShowRefundModal] = useState(false);
     const [pendingStatus, setPendingStatus] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
+    const [username, setUsername] = useState("");
     
 
     const statusOptions = [
@@ -82,6 +84,8 @@ export function useSales() {
 
             if (!selected && data.sales.length > 0) {
                 const firstSale = await getSale(data.sales[0].id);
+                const user = await getUsernameById(firstSale.created_by);
+                setUsername(user);
                 setSelected(firstSale);
             } else {
                 setSelected(null);
@@ -98,6 +102,8 @@ export function useSales() {
             setLoading(true);
 
             const sale = await getSale(id);
+            const user = await getUsernameById(sale.created_by);
+            setUsername(user);
             setSelected(sale);
         } catch (error) {
             console.error("Error fetching sale detail:", error);
@@ -168,6 +174,6 @@ export function useSales() {
     return {
         sales, selected, setSelected: selectSale, loading, startDate, setStartDate, endDate, setEndDate, page, setPage,
         totalPages, totalSales, fetchSales, statusStyle, handleStatusChange, statusOptions, showRefundModal, setShowRefundModal,
-        pendingStatus, confirmRefund, errorMessage
+        pendingStatus, confirmRefund, errorMessage, username
     };
 }
