@@ -21,15 +21,26 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
     const [page, setPage] = useState(initialPage);
     const [filters, setFilters] = useState<Filters>(initialFilters);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<unknown>(null);
+    const [errorTitle, setErrorTitle] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
     const [categories, setCategories] = useState<string[]>([]);
     const [categoriesLoaded, setCategoriesLoaded] = useState(false);
     const [categoriesLoading, setCategoriesLoading] = useState(false);
     const [currentMonthTotal, setCurrentMonthTotal] = useState<number>(0);
+    
+    const getErrorMessage = (err: unknown): string => {
+        if (err instanceof Error) {
+            return err.message;
+        }
+
+        return "Ocurrió un error inesperado";
+    };
+    
     const fetchExpenses = async () => {
         try {
             setLoading(true);
             setError(null);
+            setErrorTitle("");
 
             const res = await getExpenses(page, filters);
 
@@ -37,7 +48,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
             setPagination(res.pagination);
 
         } catch (err) {
-            setError(err);
+            setError(getErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -51,7 +62,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
 
             setCategoriesLoaded(true);
         } catch (err) {
-            setError(err);
+            setError(getErrorMessage(err));
         } finally {
             setCategoriesLoading(false);
         }
@@ -61,7 +72,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
             const data = await getCurrentMonthTotal();
             setCurrentMonthTotal(data.total);
         } catch (err) {
-            setError(err);
+            setError(getErrorMessage(err));
         }
     };
 
@@ -78,17 +89,27 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
             await fetchExpenses();
             await fetchCurrentMonthTotal()
         } catch (err) {
-            setError(err);
+            setErrorTitle("No se puede crear el egreso");
+            setError(getErrorMessage(err));
         }
     };
 
     const editExpense = async (id: number, data: Partial<Expense>) => {
         try {
-            const res = await updateExpense(id, data);
+            const result = await updateExpense(id, data);
+
+            if (!result.ok) {
+                setErrorTitle("No se puede actualizar el egreso");
+                setError(result.message);
+                return;
+            }
+
             await fetchExpenses();
             await fetchCurrentMonthTotal();
+
         } catch (err) {
-            setError(err);
+            setErrorTitle("No se puede actualizar  el egreso");
+            setError(getErrorMessage(err));
         }
     };
 
@@ -98,7 +119,8 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
             await fetchExpenses();
             await fetchCurrentMonthTotal();
         } catch (err) {
-            setError(err);
+            setErrorTitle("No se puede eliminar el egreso");
+            setError(getErrorMessage(err));
         }
     };
 
@@ -116,6 +138,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
 
     return {
         expenses, pagination, loading, error, page, setPage, filters, setFilters, updateFilter, addExpense, currentMonthTotal,
-        editExpense, removeExpense, refresh: fetchExpenses, fetchCategories, categories, categoriesLoaded, categoriesLoading
+        editExpense, removeExpense, refresh: fetchExpenses, fetchCategories, categories, categoriesLoaded, categoriesLoading,
+        setError, errorTitle, setErrorTitle
     };
 }

@@ -42,6 +42,15 @@ const Expense = sequelize.define("Expenses", {
     updated_by: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    status: {
+        type: DataTypes.STRING,//Activo, anulado, etc.
+        allowNull: false,
+        defaultValue: "Activo"
+    },
+    removal_date: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
 }, {
     tableName: "Expenses",

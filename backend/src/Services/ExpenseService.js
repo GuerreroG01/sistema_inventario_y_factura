@@ -1,16 +1,16 @@
 import Expense from "../models/Expense.js";
 import { Op } from "sequelize";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
-
-export const createExpense = async (data) => {
+import { canModifyExpense } from "../utils/expensePeriod.js";
+export const createExpense = async (data, userId) => {
     const expense = await Expense.create({
         description: data.description,
         amount: data.amount,
         category: data.category,
         date: data.date,
         payment_method: data.payment_method,
-        created_by: req.user.id,
-        updated_by: req.user.id
+        created_by: userId ?? null,
+        updated_by: userId ?? null
     });
     cacheService.del(CacheKeys.CATEGORIESEXP);
     cacheService.del(CacheKeys.PROFITABILITY);
@@ -68,10 +68,15 @@ export const getExpenseById = async (id) => {
     return expense;
 };
 
-export const updateExpense = async (id, data) => {
+export const updateExpense = async (id, data, userId) => {
     const expense = await Expense.findByPk(id);
+
     if (!expense) {
         throw new Error("Egreso no encontrado");
+    }
+
+    if (!canModifyExpense(expense.date)) {
+        throw new Error("Este egreso pertenece a un período cerrado.");
     }
 
     await expense.update({
@@ -80,10 +85,12 @@ export const updateExpense = async (id, data) => {
         category: data.category ?? expense.category,
         date: data.date ?? expense.date,
         payment_method: data.payment_method ?? expense.payment_method,
-        updated_by: req.user.id
+        updated_by: userId ?? expense.updated_by
     });
+
     cacheService.del(CacheKeys.CATEGORIESEXP);
     cacheService.del(CacheKeys.PROFITABILITY);
+
     return expense;
 };
 
@@ -91,6 +98,10 @@ export const deleteExpense = async (id) => {
     const expense = await Expense.findByPk(id);
     if (!expense) {
         throw new Error("Egreso no encontrado");
+    }
+
+    if (!canModifyExpense(expense.date)) {
+        throw new Error("Este egreso pertenece a un período cerrado.");
     }
     await expense.destroy();
     cacheService.del(CacheKeys.CATEGORIESEXP);

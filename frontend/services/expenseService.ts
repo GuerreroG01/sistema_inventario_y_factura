@@ -68,7 +68,7 @@ export async function updateExpense(
   expense: Partial<Omit<Expense, "id">>
 ): Promise<{ ok: true; data: Expense } | { ok: false; message: string }> {
   try {
-    const { data } = await api.put<Expense>(`/${id}`, expense);
+    const { data } = await api.put<Expense>(`/expenses/${id}`, expense);
 
     return { ok: true, data };
   } catch (error: any) {

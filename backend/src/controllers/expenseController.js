@@ -2,7 +2,10 @@ import { createExpense, getAllExpenses, getExpenseById, updateExpense, deleteExp
 
 export const create = async (req, res) => {
     try {
-        const expense = await createExpense(req.body);
+        const expense = await createExpense(
+            req.body,
+            req.user?.id
+        );
 
         return res.status(201).json({
             message: "Egreso creado correctamente",
@@ -63,7 +66,11 @@ export const update = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const updated = await updateExpense(id, req.body);
+        const updated = await updateExpense(
+            id,
+            req.body,
+            req.user?.id
+        );
 
         return res.status(200).json({
             message: "Egreso actualizado correctamente",

@@ -209,6 +209,7 @@ export const getProfitabilityMetrics = async (month, year) => {
             FROM "Expenses"
             WHERE EXTRACT(MONTH FROM date) = :month
                 AND EXTRACT(YEAR FROM date) = :year
+                AND status = 'Activo'
             `,
             {
                 replacements: { month, year },

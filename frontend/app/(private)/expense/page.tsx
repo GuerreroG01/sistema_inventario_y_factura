@@ -7,12 +7,13 @@ import ExpensesTable from "./components/ExpensesTable";
 import ExpenseForm from "./components/ExpensesForm";
 import ExpenseFilters from "./components/ExpenseFilters";
 import { Expense } from "@/types/Expense";
+import ModalError from "@/components/ModalError";
 
 export default function ExpensesPage() {
 
     const {
         expenses, pagination, page, setPage, addExpense, currentMonthTotal, editExpense, removeExpense, filters, updateFilter, refresh, 
-        categories, categoriesLoaded, categoriesLoading, fetchCategories
+        categories, categoriesLoaded, categoriesLoading, fetchCategories, error, setError, errorTitle, setErrorTitle
     } = useExpenses();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -55,6 +56,15 @@ export default function ExpensesPage() {
                 onPageChange={setPage}
                 onEdit={handleEdit}
                 onDelete={removeExpense}
+            />
+            <ModalError
+                open={!!error}
+                message={error || ""}
+                title={errorTitle}
+                onClose={() => {
+                    setError(null);
+                    setErrorTitle("");
+                }}
             />
             {isOpen && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
