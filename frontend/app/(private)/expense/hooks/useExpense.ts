@@ -37,12 +37,13 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
     };
 
     const canModifyExpense = (date: string) => {
-        const expenseDate = new Date(date);
+        const [year, month] = date.split("-");
+
         const now = new Date();
 
         return (
-            expenseDate.getMonth() === now.getMonth() &&
-            expenseDate.getFullYear() === now.getFullYear()
+            Number(year) === now.getFullYear() &&
+            Number(month) === now.getMonth() + 1
         );
     };
     
