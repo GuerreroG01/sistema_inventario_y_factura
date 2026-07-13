@@ -67,6 +67,16 @@ const Product = sequelize.define("Products", {
     updated_by: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    business_id:{
+        type:DataTypes.INTEGER,
+        allowNull:false,
+        references:{
+            model:"Business",
+            key:"id"
+        },
+        onUpdate:"CASCADE",
+        onDelete:"RESTRICT"
     }
 },
 {

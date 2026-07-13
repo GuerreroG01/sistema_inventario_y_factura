@@ -51,6 +51,16 @@ const Expense = sequelize.define("Expenses", {
     removal_date: {
         type: DataTypes.DATE,
         allowNull: true
+    },
+    business_id:{
+        type:DataTypes.INTEGER,
+        allowNull:false,
+        references:{
+            model:"Business",
+            key:"id"
+        },
+        onUpdate:"CASCADE",
+        onDelete:"RESTRICT"
     }
 }, {
     tableName: "Expenses",

@@ -49,6 +49,14 @@ const User = sequelize.define("User", {
     UltimoAcceso: {
         type: DataTypes.DATE,
         allowNull: true,
+    },
+    business_id:{
+        type:DataTypes.INTEGER,
+        allowNull:false,
+        references:{
+            model:"Business",
+            key:"id"
+        }
     }
 
 }, {

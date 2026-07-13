@@ -1,51 +1,88 @@
+import Business from "./Business.js";
 import Sales from "./Sales.js";
 import SaleDetail from "./SaleDetails.js";
 import Product from "./Products.js";
 import InventoryMov from "./Inventory_mov.js";
+import Expense from "./Expense.js";
+import User from "./User.js";
 
-Sales.hasMany(SaleDetail, {
-    foreignKey: "sale_id",
-    as: "details"
+Business.hasMany(User,{
+    foreignKey:"business_id",
+    as:"users"
 });
 
-SaleDetail.belongsTo(Sales, {
-    foreignKey: "sale_id",
-    as: "sale"
+User.belongsTo(Business,{
+    foreignKey:"business_id",
+    as:"business"
 });
 
-Product.hasMany(InventoryMov, {
-    foreignKey: "product_id",
-    as: "movements"
+Business.hasMany(Product,{
+    foreignKey:"business_id",
+    as:"products"
 });
 
-Product.hasMany(SaleDetail, {
-    foreignKey: "product_id",
-    as: "details"
+Product.belongsTo(Business,{
+    foreignKey:"business_id",
+    as:"business"
 });
 
-SaleDetail.belongsTo(Product, {
-    foreignKey: "product_id",
-    as: "product"
+
+Business.hasMany(Sales,{
+    foreignKey:"business_id",
+    as:"sales"
 });
 
-InventoryMov.belongsTo(Product, {
-    foreignKey: "product_id",
-    as: "products"
+Sales.belongsTo(Business,{
+    foreignKey:"business_id",
+    as:"business"
 });
 
-Sales.hasMany(InventoryMov, {
-    foreignKey: "referencia",
-    as: "inventoryMovements"
+Business.hasMany(Expense,{
+    foreignKey:"business_id",
+    as:"expenses"
 });
 
-InventoryMov.belongsTo(Sales, {
-    foreignKey: "referencia",
-    as: "sale"
+Expense.belongsTo(Business,{
+    foreignKey:"business_id",
+    as:"business"
 });
 
-export {
-    Sales,
-    SaleDetail,
-    Product,
-    InventoryMov
-};
+Sales.hasMany(SaleDetail,{
+    foreignKey:"sale_id",
+    as:"details"
+});
+
+SaleDetail.belongsTo(Sales,{
+    foreignKey:"sale_id",
+    as:"sale"
+});
+
+Product.hasMany(InventoryMov,{
+    foreignKey:"product_id",
+    as:"movements"
+});
+
+InventoryMov.belongsTo(Product,{
+    foreignKey:"product_id",
+    as:"product"
+});
+
+Product.hasMany(SaleDetail,{
+    foreignKey:"product_id",
+    as:"details"
+});
+
+SaleDetail.belongsTo(Product,{
+    foreignKey:"product_id",
+    as:"product"
+});
+
+Sales.hasMany(InventoryMov,{
+    foreignKey:"referencia",
+    as:"inventoryMovements"
+});
+
+InventoryMov.belongsTo(Sales,{
+    foreignKey:"referencia",
+    as:"sale"
+});

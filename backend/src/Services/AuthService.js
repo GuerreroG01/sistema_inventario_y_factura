@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-export const register = async (datosUsuario) => {
+export const registerMethod = async (datosUsuario, currentUser) => {
     const { Usuario, Clave, Email, Telefono } = datosUsuario;
 
     if (!Usuario || !Clave || !Email || !Telefono) {
@@ -45,8 +45,8 @@ export const register = async (datosUsuario) => {
         Clave: claveHash,
         Email,
         Telefono,
-        Rol: "Empleado"
-
+        Rol: "Empleado",
+        business_id: currentUser.business_id
     });
 
     return {
@@ -107,7 +107,8 @@ export const login = async (usuario, clave) => {
         {
             id: user.Id,
             usuario: user.Usuario,
-            rol: user.Rol
+            rol: user.Rol,
+            business_id: user.business_id
         },
         process.env.JWT_SECRET,
         {
@@ -120,11 +121,9 @@ export const login = async (usuario, clave) => {
         usuario: {
             Id: user.Id,
             Usuario: user.Usuario,
-            Email: user.Email,
-            Telefono: user.Telefono,
             Rol: user.Rol,
-            FechaIngreso: user.FechaIngreso,
-            Activo: user.Activo
+            Activo: user.Activo,
+            Business_id: user.business_id
         }
     };
 };

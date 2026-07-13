@@ -157,7 +157,7 @@ export default function Header() {
                                 group-hover:translate-y-0
                             "
                         >
-                            {user?.Rol?.toLowerCase() === "admin" && (
+                            {(user?.Rol?.toLowerCase() === "admin" || user?.Rol?.toLowerCase() === "superadmin") && (
                                 <a
                                     href="/auth/register"
                                     className="

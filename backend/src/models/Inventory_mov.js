@@ -49,7 +49,17 @@ const Inventory_mov = sequelize.define("Inventory_mov", {
     observacion: {
         type: DataTypes.STRING,
         allowNull: true
-    } 
+    },
+    business_id:{
+        type:DataTypes.INTEGER,
+        allowNull:false,
+        references:{
+            model:"Business",
+            key:"id"
+        },
+        onUpdate:"CASCADE",
+        onDelete:"RESTRICT"
+    }
 },
 {
     tableName: "Inventory_mov",

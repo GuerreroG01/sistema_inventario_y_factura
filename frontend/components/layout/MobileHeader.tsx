@@ -118,7 +118,7 @@ export default function MobileHeader({ navItems, user, logout }: Props) {
                             <ChevronRight className="relative z-10 h-4 w-4 text-slate-400 transform transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1) group-hover:translate-x-1 group-hover:text-blue-500" />
                         </a>
                     ))}
-                    {user?.Rol?.toLowerCase() === "admin" && (
+                    {(user?.Rol?.toLowerCase() === "admin" || user?.Rol?.toLowerCase() === "superadmin") && (
                     <a
                         href="/auth/register"
                         onClick={() => setMenuOpen(false)}

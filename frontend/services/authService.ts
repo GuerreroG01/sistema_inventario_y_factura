@@ -1,4 +1,5 @@
 import axios from "axios";
+import interceptor from "./api";
 import { LoginResponse, RegisterRequest, RegisterResponse, SystemStatusResponse } from "../types/Auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -25,7 +26,7 @@ export async function login( usuario: string, clave: string ): Promise<LoginResp
 
 export async function register( usuarioData: RegisterRequest ): Promise<RegisterResponse> {
     try {
-        const { data } = await api.post<RegisterResponse>( "/register", usuarioData);
+        const { data } = await interceptor.post<RegisterResponse>( "/auth/register", usuarioData);
         return data;
     } catch (error: any) {
         throw new Error(error?.response?.data?.message ||"Error al registrar usuario");

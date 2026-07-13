@@ -2,7 +2,16 @@ import * as authService from "../services/AuthService.js";
 
 export const register = async (req, res) => {
     try {
-        const usuario = await authService.register(req.body);
+        const rolesPermitidos = ["admin", "superAdmin"];
+        if (!rolesPermitidos.includes(req.user.rol)) {
+            return res.status(403).json({
+                success: false,
+                message: "No tiene permisos para realizar esta acción."
+            });
+        }
+
+        const usuario = await authService.registerMethod(req.body, req.user);
+
         res.status(201).json({
             success: true,
             message: "Usuario registrado correctamente",
