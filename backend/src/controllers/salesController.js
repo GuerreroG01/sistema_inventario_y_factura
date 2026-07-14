@@ -16,7 +16,7 @@ export const getSales = async (req, res) => {
         const offset = (page - 1) * limit;
 
         const { fechaMin, fechaMax, status } = req.query;
-        const where = {};
+        const where = {business_id: req.user.business_id};
 
         if (fechaMin || fechaMax) {
             where.fecha = {};
@@ -58,8 +58,12 @@ export const getSales = async (req, res) => {
 export const getSaleById = async (req, res) => {
     try {
         const { id } = req.params;
-
-        const sale = await Sales.findByPk(id, {
+        const business_id = req.user.business_id;
+        const sale = await Sales.findOne({
+            where: {
+                id,
+                business_id
+            },
             include: [
                 {
                     model: SaleDetail,
@@ -112,7 +116,8 @@ export const createSale = async (req, res) => {
             category,
             client_id,
             created_by: req.user.id,
-            updated_by: req.user.id
+            updated_by: req.user.id,
+            business_id: req.user.business_id
         }, { transaction: t });
 
 
@@ -122,7 +127,13 @@ export const createSale = async (req, res) => {
 
         for (const item of items) {
 
-            const product = await Product.findByPk(item.product_id, { transaction: t });
+            const product = await Product.findOne({
+                where: {
+                    id: item.product_id,
+                    business_id: req.user.business_id
+                },
+                transaction: t
+            });
 
             if (!product) {
                 throw new Error(`Producto no encontrado: ${item.product_id}`);
@@ -144,7 +155,8 @@ export const createSale = async (req, res) => {
                 tipo: "salida",
                 cantidad: item.cantidad,
                 referencia: sale.id,
-                observacion: null
+                observacion: null,
+                business_id: req.user.business_id
             }, t);
 
             details.push({
@@ -154,7 +166,8 @@ export const createSale = async (req, res) => {
                 cantidad: item.cantidad,
                 precio_unitario: item.precio_unitario,
                 subtotal,
-                tipo_item: item.tipo_item
+                tipo_item: item.tipo_item,
+                business_id: req.user.business_id
             });
         }
 
@@ -191,12 +204,15 @@ export const createSale = async (req, res) => {
 
 export const getCategories = async (req, res) => {
     try {
+        const businessId = req.user.business_id;
         const now = Date.now();
 
-        if (categoriesCache && now - categoriesCacheTime < CACHE_TTL) {
+        const cached = categoriesCache.get(businessId);
+
+        if (cached && now - cached.time < CACHE_TTL) {
             return res.json({
                 source: "cache",
-                categories: categoriesCache
+                categories: cached.data
             });
         }
 
@@ -205,6 +221,7 @@ export const getCategories = async (req, res) => {
                 [fn("DISTINCT", col("category")), "category"]
             ],
             where: {
+                business_id: businessId,
                 category: {
                     [Op.ne]: null
                 }
@@ -216,8 +233,10 @@ export const getCategories = async (req, res) => {
             .map(c => c.category)
             .filter(Boolean);
 
-        categoriesCache = clean;
-        categoriesCacheTime = now;
+        categoriesCache.set(businessId, {
+            data: clean,
+            time: now
+        });
 
         return res.json({
             source: "db",
@@ -256,7 +275,13 @@ export const updateSaleStatus = async (req, res) => {
             });
         }
 
-        const sale = await Sales.findByPk(id, { transaction: t });
+        const sale = await Sales.findOne({
+            where: {
+                id,
+                business_id: req.user.business_id
+            },
+            transaction: t
+        });
 
         if (!sale) {
             await t.rollback();
@@ -280,13 +305,22 @@ export const updateSaleStatus = async (req, res) => {
         if (status === "CANCELLED" && previousStatus !== "CANCELLED") {
 
             const details = await SaleDetail.findAll({
-                where: { sale_id: id },
+                where: {
+                    sale_id: id,
+                    business_id: req.user.business_id
+                },
                 transaction: t
             });
 
             for (const item of details) {
 
-                const product = await Product.findByPk(item.product_id, { transaction: t });
+                const product = await Product.findOne({
+                    where: {
+                        id: item.product_id,
+                        business_id: req.user.business_id
+                    },
+                    transaction: t
+                });
 
                 if (!product) {
                     throw new Error(`Producto no encontrado: ${item.product_id}`);
@@ -301,19 +335,27 @@ export const updateSaleStatus = async (req, res) => {
                     tipo: "entrada",
                     cantidad: item.cantidad,
                     referencia: sale.id,
-                    observacion: "Cancelación de venta"
+                    observacion: "Cancelación de venta",
+                    business_id: req.user.business_id
                 }, t);
             }
         }
 
         if (status === "COMPLETED" && previousStatus === "CANCELLED") {
             const details = await SaleDetail.findAll({
-                where: { sale_id: id },
+                where: {
+                    sale_id: id,
+                    business_id: req.user.business_id
+                },
                 transaction: t
             });
             for (const item of details) {
-                const product = await Product.findByPk(item.product_id, { 
-                    transaction: t 
+                const product = await Product.findOne({
+                    where: {
+                        id: item.product_id,
+                        business_id: req.user.business_id
+                    },
+                    transaction: t
                 });
 
                 if (!product) {
@@ -331,7 +373,8 @@ export const updateSaleStatus = async (req, res) => {
                     tipo: "salida",
                     cantidad: item.cantidad,
                     referencia: sale.id,
-                    observacion: "Reactivación de venta cancelada"
+                    observacion: "Reactivación de venta cancelada",
+                    business_id: req.user.business_id
                 }, t);
             }
         }
