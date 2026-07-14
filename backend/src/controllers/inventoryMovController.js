@@ -3,7 +3,7 @@ import { getInventoryMovements } from "../services/inventoryMovService.js";
 export const showInventoryMovements = async (req, res) => {
     try {
 
-        const result = await getInventoryMovements(req.query);
+        const result = await getInventoryMovements(req.query,req.user.business_id);
 
         res.status(200).json({
             ok: true,

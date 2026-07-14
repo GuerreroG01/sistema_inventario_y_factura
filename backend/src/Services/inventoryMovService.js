@@ -4,13 +4,13 @@ import { Op } from "sequelize";
 
 export const getInventoryMovements = async ({
     page = 1, limit = 10, product, tipo, startDate, endDate, referencia, cantidadMin,
-    cantidadMax } = {}) => {
+    cantidadMax } = {}, businessId) => {
 
     page = Number(page);
     limit = Number(limit);
     const offset = (page - 1) * limit;
-    const where = {};
-    const productWhere = {};
+    const where = {business_id: businessId};
+    const productWhere = {business_id: businessId};
 
     if (tipo) {
         where.tipo = tipo;
@@ -63,7 +63,7 @@ export const getInventoryMovements = async ({
         include: [
             {
                 model: Product,
-                as: "products",
+                as: "product",
                 attributes: [
                     "id",
                     "name"

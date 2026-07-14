@@ -96,7 +96,7 @@ export default function InventoryMovements() {
                                 className="border-t border-gray-100 hover:bg-gray-50 transition"
                             >
                                 <td className="px-6 py-4 font-medium text-gray-800">
-                                    {movement.products.name}
+                                    {movement.product.name}
                                 </td>
                                 <td className="px-6 py-4">
                                     <span

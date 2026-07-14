@@ -5,7 +5,7 @@ export interface InventoryMovement {
     fecha: string;
     referencia: number | null;
     observacion: string | null;
-    products: {
+    product: {
         id: number;
         name: string;
     };
