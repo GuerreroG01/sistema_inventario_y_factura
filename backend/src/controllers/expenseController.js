@@ -4,7 +4,8 @@ export const create = async (req, res) => {
     try {
         const expense = await createExpense(
             req.body,
-            req.user?.id
+            req.user?.id,
+            req.user.business_id
         );
 
         return res.status(201).json({
@@ -26,7 +27,8 @@ export const getAll = async (req, res) => {
             page: req.query.page,
             category: req.query.category,
             from: req.query.from,
-            to: req.query.to
+            to: req.query.to,
+            businessId: req.user.business_id
         };
 
         const { data, pagination } = await getAllExpenses(filters);
@@ -48,7 +50,7 @@ export const getById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const expense = await getExpenseById(id);
+        const expense = await getExpenseById(id,req.user.business_id);
 
         return res.status(200).json({
             message: "Egreso encontrado",
@@ -69,7 +71,8 @@ export const update = async (req, res) => {
         const updated = await updateExpense(
             id,
             req.body,
-            req.user?.id
+            req.user?.id,
+            req.user.business_id
         );
 
         return res.status(200).json({
@@ -88,7 +91,7 @@ export const deleteValue = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const result = await deleteExpense(id);
+        const result = await deleteExpense(id,req.user.business_id);
 
         return res.status(200).json(result);
 
@@ -100,7 +103,7 @@ export const deleteValue = async (req, res) => {
 };
 export const getCategories = async (req, res) => {
     try {
-        const categories = await getAllCategories();
+        const categories = await getAllCategories(req.user.business_id);
         return res.status(200).json({
             message: "Categorías de egresos encontradas",
             data: categories
@@ -113,7 +116,7 @@ export const getCategories = async (req, res) => {
 };
 export const getCurrentMonthTotal = async (req, res) => {
     try {
-        const total = await getCurrentMonthTotalExpenses();
+        const total = await getCurrentMonthTotalExpenses(req.user.business_id);
 
         return res.status(200).json({
             message: "Total de egresos del mes actual",

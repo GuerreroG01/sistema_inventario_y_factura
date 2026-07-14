@@ -16,50 +16,65 @@ const cache = new NodeCache({
 });
 
 class CacheService {
-    get(key) {
-        const value = cache.get(key);
-        return value;
+
+    buildKey(key, businessId) {
+        if (!businessId) {
+            return key;
+        }
+
+        return `${key}:${businessId}`;
     }
 
-    set(key, value, ttl = CacheTTL.FIVE_MINUTES) {
-        cache.set(key, value, ttl);
+    get(key, businessId) {
+        return cache.get(this.buildKey(key, businessId));
     }
 
-    del(key) {
-        const deleted = cache.del(key);
-        return deleted;
+    set(key, value, ttl = CacheTTL.FIVE_MINUTES, businessId) {
+        cache.set(this.buildKey(key, businessId), value, ttl);
     }
 
-    has(key) {
-        const exists = cache.has(key);
-        return exists;
+    del(key, businessId) {
+        return cache.del(this.buildKey(key, businessId));
+    }
+
+    has(key, businessId) {
+        return cache.has(this.buildKey(key, businessId));
     }
 
     clear() {
         cache.flushAll();
     }
 
-    delByPrefix(prefix) {
+    delByPrefix(prefix, businessId) {
+        const fullPrefix = this.buildKey(prefix, businessId);
+
         const keys = cache.keys();
 
-        const matchedKeys = keys.filter((key) => key.startsWith(prefix));
+        const matchedKeys = keys.filter((key) =>
+            key.startsWith(fullPrefix)
+        );
 
         return cache.del(matchedKeys);
     }
 
-    async remember(key, callback, ttl = CacheTTL.FIVE_MINUTES) {
-        const cached = this.get(key);
+    async remember(key, callback, ttl = CacheTTL.FIVE_MINUTES, businessId) {
+        const cacheKey = this.buildKey(key, businessId);
+
+        const cached = this.get(key, businessId);
 
         if (cached !== undefined) {
-            console.log(`[CACHE] HIT -> ${key}`);
+            console.log(`[CACHE] HIT -> ${cacheKey}`);
             return cached;
         }
-        console.log(`[CACHE] MISS -> ${key}`);
+
+        console.log(`[CACHE] MISS -> ${cacheKey}`);
+
         const value = await callback();
 
         if (value !== undefined && value !== null) {
-            this.set(key, value, ttl);
+            this.set(key, value, ttl, businessId);
         }
+
         return value;
     }
 }

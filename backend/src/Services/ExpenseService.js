@@ -2,7 +2,7 @@ import Expense from "../models/Expense.js";
 import { Op } from "sequelize";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
 import { canModifyExpense } from "../utils/expensePeriod.js";
-export const createExpense = async (data, userId) => {
+export const createExpense = async (data, userId,businessId) => {
     const expense = await Expense.create({
         description: data.description,
         amount: data.amount,
@@ -10,20 +10,21 @@ export const createExpense = async (data, userId) => {
         date: data.date,
         payment_method: data.payment_method,
         created_by: userId ?? null,
-        updated_by: userId ?? null
+        updated_by: userId ?? null,
+        business_id: businessId
     });
-    cacheService.del(CacheKeys.CATEGORIESEXP);
-    cacheService.del(CacheKeys.PROFITABILITY);
+    cacheService.del(CacheKeys.CATEGORIESEXP, businessId);
+    cacheService.del(CacheKeys.PROFITABILITY, businessId);
 
     return expense;
 };
 
-export const getAllExpenses = async ({ page = 1, limit = 10, category, from, to } = {}) => {
+export const getAllExpenses = async ({ page = 1, limit = 10, category, from, to, businessId } = {}) => {
     page = Number(page);
     limit = Number(limit);
 
     const offset = (page - 1) * limit;
-    const where = {};
+    const where = {business_id: businessId};
 
     if (category) {
         where.category = category;
@@ -59,8 +60,13 @@ export const getAllExpenses = async ({ page = 1, limit = 10, category, from, to 
     };
 };
 
-export const getExpenseById = async (id) => {
-    const expense = await Expense.findByPk(id);
+export const getExpenseById = async (id, businessId) => {
+    const expense = await Expense.findOne({
+        where: {
+            id,
+            business_id: businessId
+        }
+    });
     if (!expense) {
         throw new Error("Egreso no encontrado");
     }
@@ -68,8 +74,13 @@ export const getExpenseById = async (id) => {
     return expense;
 };
 
-export const updateExpense = async (id, data, userId) => {
-    const expense = await Expense.findByPk(id);
+export const updateExpense = async (id, data, userId, businessId) => {
+    const expense = await Expense.findOne({
+        where: {
+            id,
+            business_id: businessId
+        }
+    });
 
     if (!expense) {
         throw new Error("Egreso no encontrado");
@@ -85,17 +96,22 @@ export const updateExpense = async (id, data, userId) => {
         category: data.category ?? expense.category,
         date: data.date ?? expense.date,
         payment_method: data.payment_method ?? expense.payment_method,
-        updated_by: userId ?? expense.updated_by
+        updated_by: userId ?? expense.updated_by,
     });
 
-    cacheService.del(CacheKeys.CATEGORIESEXP);
-    cacheService.del(CacheKeys.PROFITABILITY);
+    cacheService.del(CacheKeys.CATEGORIESEXP, businessId);
+    cacheService.del(CacheKeys.PROFITABILITY, businessId);
 
     return expense;
 };
 
-export const deleteExpense = async (id) => {
-    const expense = await Expense.findByPk(id);
+export const deleteExpense = async (id, businessId) => {
+    const expense = await Expense.findOne({
+        where: {
+            id,
+            business_id: businessId
+        }
+    });
     if (!expense) {
         throw new Error("Egreso no encontrado");
     }
@@ -104,28 +120,31 @@ export const deleteExpense = async (id) => {
         throw new Error("Este egreso pertenece a un período cerrado.");
     }
     await expense.destroy();
-    cacheService.del(CacheKeys.CATEGORIESEXP);
-    cacheService.del(CacheKeys.PROFITABILITY);
+    cacheService.del(CacheKeys.CATEGORIESEXP, businessId);
+    cacheService.del(CacheKeys.PROFITABILITY, businessId);
     return {
         message: "Egreso eliminado correctamente"
     };
 };
-export const getAllCategories = async () => {
+export const getAllCategories = async (businessId) => {
     return cacheService.remember(
         CacheKeys.CATEGORIESEXP,
         async () => {
             const categories = await Expense.findAll({
                 attributes: ["category"],
+                where: {
+                    business_id: businessId
+                },
                 group: ["category"],
                 raw: true,
             });
 
             return categories.map((c) => c.category);
         },
-        CacheTTL.ONE_DAY
+        CacheTTL.ONE_DAY, businessId
     );
 };
-export const getCurrentMonthTotalExpenses = async () => {
+export const getCurrentMonthTotalExpenses = async (businessId) => {
     const now = new Date();
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -133,6 +152,7 @@ export const getCurrentMonthTotalExpenses = async () => {
 
     const total = await Expense.sum("amount", {
         where: {
+            business_id:businessId,
             date: {
                 [Op.between]: [startOfMonth, endOfMonth]
             }
