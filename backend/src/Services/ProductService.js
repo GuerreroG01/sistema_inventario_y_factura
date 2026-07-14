@@ -2,7 +2,8 @@ import Product from "../models/Products.js";
 import { Op } from "sequelize";
 import { cacheService, CacheTTL, CacheKeys } from "./cache/index.js";
 
-export const getCriticalStockProducts = async () => {
+export const getCriticalStockProducts = async (business_id) => {
+
     return await cacheService.remember(
         CacheKeys.PRODUCTSALERTS,
         async () => {
@@ -24,6 +25,7 @@ export const getCriticalStockProducts = async () => {
             const critical = await Product.findAll({
                 attributes,
                 where: {
+                    business_id,
                     active: true,
                     stock: {
                         [Op.between]: [1, 5]
@@ -37,6 +39,6 @@ export const getCriticalStockProducts = async () => {
             };
 
         },
-        CacheTTL.FIVE_MINUTES
+        CacheTTL.ONE_HOUR
     );
 };

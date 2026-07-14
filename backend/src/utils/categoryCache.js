@@ -1,35 +1,58 @@
-let categoriesCache = null;
-let categoriesCacheTime = 0;
+const categoriesCache = Object.create(null);
 const CACHE_TTL = 1000 * 60 * 60 * 24;
 
-export const invalidateCategoryCache = (newCategory) => {
-    if (!newCategory) return;
-    if (!categoriesCache) return;
 
-    const exists = categoriesCache.includes(newCategory);
+export const invalidateCategoryCache = (business_id, newCategory) => {
+
+    if (!business_id || !newCategory) return;
+
+    const cache = categoriesCache[business_id];
+
+    if (!cache) return;
+
+    const exists = cache.data.includes(newCategory);
 
     if (exists) return;
 
-    categoriesCache = null;
-    categoriesCacheTime = 0;
+    delete categoriesCache[business_id];
 };
 
-export const setCategoryCache = (categories) => {
-    categoriesCache = categories;
-    categoriesCacheTime = Date.now();
+
+export const setCategoryCache = (business_id, categories) => {
+
+    categoriesCache[business_id] = {
+        data: categories,
+        time: Date.now()
+    };
+
 };
 
-export const getCategoryCache = () => {
-    const now = Date.now();
 
-    if (categoriesCache && now - categoriesCacheTime < CACHE_TTL) {
-        return categoriesCache;
+export const getCategoryCache = (business_id) => {
+    const cache = categoriesCache[business_id];
+
+    if (!cache) {
+        return null;
     }
 
+    const now = Date.now();
+    if (now - cache.time < CACHE_TTL) {
+        return cache.data;
+    }
+
+    delete categoriesCache[business_id];
     return null;
 };
 
-export const clearCategoryCache = () => {
-    categoriesCache = null;
-    categoriesCacheTime = 0;
+export const clearCategoryCache = (business_id) => {
+
+    if (business_id) {
+        delete categoriesCache[business_id];
+        return;
+    }
+
+    Object.keys(categoriesCache).forEach(key => {
+        delete categoriesCache[key];
+    });
+
 };

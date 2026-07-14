@@ -10,7 +10,8 @@ class InventoryMovService {
         tipo,
         cantidad,
         referencia = null,
-        observacion = null
+        observacion = null,
+        business_id
     }, transaction = null) {
 
         const movement = await InventoryMov.create({
@@ -18,7 +19,8 @@ class InventoryMovService {
             tipo,
             cantidad,
             referencia,
-            observacion
+            observacion,
+            business_id
         }, {
             transaction
         });
@@ -35,7 +37,7 @@ class InventoryMovService {
 
         const offset = (page - 1) * limit;
 
-        const where = {};
+        const where = {business_id};
 
         if (startDate && endDate) {
             where.fecha = {
@@ -80,10 +82,17 @@ class InventoryMovService {
     }
     static async updateStockOnly({
         product_id,
-        quantity
+        quantity,
+        business_id
     }, transaction = null) {
 
-        const product = await Product.findByPk(product_id, { transaction });
+        const product = await Product.findOne({
+            where: {
+                id: product_id,
+                business_id
+            },
+            transaction
+        });
 
         if (!product) {
             throw new Error(`Producto no encontrado: ${product_id}`);

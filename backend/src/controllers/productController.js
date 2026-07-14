@@ -1,18 +1,18 @@
 import Product from "../models/Products.js";
-import { ValidationError, UniqueConstraintError, fn, col, literal, Op } from "sequelize";
+import { ValidationError, UniqueConstraintError, fn, col, literal, Op, where } from "sequelize";
 import { normalizeDate } from "../utils/formatters.js"
 import { invalidateCategoryCache, clearCategoryCache, getCategoryCache, setCategoryCache  } from "../utils/categoryCache.js";
 import InventoryMovService from "../Services/Inventory_MovService.js";
 import { cacheService, CacheKeys } from "../services/cache/index.js";
 import { getCriticalStockProducts } from "../services/ProductService.js";
 
-const generateBarcode = async () => {
+const generateBarcode = async (business_id) => {
     let barcode;
     let exists = true;
 
     while (exists) {
         barcode = Math.floor(1000000000000 + Math.random() * 9000000000000).toString();
-        const product = await Product.findOne({ where: { barcode } });
+        const product = await Product.findOne({ where: { barcode, business_id } });
         exists = !!product;
     }
 
@@ -38,7 +38,7 @@ export const createProduct = async (req, res) => {
         }
 
         if (!barcode || barcode.trim() === "") {
-            barcode = await generateBarcode();
+            barcode = await generateBarcode(req.user.business_id);
         }
 
         const product = await Product.create({
@@ -53,7 +53,8 @@ export const createProduct = async (req, res) => {
             expirationDate: normalizeDate(expirationDate),
             active,
             created_by: req.user.id,
-            updated_by: req.user.id
+            updated_by: req.user.id,
+            business_id: req.user.business_id
         });
 
         if (stock && Number(stock) > 0) {
@@ -61,11 +62,12 @@ export const createProduct = async (req, res) => {
                 product_id: product.id,
                 tipo: "entrada",
                 cantidad: stock,
-                observacion: null
+                observacion: null,
+                business_id: req.user.business_id
             });
         }
 
-        invalidateCategoryCache(category);
+        invalidateCategoryCache(req.user.business_id,category);
         cacheService.del(CacheKeys.DASHBOARDCARDS);
         cacheService.del(CacheKeys.PROFITABILITY);
         cacheService.del(CacheKeys.RANKINGMETRICS);
@@ -103,7 +105,7 @@ export const getProducts = async (req, res) => {
         const offset = (page - 1) * limit;
 
         const { name, barcode, category, active, priceMin, priceMax, costMin, costMax } = req.query;
-        const where = {};
+        const where = {business_id: req.user.business_id};
 
         if (name) {
             where.name = {
@@ -149,7 +151,6 @@ export const getProducts = async (req, res) => {
             limit,
             offset
         });
-        invalidateCategoryCache(category);
         return res.json({
             total: count,
             page,
@@ -170,7 +171,12 @@ export const getProductById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const product = await Product.findByPk(id);
+        const product = await Product.findOne({
+            where:{
+                id,
+                business_id:req.user.business_id
+            }
+        });
 
         if (!product) {
             return res.status(404).json({
@@ -195,7 +201,12 @@ export const updateProduct = async (req, res) => {
         const { id } = req.params;
         const { name, barcode, category, unit, price, cost, stock, entryDate, expirationDate, active, stockObservation } = req.body;
 
-        const product = await Product.findByPk(id);
+        const product = await Product.findOne({
+            where:{
+                id,
+                business_id:req.user.business_id
+            }
+        });
         if (!product) {
             return res.status(404).json({
                 error: "not_found",
@@ -237,7 +248,8 @@ export const updateProduct = async (req, res) => {
                 cantidad: diff,
                 observacion: diff < 0
                     ? stockObservation
-                    : "Aumento manual de stock"
+                    : "Aumento manual de stock",
+                business_id: req.user.business_id
             });
         }
         await product.update({
@@ -255,7 +267,10 @@ export const updateProduct = async (req, res) => {
         });
 
         if (category !== undefined && oldCategory !== product.category) {
-            clearCategoryCache();
+            invalidateCategoryCache(
+                req.user.business_id,
+                category
+            );
         }
         cacheService.del(CacheKeys.DASHBOARDCARDS);
         cacheService.del(CacheKeys.PROFITABILITY);
@@ -290,7 +305,12 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const product = await Product.findByPk(id);
+        const product = await Product.findOne({
+            where:{
+                id,
+                business_id:req.user.business_id
+            }
+        });
 
         if (!product) {
             return res.status(404).json({
@@ -310,7 +330,7 @@ export const deleteProduct = async (req, res) => {
         cacheService.del(CacheKeys.INVENTORYALERTS);
         cacheService.del(CacheKeys.PRODUCTSALERTS);
         cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
-        clearCategoryCache();
+        clearCategoryCache(req.user.business_id);
 
         return res.json({
             message: `Producto con id ${id} desactivado correctamente.`
@@ -326,11 +346,12 @@ export const deleteProduct = async (req, res) => {
     }
 };
 export const getProductStats = async (req, res) => {
+    const business_id = req.user.business_id;
     try {
-        const totalProducts = await Product.count();
-        const totalStock = await Product.sum('stock');
-        const activeProducts = await Product.count({ where: { active: true } });
-        const lowStock = await Product.count({ where: { stock: { [Op.between]: [1, 20] } } });
+        const totalProducts = await Product.count({where:{business_id}});
+        const totalStock = await Product.sum('stock',{where:{business_id}});
+        const activeProducts = await Product.count({ where: { business_id, active: true } });
+        const lowStock = await Product.count({ where: { business_id, stock: { [Op.between]: [1, 20] } } });
 
         return res.json({
             totalProducts,
@@ -350,7 +371,7 @@ export const getProductStats = async (req, res) => {
 
 export const getCategories = async (req, res) => {
     try {
-        const cached = getCategoryCache();
+        const cached = getCategoryCache(req.user.business_id);
 
         if (cached) {
             return res.json({
@@ -364,6 +385,7 @@ export const getCategories = async (req, res) => {
                 [fn("DISTINCT", col("category")), "category"]
             ],
             where: {
+                business_id:req.user.business_id,
                 category: {
                     [Op.ne]: null
                 }
@@ -375,7 +397,7 @@ export const getCategories = async (req, res) => {
             .map(c => c.category)
             .filter(Boolean);
 
-        setCategoryCache(clean);
+        setCategoryCache(req.user.business_id,clean);
 
         return res.json({
             source: "db",
@@ -401,7 +423,8 @@ export const getProductsAutocomplete = async (req, res) => {
         }
 
         const where = {
-            active: true
+            active: true,
+            business_id:req.user.business_id
         };
 
         if (barcode) {
@@ -442,7 +465,7 @@ export const getProductsAutocomplete = async (req, res) => {
 
 export const getStockAlerts = async (req, res) => {
     try {
-        const alerts = await getCriticalStockProducts();
+        const alerts = await getCriticalStockProducts(req.user.business_id);
 
         res.status(200).json({
             success: true,
