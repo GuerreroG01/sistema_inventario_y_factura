@@ -21,6 +21,14 @@ export default function ProductCards() {
 
   return (
     <>
+      <ProductFilters
+        filters={filters}
+        updateFilter={updateFilter}
+        applyFilters={applyFilters}
+        open={filtersOpen}
+        setOpen={setFiltersOpen}
+        categories={categories}
+      />
       {loading ? (
         <div className="py-20 text-center text-slate-500 font-medium">Cargando productos...</div>
       ) : products.length === 0 ? (
@@ -31,14 +39,6 @@ export default function ProductCards() {
         </div>
       ) : (
         <>
-        <ProductFilters
-          filters={filters}
-          updateFilter={updateFilter}
-          applyFilters={applyFilters}
-          open={filtersOpen}
-          setOpen={setFiltersOpen}
-          categories={categories}
-        />
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {products.map((p: Product) => (
               <div

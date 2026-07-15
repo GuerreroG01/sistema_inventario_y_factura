@@ -38,7 +38,7 @@ export default function ExpenseMetricCard({ label, value, onCreate }: Props) {
                     </p>
 
                     <p className="text-xs text-gray-400 mt-0.5">
-                        Registro de Egresos del Negocio
+                        Registro Mensual de Egresos del Negocio
                     </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
