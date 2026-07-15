@@ -56,6 +56,17 @@ class CacheService {
 
         return cache.del(matchedKeys);
     }
+    delOtherByPrefix(prefix, businessId) {
+
+        const keys = cache.keys();
+
+        const matchedKeys = keys.filter((key) =>
+            key.includes(`${prefix}`) &&
+            key.endsWith(`:${businessId}`)
+        );
+
+        return cache.del(matchedKeys);
+    }
 
     async remember(key, callback, ttl = CacheTTL.FIVE_MINUTES, businessId) {
         const cacheKey = this.buildKey(key, businessId);

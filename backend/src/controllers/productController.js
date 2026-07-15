@@ -68,12 +68,12 @@ export const createProduct = async (req, res) => {
         }
 
         invalidateCategoryCache(req.user.business_id,category);
-        cacheService.del(CacheKeys.DASHBOARDCARDS);
-        cacheService.del(CacheKeys.PROFITABILITY);
-        cacheService.del(CacheKeys.RANKINGMETRICS);
-        cacheService.del(CacheKeys.INVENTORYALERTS);
-        cacheService.del(CacheKeys.PRODUCTSALERTS);
-        cacheService.delByPrefix(CacheKeys.EXPIRINGPRODUCTS);
+        cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
+        cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
+        cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
+        cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
+        cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
+        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
         return res.status(201).json(product);
 
     } catch (error) {
@@ -272,12 +272,12 @@ export const updateProduct = async (req, res) => {
                 category
             );
         }
-        cacheService.del(CacheKeys.DASHBOARDCARDS);
-        cacheService.del(CacheKeys.PROFITABILITY);
-        cacheService.del(CacheKeys.RANKINGMETRICS);
-        cacheService.del(CacheKeys.INVENTORYALERTS);
-        cacheService.del(CacheKeys.PRODUCTSALERTS);
-        cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
+        cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
+        cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
+        cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
+        cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
+        cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
+        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
         return res.json(product);
 
     } catch (error) {
@@ -324,12 +324,12 @@ export const deleteProduct = async (req, res) => {
             updated_by: req.user.id
         });
 
-        cacheService.del(CacheKeys.DASHBOARDCARDS);
-        cacheService.del(CacheKeys.PROFITABILITY);
-        cacheService.del(CacheKeys.RANKINGMETRICS);
-        cacheService.del(CacheKeys.INVENTORYALERTS);
-        cacheService.del(CacheKeys.PRODUCTSALERTS);
-        cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
+        cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
+        cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
+        cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
+        cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
+        cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
+        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
         clearCategoryCache(req.user.business_id);
 
         return res.json({

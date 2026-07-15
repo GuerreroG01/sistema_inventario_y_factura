@@ -4,7 +4,7 @@ import {
 
 export const dashboardMetrics = async (req, res) => {
     try {
-        const result = await getDashboardMetrics();
+        const result = await getDashboardMetrics(req.user.business_id);
 
         if (!result.success) {
             console.warn(
@@ -36,7 +36,7 @@ export const dashboardMetrics = async (req, res) => {
 
 export const profitabilityMetrics = async (req, res) => {
     try {
-        const result = await getProfitabilityTrendMetrics();
+        const result = await getProfitabilityTrendMetrics(req.user.business_id);
 
         if (!result.success) {
             console.warn(
@@ -67,7 +67,7 @@ export const profitabilityMetrics = async (req, res) => {
 };
 export const rankingMetrics = async (req, res) => {
     try {
-        const result = await getSalesRankingMetrics();
+        const result = await getSalesRankingMetrics(req.user.business_id);
 
         if (!result.success) {
             console.warn(
@@ -98,7 +98,7 @@ export const rankingMetrics = async (req, res) => {
 };
 export const InventoryAlertsMetrics = async (req, res) => {
     try {
-        const result = await getInventoryAlertsMetrics();
+        const result = await getInventoryAlertsMetrics(req.user.business_id);
         if (!result.success) {
             console.warn(
                 "[InventoryAlertsMetrics] Error obteniendo los rankings",
@@ -125,7 +125,9 @@ export const InventoryAlertsMetrics = async (req, res) => {
 };
 export const ExpiringProductsMetrics = async (req, res) => {
     try {
-        const result = await getExpiringProductsMetrics();
+        const page = Number(req.query.page ?? 1);
+        const limit = Number(req.query.limit ?? 10);
+        const result = await getExpiringProductsMetrics(req.user.business_id, page, limit);
         if (!result.success) {
             console.warn(
                 "[InventoryAlertsMetrics] Error obteniendo los rankings",

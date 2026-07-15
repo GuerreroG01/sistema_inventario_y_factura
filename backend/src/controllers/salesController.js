@@ -175,12 +175,12 @@ export const createSale = async (req, res) => {
 
         await sale.update({ total }, { transaction: t });
         await t.commit();
-        cacheService.del(CacheKeys.DASHBOARDCARDS);
-        cacheService.del(CacheKeys.PROFITABILITY);
-        cacheService.del(CacheKeys.RANKINGMETRICS);
-        cacheService.del(CacheKeys.INVENTORYALERTS);
-        cacheService.del(CacheKeys.PRODUCTSALERTS);
-        cacheService.delByPrefix(CacheKeys.EXPIRINGPRODUCTS);
+        cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
+        cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
+        cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
+        cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
+        cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
+        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
         return res.status(201).json({
             message: "Venta creada correctamente",
             sale,
@@ -382,12 +382,12 @@ export const updateSaleStatus = async (req, res) => {
         clearStatusCache();
 
         await t.commit();
-        cacheService.del(CacheKeys.DASHBOARDCARDS);
-        cacheService.del(CacheKeys.PROFITABILITY);
-        cacheService.del(CacheKeys.RANKINGMETRICS);
-        cacheService.del(CacheKeys.INVENTORYALERTS);
-        cacheService.del(CacheKeys.PRODUCTSALERTS);
-        cacheService.del(CacheKeys.EXPIRINGPRODUCTS);
+        cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
+        cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
+        cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
+        cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
+        cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
+        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
 
         return res.json({
             message: "Status actualizado correctamente",

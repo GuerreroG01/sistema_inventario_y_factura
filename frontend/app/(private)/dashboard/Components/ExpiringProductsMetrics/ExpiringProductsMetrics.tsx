@@ -1,14 +1,25 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useExpiringProductsMetrics } from "../../hooks/useExpiringProductsMetrics";
 import { ExpirationIcon } from "./Icons/ExpirationIcon";
 import { ExpiringProductRow } from "./ExpiringProductRow";
 
 export default function ExpiringProductsMetrics() {
+    const containerRef = useRef<HTMLDivElement>(null);
     const {
         data, loading, error, page, setPage
     } = useExpiringProductsMetrics();
-
+    const pages = Array.from(
+        { length: data.pagination.totalPages },
+        (_, i) => i + 1
+    );
+    useEffect(() => {
+        containerRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    }, [page]);
     if (loading) {
         return (
             <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm animate-pulse">
@@ -37,7 +48,7 @@ export default function ExpiringProductsMetrics() {
     }
 
     return (
-        <div className="rounded-3xl border border-gray-200/80 bg-white p-8 shadow-sm relative overflow-hidden">
+        <div ref={containerRef} className="rounded-3xl border border-gray-200/80 bg-white p-8 shadow-sm relative overflow-hidden">
             <div className="absolute -top-32 -left-32 w-64 h-64 bg-amber-50 rounded-full blur-3xl"/>
             <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-red-50 rounded-full blur-3xl"/>
             <div className="relative z-10">
@@ -87,19 +98,69 @@ export default function ExpiringProductsMetrics() {
                     </table>
                 </div>
                 {
-                    data.pagination.totalPages>1 && (
-                        <div className="flex justify-end gap-3 mt-6">
+                    data.pagination.totalPages > 1 && (
+                        <div className="flex justify-center mt-6 gap-2 flex-wrap border-t border-gray-100 px-6 py-4">
                             <button
-                                disabled={page===1}
-                                onClick={()=>setPage(page-1)}
-                                className="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50 disabled:opacity-40"
+                                type="button"
+                                disabled={page === 1}
+                                onClick={() => setPage(page - 1)}
+                                className="
+                                    px-4
+                                    py-2
+                                    rounded-lg
+                                    bg-gray-200
+                                    text-gray-700
+                                    font-semibold
+                                    shadow
+                                    hover:bg-gray-300
+                                    disabled:opacity-50
+                                    disabled:cursor-not-allowed
+                                    transition
+                                "
                             >
                                 Anterior
                             </button>
+
+                            {pages.map((p) => (
+                                <button
+                                    key={p}
+                                    type="button"
+                                    onClick={() => setPage(p)}
+                                    className={`
+                                        px-4
+                                        py-2
+                                        rounded-lg
+                                        font-semibold
+                                        shadow
+                                        transition
+                                        ${
+                                            p === page
+                                                ? "bg-indigo-600 text-white shadow-lg scale-105"
+                                                : "bg-white text-gray-700 hover:bg-gray-100"
+                                        }
+                                    `}
+                                >
+                                    {p}
+                                </button>
+                            ))}
+
                             <button
-                                disabled={page===data.pagination.totalPages}
-                                onClick={()=>setPage(page+1)}
-                                className="px-4 py-2 rounded-xl border border-gray-200 text-sm hover:bg-gray-50 disabled:opacity-40"
+                                type="button"
+                                disabled={page === data.pagination.totalPages}
+                                onClick={() => setPage(page + 1)}
+                                className="
+                                    px-4
+                                    py-2
+                                    rounded-lg
+                                    bg-gray-200
+                                    text-gray-700
+                                    font-semibold
+                                    shadow
+                                    hover:bg-gray-300
+                                    disabled:opacity-50
+                                    disabled:cursor-not-allowed
+                                    transition
+                                "
                             >
                                 Siguiente
                             </button>

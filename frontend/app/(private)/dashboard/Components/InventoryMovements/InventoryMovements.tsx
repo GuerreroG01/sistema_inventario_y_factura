@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useInventoryMovements } from "../../hooks/useInventoryMovements";
 import InventoryMovementsFilters from "./InventoryMovementsFilters";
 
 export default function InventoryMovements() {
+    const containerRef = useRef<HTMLDivElement>(null);
     const {
         movements, pagination, loading, error, page, setPage, filters, updateFilter, applyFilters
     } = useInventoryMovements();
@@ -12,6 +13,12 @@ export default function InventoryMovements() {
         { length: pagination.totalPages },
         (_, index) => index + 1
     );
+    useEffect(() => {
+        containerRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    }, [page]);
     if (loading) {
         return (
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm animate-pulse">
@@ -42,7 +49,7 @@ export default function InventoryMovements() {
     }
 
     return (
-        <div className="rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div ref={containerRef} className="rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div className="px-6 pt-6">
                 <InventoryMovementsFilters
                     filters={filters}

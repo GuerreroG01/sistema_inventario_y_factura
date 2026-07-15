@@ -4,7 +4,11 @@ import Sales from "../models/Sales.js";
 import Product from "../models/Products.js";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
 
-export const getDashboardMetrics = async () => {
+export const getDashboardMetrics = async (businessId) => {
+    console.log(
+        "[DASHBOARD] businessId:",
+        businessId
+    );
     return cacheService.remember(
         CacheKeys.DASHBOARDCARDS,
         async () => {
@@ -34,6 +38,7 @@ export const getDashboardMetrics = async () => {
                 try {
                     const ventasHoy = await Sales.sum("total", {
                         where: {
+                            business_id: businessId,
                             fecha: {
                                 [Op.gte]: startOfDay,
                             },
@@ -45,6 +50,7 @@ export const getDashboardMetrics = async () => {
 
                     const ventasMes = await Sales.sum("total", {
                         where: {
+                            business_id: businessId,
                             fecha: {
                                 [Op.gte]: startOfMonth,
                             },
@@ -69,6 +75,7 @@ export const getDashboardMetrics = async () => {
                 try {
                     response.productosActivos = await Product.count({
                         where: {
+                            business_id: businessId,
                             active: true,
                         },
                     });
@@ -88,6 +95,7 @@ export const getDashboardMetrics = async () => {
                 try {
                     response.stockBajo = await Product.count({
                         where: {
+                            business_id: businessId,
                             active: true,
                             stock: {
                                 [Op.lte]: 5,
@@ -117,9 +125,13 @@ export const getDashboardMetrics = async () => {
                             ON p.id = sd.product_id
                         INNER JOIN "Sales" s
                             ON s.id = sd.sale_id
-                        WHERE s.status NOT IN ('PENDING', 'REFUNDED', 'CANCELLED')
+                        WHERE s.business_id = :businessId
+                        AND s.status NOT IN ('PENDING', 'REFUNDED', 'CANCELLED')
                         `,
                         {
+                            replacements: {
+                                businessId
+                            },
                             type: QueryTypes.SELECT,
                         }
                     );
@@ -168,10 +180,10 @@ export const getDashboardMetrics = async () => {
                 };
             }
         },
-        CacheTTL.ONE_HOUR
+        CacheTTL.ONE_HOUR, businessId
     );
 };
-export const getProfitabilityMetrics = async (month, year) => {
+export const getProfitabilityMetrics = async (month, year, businessId) => {
     const warnings = [];
     const errors = [];
 
@@ -192,12 +204,13 @@ export const getProfitabilityMetrics = async (month, year) => {
             SELECT
                 COALESCE(SUM(total), 0) AS ventas
             FROM "Sales"
-            WHERE status IN ('COMPLETED', 'PAID')
+            WHERE business_id = :businessId
+                AND status IN ('COMPLETED', 'PAID')
                 AND EXTRACT(MONTH FROM "createdAt") = :month
                 AND EXTRACT(YEAR FROM "createdAt") = :year
             `,
             {
-                replacements: { month, year },
+                replacements: { month, year, businessId },
                 type: QueryTypes.SELECT,
             }
         );
@@ -207,12 +220,13 @@ export const getProfitabilityMetrics = async (month, year) => {
             `
             SELECT COALESCE(SUM(amount), 0) AS gastos
             FROM "Expenses"
-            WHERE EXTRACT(MONTH FROM date) = :month
+            WHERE business_id = :businessId
+                AND EXTRACT(MONTH FROM date) = :month
                 AND EXTRACT(YEAR FROM date) = :year
                 AND status = 'Activo'
             `,
             {
-                replacements: { month, year },
+                replacements: { month, year, businessId },
                 type: QueryTypes.SELECT,
             }
         );
@@ -270,7 +284,7 @@ export const getProfitabilityMetrics = async (month, year) => {
     }
 };
 
-export const getProfitabilityTrendMetrics = async () => {
+export const getProfitabilityTrendMetrics = async (businessId) => {
 
     const key = `${CacheKeys.PROFITABILITY}`;
 
@@ -281,7 +295,7 @@ export const getProfitabilityTrendMetrics = async () => {
             const month = today.getMonth() + 1;
             const year = today.getFullYear();
 
-            const current = await getProfitabilityMetrics(month, year);
+            const current = await getProfitabilityMetrics(month, year, businessId);
 
             let previousMonth = month - 1;
             let previousYear = year;
@@ -291,7 +305,7 @@ export const getProfitabilityTrendMetrics = async () => {
                 previousYear--;
             }
 
-            const previous = await getProfitabilityMetrics(previousMonth, previousYear);
+            const previous = await getProfitabilityMetrics(previousMonth, previousYear, businessId);
 
             const calculateTrend = (currentValue, previousValue) => {
                 if (previousValue === 0) {
@@ -371,10 +385,10 @@ export const getProfitabilityTrendMetrics = async () => {
                 ],
             };
         }
-    }, CacheTTL.ONE_HOUR);
+    }, CacheTTL.ONE_HOUR, businessId);
 };
 
-export const getSalesRankingMetrics = async () => {
+export const getSalesRankingMetrics = async (businessId) => {
     const key = CacheKeys.RANKINGMETRICS;
 
     return cacheService.remember(key, async () => {
@@ -401,12 +415,18 @@ export const getSalesRankingMetrics = async () => {
                         ON p.id = sd.product_id
                     INNER JOIN "Sales" s
                         ON s.id = sd.sale_id
-                    WHERE s.status = 'COMPLETED'
+                    WHERE s.business_id = :businessId 
+                    AND s.status = 'COMPLETED'
                     GROUP BY p.id, p.name
                     ORDER BY "unidadesVendidas" DESC
                     LIMIT 5
                     `,
-                    { type: QueryTypes.SELECT }
+                    { 
+                        replacements: {
+                            businessId
+                        },
+                        type: QueryTypes.SELECT 
+                    }
                 );
 
                 response.topProductos = productos.map((item, index) => ({
@@ -433,12 +453,18 @@ export const getSalesRankingMetrics = async () => {
                         ON p.id = sd.product_id
                     INNER JOIN "Sales" s
                         ON s.id = sd.sale_id
-                    WHERE s.status = 'COMPLETED'
+                    WHERE s.business_id = :businessId 
+                    AND s.status = 'COMPLETED'
                     GROUP BY p.category
                     ORDER BY ventas DESC
                     LIMIT 5
                     `,
-                    { type: QueryTypes.SELECT }
+                    { 
+                        replacements: {
+                            businessId
+                        },
+                        type: QueryTypes.SELECT 
+                    }
                 );
 
                 response.topCategorias = categorias.map((item, index) => ({
@@ -485,9 +511,9 @@ export const getSalesRankingMetrics = async () => {
             };
         }
 
-    }, CacheTTL.ONE_HOUR);
+    }, CacheTTL.ONE_HOUR, businessId);
 };
-export const getInventoryAlertsMetrics = async () => {
+export const getInventoryAlertsMetrics = async (businessId) => {
     const key = CacheKeys.INVENTORYALERTS;
 
     return cacheService.remember(key, async () => {
@@ -503,6 +529,7 @@ export const getInventoryAlertsMetrics = async () => {
             try {
                 response.stockCritico = await Product.count({
                     where: {
+                        business_id:businessId,
                         active: true,
                         stock: {
                             [Op.gt]: 0,
@@ -520,6 +547,7 @@ export const getInventoryAlertsMetrics = async () => {
             try {
                 response.agotados = await Product.count({
                     where: {
+                        business_id:businessId,
                         active: true,
                         stock: 0,
                     },
@@ -561,9 +589,9 @@ export const getInventoryAlertsMetrics = async () => {
             };
         }
 
-    }, CacheTTL.ONE_HOUR);
+    }, CacheTTL.ONE_HOUR, businessId);
 };
-export const getExpiringProductsMetrics = async (page = 1, limit = 10) => {
+export const getExpiringProductsMetrics = async (businessId, page = 1, limit = 10) => {
     const key = `${CacheKeys.EXPIRINGPRODUCTS}:${page}:${limit}`;
 
     return cacheService.remember(key, async () => {
@@ -585,6 +613,7 @@ export const getExpiringProductsMetrics = async (page = 1, limit = 10) => {
 
             const total = await Product.count({
                 where: {
+                    business_id: businessId,
                     active: true,
                     expirationDate: {
                         [Op.lte]: db.literal("CURRENT_DATE + INTERVAL '30 days'"),
@@ -601,6 +630,7 @@ export const getExpiringProductsMetrics = async (page = 1, limit = 10) => {
 
             const products = await Product.findAll({
                 where: {
+                    business_id: businessId,
                     active: true,
                     expirationDate: {
                         [Op.lte]: db.literal("CURRENT_DATE + INTERVAL '30 days'"),
@@ -659,5 +689,5 @@ export const getExpiringProductsMetrics = async (page = 1, limit = 10) => {
             };
         }
 
-    }, CacheTTL.ONE_HOUR);
+    }, CacheTTL.ONE_HOUR, businessId);
 };
