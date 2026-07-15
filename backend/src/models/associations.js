@@ -5,6 +5,7 @@ import Product from "./Products.js";
 import InventoryMov from "./Inventory_mov.js";
 import Expense from "./Expense.js";
 import User from "./User.js";
+import License from './License.js';
 
 Business.hasMany(User,{
     foreignKey:"business_id",
@@ -85,4 +86,14 @@ Sales.hasMany(InventoryMov,{
 InventoryMov.belongsTo(Sales,{
     foreignKey:"referencia",
     as:"sale"
+});
+
+Business.hasOne(License, {
+    foreignKey: "business_id",
+    as: "license"
+});
+
+License.belongsTo(Business, {
+    foreignKey: "business_id",
+    as: "business"
 });
