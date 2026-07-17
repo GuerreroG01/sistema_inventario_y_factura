@@ -1,7 +1,9 @@
 import express from "express";
 import salesController from "../controllers/salesController.js";
+import licenseMiddleware from "../middlewares/licenseMiddleware.js";
 
 const router = express.Router();
+router.use(licenseMiddleware);
 
 router.post("/",salesController.createSale);
 router.get("/",salesController.getSales);

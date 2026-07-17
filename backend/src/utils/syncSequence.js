@@ -13,10 +13,6 @@ export const syncSequence = async ( tableName, columnName = "id" ) => {
             );
         `);
 
-        console.log(
-            `✅ Sequence synchronized: ${tableName}.${columnName}`
-        );
-
     } catch (error) {
         console.error(
             `❌ Error synchronizing sequence for ${tableName}:`,

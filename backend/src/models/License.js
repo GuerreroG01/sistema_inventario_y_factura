@@ -1,3 +1,6 @@
+import { DataTypes } from "sequelize";
+import sequelize from "../config/database.js";
+
 const License = sequelize.define("License", {
     id: {
         type: DataTypes.INTEGER,
@@ -5,7 +8,7 @@ const License = sequelize.define("License", {
         primaryKey: true
     },
 
-    business_id: {
+    business_id: { //Licencia por negocio
         type: DataTypes.INTEGER,
         allowNull: false,
         unique: true,
@@ -23,7 +26,7 @@ const License = sequelize.define("License", {
         unique: true
     },
 
-    type: {
+    type: { // Tipo de licencia que empieza con periodo de prueba
         type: DataTypes.ENUM(
             "SUBSCRIPTION",
             "LIFETIME",
@@ -46,7 +49,7 @@ const License = sequelize.define("License", {
         allowNull: true
     },
 
-    status: {
+    status: { //Estados de la licencia, suspendida en caso de que algo pase
         type: DataTypes.ENUM(
             "ACTIVE",
             "EXPIRED",
@@ -63,12 +66,13 @@ const License = sequelize.define("License", {
         type: DataTypes.DATE,
     },
 
-    grace_period_days: {
+    grace_period_days: { // Periodo de prórroga luego de que la licencia expire antes de bloquear el sistema
         type: DataTypes.INTEGER,
         defaultValue: 5
     },
 
-    last_validation: {
+    last_validation: { //Para validaciones de licencia
         type: DataTypes.DATE
     }
 });
+export default License;
