@@ -5,10 +5,6 @@ import Product from "../models/Products.js";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
 
 export const getDashboardMetrics = async (businessId) => {
-    console.log(
-        "[DASHBOARD] businessId:",
-        businessId
-    );
     return cacheService.remember(
         CacheKeys.DASHBOARDCARDS,
         async () => {

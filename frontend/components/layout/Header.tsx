@@ -1,9 +1,9 @@
 "use client";
 
 import MobileHeader from "./MobileHeader";
-import { Layers } from "lucide-react";
+import { Layers, Link } from "lucide-react";
 import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, LogOut, Cog } from "lucide-react";
 
 type NavItem = {
     label: string;
@@ -158,10 +158,12 @@ export default function Header() {
                             "
                         >
                             {(user?.Rol?.toLowerCase() === "admin" || user?.Rol?.toLowerCase() === "superadmin") && (
+
                                 <a
-                                    href="/auth/register"
+                                    href="/configuration"
                                     className="
                                         flex
+                                        gap-2
                                         items-center
                                         rounded-xl
                                         border
@@ -181,7 +183,15 @@ export default function Header() {
                                         active:scale-95
                                     "
                                 >
-                                    Registrar usuario
+                                    <Cog
+                                        className="
+                                            h-4
+                                            w-4
+                                            stroke-[2.2]
+                                        "
+                                    />
+
+                                    Configuración
                                 </a>
                             )}
                             <button
