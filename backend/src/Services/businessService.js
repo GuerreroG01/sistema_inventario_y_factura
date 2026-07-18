@@ -1,8 +1,7 @@
 import Business from "../models/Business.js";
 import License from "../models/License.js";
 import { createTrialLicense, getLicenseByBusiness, suspendLicense, reactivateLicense } from "./LicenseService.js";
-import { Op } from "sequelize";
-
+import { Op, ForeignKeyConstraintError } from "sequelize";
 export const createBusiness = async (data) => {
     const { name } = data;
     if (!name) {
@@ -133,18 +132,28 @@ export const changeBusinessStatus = async (id, status) => {
         licenseMessage
     };
 };
-
 export const deleteBusiness = async (id) => {
-
     const business = await Business.findByPk(id);
     if (!business) {
         throw new Error("Empresa no encontrada");
     }
+    try {
+        await business.destroy();
+        return {
+            message: "Empresa eliminada correctamente"
+        };
 
-    await business.destroy();
-    return {
-        message: "Empresa eliminada correctamente"
-    };
+    } catch (error) {
+        if (
+            error.message.includes("violates RESTRICT setting") ||
+            error.message.includes("User_business_id_fkey")
+        ) {
+            throw new Error(
+                "No se puede eliminar la empresa porque tiene usuarios asociados."
+            );
+        }
+        throw error;
+    }
 };
 
 export const getBusinessByName = async (query) => {
