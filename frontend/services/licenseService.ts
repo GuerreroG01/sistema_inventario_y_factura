@@ -193,3 +193,22 @@ export async function changeLicenseType(
     );
   }
 }
+
+export async function activatePendingLicense(licenseKey: string): Promise<License> {
+  try {
+    const { data } = await api.post<{
+      message: string;
+      license: License;
+    }>("/licenses/activate", {
+      licenseKey,
+    });
+
+    return data.license;
+
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+      "Error al activar la licencia"
+    );
+  }
+}

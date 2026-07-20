@@ -192,3 +192,33 @@ export const revoke = async (req, res) => {
         });
     }
 };
+
+//Metodo de prueba que luego será migrado a un job automatico.
+export const methodTest = async (req, res) => {
+    try {
+        const expiredBusinesses = await licenseService.getExpiredLicenses();
+        const businessIds = expiredBusinesses.business;
+        const response = await licenseService.recreateExpiredLicenses(
+            businessIds
+        );
+
+        return res.status(200).json(response);
+
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message
+        });
+    }
+};
+export const activatePendings = async (req, res) => {
+    try {
+        const { licenseKey } = req.body;
+        const response = await licenseService.activatePendingLicense(licenseKey);
+        return res.status(200).json(response);
+
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message
+        });
+    }
+};

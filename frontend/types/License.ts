@@ -3,7 +3,7 @@ export type License = {
     business_id: number;
     license_key: string;
     type: "TRIAL_PERIOD" | "SUBSCRIPTION" | "LIFETIME";
-    status: "ACTIVE" | "EXPIRED" | "SUSPENDED";
+    status: "ACTIVE" | "EXPIRED" | "SUSPENDED" | "PENDING";
     duration: number | null;
     duration_unit: "DAY" | "MONTH" | "YEAR" | null;
     activated_at: string | null;
@@ -14,7 +14,7 @@ export type License = {
 
 export type LicenseStatus = {
     type: "TRIAL_PERIOD" | "SUBSCRIPTION" | "LIFETIME";
-    status: "ACTIVE" | "EXPIRED" | "SUSPENDED";
+    status: "ACTIVE" | "EXPIRED" | "SUSPENDED" | "PENDING";
     expires_at: string | null;
     days_remaining: number | null;
 };
@@ -28,4 +28,5 @@ export type LicenseType =
 export type LicenseStatusType =
     | "ACTIVE"
     | "EXPIRED"
-    | "SUSPENDED";
+    | "SUSPENDED"
+    | "PENDING";

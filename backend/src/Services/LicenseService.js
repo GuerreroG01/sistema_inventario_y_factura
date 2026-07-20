@@ -1,5 +1,6 @@
 import License from "../models/License.js";
 import crypto from "crypto";
+import { Op } from "sequelize";
 
 const generateLicenseKey = () => {
     return crypto
@@ -267,4 +268,96 @@ export const getLicenseStatus = async ( businessId ) => {
         expires_at: license.expires_at,
         days_remaining: daysRemaining
     };
+};
+
+//Metodos para generación de nuevas licencias para negocios con licencias ya expiradas.
+export const getExpiredLicenses = async () => {
+    const now = new Date();
+
+    const licenses = await License.findAll({
+        attributes: [
+            "business_id"
+        ],
+        where: {
+            expires_at: {
+                [Op.lt]: now
+            },
+            status: "EXPIRED"
+        },
+        raw: true
+    });
+    return {
+        business: licenses.map(
+            license => license.business_id
+        )
+    };
+};
+
+export const recreateExpiredLicenses = async (businessIds) => {
+    const results = [];
+
+    for (const businessId of businessIds) {
+        const expiredLicense = await License.findOne({
+            where: {
+                business_id: businessId,
+                status: "EXPIRED"
+            }
+        });
+
+        if (!expiredLicense) {
+            results.push({
+                business_id: businessId,
+                message: "No existe licencia expirada"
+            });
+            continue;
+        }
+        await expiredLicense.destroy();
+        const now = new Date();
+
+        const newLicense = await License.create({
+            business_id: businessId,
+            license_key: generateLicenseKey(),
+            type: "SUBSCRIPTION",
+            duration: 1,
+            duration_unit: "MONTH",
+            status: "PENDING",
+            activated_at: null,
+            expires_at: null
+        });
+
+        results.push({
+            business_id: businessId,
+            license_id: newLicense.id,
+            message: "Licencia creada correctamente"
+        });
+    }
+    return results;
+};
+
+export const activatePendingLicense = async (licenseKey) => {
+    const license = await License.findOne({
+        where: {
+            license_key: licenseKey,
+            status: "PENDING"
+        }
+    });
+
+    if (!license) {
+        throw new Error(
+            "Licencia pendiente no encontrada o ya activada"
+        );
+    }
+    const now = new Date();
+    const expirationDate = calculateExpirationDate(
+        license.duration,
+        license.duration_unit,
+        now
+    );
+
+    await license.update({
+        status: "ACTIVE",
+        activated_at: now,
+        expires_at: expirationDate
+    });
+    return license;
 };

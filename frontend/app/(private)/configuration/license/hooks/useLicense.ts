@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getLicense, createTrialLicense, getLicenseStatus, renewLicense, extendLicense,
-    suspendLicense, reactivateLicense, createLifetimeLicense, revokeLicense
+    suspendLicense, reactivateLicense, createLifetimeLicense, revokeLicense, activatePendingLicense
 } from "@/services/licenseService";
 import { License, LicenseStatus } from "@/types/License";
 import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
@@ -23,6 +23,7 @@ export function useLicense(businessId: number) {
     const [durationUnit, setDurationUnit] = useState<"DAY" | "MONTH" | "YEAR">("MONTH");
     const { user } = useAuth();
     const isSuperAdmin = user?.Rol === "superAdmin";
+    const [licenseKey, setLicenseKey] = useState("");
 
     const loadLicense = async () => {
         try {
@@ -91,7 +92,8 @@ export function useLicense(businessId: number) {
 
     return {
         license, status, loading, processing, noLicense, notification, duration, setDuration, isSuperAdmin,
-        durationUnit, setDurationUnit, clearNotification: () => setNotification(null), executeAction, reload: loadLicense,
+        durationUnit, setDurationUnit, clearNotification: () => setNotification(null), executeAction, 
+        reload: loadLicense, licenseKey, setLicenseKey,
         actions: {
             renewLicense: () =>
                 renewLicense(businessId, duration, durationUnit),
@@ -107,6 +109,8 @@ export function useLicense(businessId: number) {
                 revokeLicense(businessId),
             createTrialLicense: () =>
                 createTrialLicense(businessId),
+            activatePendingLicense: () =>
+                activatePendingLicense(licenseKey)
         }
     };
 }

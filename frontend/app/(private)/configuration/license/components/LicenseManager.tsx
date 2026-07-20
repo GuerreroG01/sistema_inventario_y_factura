@@ -8,6 +8,7 @@ import { ShieldCheck, KeyRound, Clock3, Zap } from "lucide-react";
 import { licenseTypeTranslations, licenseStatusTranslations } from "../constants/licenseTranslations"
 import ModalSuccess from "@/components/ModalSuccess";
 import ModalError from "@/components/ModalError";
+import ManualActivation from "./ManualActivation";
 
 type Props = {
     businessId: number;
@@ -15,9 +16,15 @@ type Props = {
 
 export default function LicenseManager({ businessId }: Props) {
     const { license, status, loading, processing, noLicense, duration, setDuration, isSuperAdmin,
-        durationUnit, setDurationUnit, executeAction, actions, notification, clearNotification
+        durationUnit, setDurationUnit, executeAction, actions, notification, clearNotification,
+        licenseKey, setLicenseKey
     } = useLicense(businessId);
-
+    
+    const requiresManualActivation =
+        !!license &&
+        license.status === "PENDING" &&
+        license.activated_at === null &&
+        license.expires_at === null;
     if (loading) {
         return (
             <section className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
@@ -39,10 +46,19 @@ export default function LicenseManager({ businessId }: Props) {
                         "Licencia de prueba creada correctamente"
                     )
                 }
+                isSuperAdmin={isSuperAdmin}
             />
         );
     }
 
+    /*if (requiresManualActivation) {
+        return (
+            <ManualActivation
+                license={license}
+                businessId={businessId}
+            />
+        );
+    }*/
 
     if (!license || !status) {
         return null;
@@ -63,6 +79,11 @@ export default function LicenseManager({ businessId }: Props) {
             label: "Licencia expirada",
             className: "bg-red-50 text-red-700",
             dot: "bg-red-500"
+        },
+        PENDING: {
+            label: "Pendiente de Activación",
+            className: "bg-amber-50 text-amber-700",
+            dot: "bg-slate-500"
         }
     };
     const badge =
@@ -134,10 +155,25 @@ export default function LicenseManager({ businessId }: Props) {
                         />
 
                     </div>
-
-                    <LicenseInfo
-                        license={license}
-                    />
+                    {requiresManualActivation && !isSuperAdmin && (
+                        <ManualActivation
+                            licenseKey={licenseKey}
+                            setLicenseKey={setLicenseKey}
+                            processing={processing}
+                            onActivate={() =>
+                                executeAction(
+                                    actions.activatePendingLicense,
+                                    "Licencia activada correctamente"
+                                )
+                            }
+                        />
+                    )}
+                    
+                    {(!requiresManualActivation || isSuperAdmin) && (
+                        <LicenseInfo
+                            license={license}
+                        />
+                    )}
                     {isSuperAdmin && (
                         <>
                             <LicenseActions

@@ -53,7 +53,8 @@ const License = sequelize.define("License", {
         type: DataTypes.ENUM(
             "ACTIVE",
             "EXPIRED",
-            "SUSPENDED"
+            "SUSPENDED",
+            "PENDING"
         ),
         defaultValue: "ACTIVE"
     },

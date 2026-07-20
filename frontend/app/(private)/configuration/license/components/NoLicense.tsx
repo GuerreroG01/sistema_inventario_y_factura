@@ -3,11 +3,11 @@ import { ShieldCheck } from "lucide-react";
 type Props = {
     processing: boolean;
     onCreateTrialLicense: () => Promise<void>;
+    isSuperAdmin: boolean;
 };
 
 export default function NoLicense({
-    processing,
-    onCreateTrialLicense,
+    processing, onCreateTrialLicense, isSuperAdmin
 }: Props) {
     return (
         <section className="
@@ -62,28 +62,30 @@ export default function NoLicense({
                     Este negocio todavía no posee una licencia registrada.
                 </p>
 
-                <button
-                    onClick={onCreateTrialLicense}
-                    disabled={processing}
-                    className="
-                        mt-6
-                        rounded-xl
-                        bg-blue-600
-                        px-5
-                        py-2.5
-                        text-sm
-                        font-semibold
-                        text-white
-                        transition
-                        hover:bg-blue-700
-                        disabled:cursor-not-allowed
-                        disabled:opacity-50
-                    "
-                >
-                    {processing
-                        ? "Creando licencia..."
-                        : "Crear licencia de prueba"}
-                </button>
+                {isSuperAdmin &&
+                    <button
+                        onClick={onCreateTrialLicense}
+                        disabled={processing}
+                        className="
+                            mt-6
+                            rounded-xl
+                            bg-blue-600
+                            px-5
+                            py-2.5
+                            text-sm
+                            font-semibold
+                            text-white
+                            transition
+                            hover:bg-blue-700
+                            disabled:cursor-not-allowed
+                            disabled:opacity-50
+                        "
+                    >
+                        {processing
+                            ? "Creando licencia..."
+                            : "Crear licencia de prueba"}
+                    </button>
+                }
             </div>
         </section>
     );

@@ -11,4 +11,5 @@ export const licenseStatusTranslations: Record<LicenseStatusType, string> = {
     ACTIVE: "Activa",
     EXPIRED: "Expirada",
     SUSPENDED: "Suspendida",
+    PENDING: "Pendiente"
 };

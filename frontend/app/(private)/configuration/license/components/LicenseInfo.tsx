@@ -57,7 +57,7 @@ export default function LicenseInfo({
                             license.expires_at
                         ).toLocaleDateString()
                         :
-                        "Lifetime"
+                        "Nunca"
                     }
                 </p>
             </div>
