@@ -144,15 +144,27 @@ export const deleteBusiness = async (id) => {
         };
 
     } catch (error) {
-        if (
-            error.message.includes("violates RESTRICT setting") ||
-            error.message.includes("User_business_id_fkey")
-        ) {
-            throw new Error(
-                "No se puede eliminar la empresa porque tiene usuarios asociados."
-            );
+        const constraint = error.constraint || error.parent?.constraint;
+
+        switch (constraint) {
+            case "User_business_id_fkey":
+                throw new Error(
+                    "No se puede eliminar la empresa porque tiene usuarios asociados."
+                );
+
+            case "Licenses_business_id_fkey":
+                throw new Error(
+                    "No se puede eliminar la empresa porque tiene una licencia asociada."
+                );
+
+            case "Products_business_id_fkey":
+                throw new Error(
+                    "No se puede eliminar la empresa porque tiene productos asociados."
+                );
+
+            default:
+                throw error;
         }
-        throw error;
     }
 };
 
