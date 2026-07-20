@@ -36,7 +36,7 @@ const configurationModules = [
         description:"Administrar licencias, renovaciones y estado de activación.",
         href: "/configuration/license",
         icon: KeyRound,
-        allowedRoles: ["superadmin"],
+        allowedRoles: ["admin", "superadmin"],
         color: {
           bg: "bg-emerald-50",
           border: "border-emerald-100",

@@ -5,6 +5,7 @@ import { getLicense, createTrialLicense, getLicenseStatus, renewLicense, extendL
     suspendLicense, reactivateLicense, createLifetimeLicense, revokeLicense
 } from "@/services/licenseService";
 import { License, LicenseStatus } from "@/types/License";
+import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
 
 export function useLicense(businessId: number) {
     type Notification = {
@@ -20,6 +21,8 @@ export function useLicense(businessId: number) {
     const [notification, setNotification] = useState<Notification | null>(null);
     const [duration, setDuration] = useState(1);
     const [durationUnit, setDurationUnit] = useState<"DAY" | "MONTH" | "YEAR">("MONTH");
+    const { user } = useAuth();
+    const isSuperAdmin = user?.Rol === "superAdmin";
 
     const loadLicense = async () => {
         try {
@@ -87,7 +90,7 @@ export function useLicense(businessId: number) {
 
 
     return {
-        license, status, loading, processing, noLicense, notification, duration, setDuration, 
+        license, status, loading, processing, noLicense, notification, duration, setDuration, isSuperAdmin,
         durationUnit, setDurationUnit, clearNotification: () => setNotification(null), executeAction, reload: loadLicense,
         actions: {
             renewLicense: () =>

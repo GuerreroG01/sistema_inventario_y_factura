@@ -14,10 +14,9 @@ type Props = {
 };
 
 export default function LicenseManager({ businessId }: Props) {
-    const { license, status, loading, processing, noLicense, duration, setDuration,
+    const { license, status, loading, processing, noLicense, duration, setDuration, isSuperAdmin,
         durationUnit, setDurationUnit, executeAction, actions, notification, clearNotification
     } = useLicense(businessId);
-
 
     if (loading) {
         return (
@@ -139,22 +138,24 @@ export default function LicenseManager({ businessId }: Props) {
                     <LicenseInfo
                         license={license}
                     />
+                    {isSuperAdmin && (
+                        <>
+                            <LicenseActions
+                                processing={processing}
+                                duration={duration}
+                                durationUnit={durationUnit}
+                                setDuration={setDuration}
+                                setDurationUnit={setDurationUnit}
+                                executeAction={executeAction}
+                                actions={actions}
+                            />
 
-                    <LicenseActions
-                        processing={processing}
-                        duration={duration}
-                        durationUnit={durationUnit}
-                        setDuration={setDuration}
-                        setDurationUnit={setDurationUnit}
-                        executeAction={executeAction}
-                        actions={actions}
-                    />
-
-                    <LicenseDangerZone
-                        executeAction={executeAction}
-                        actions={actions}
-                    />
-
+                            <LicenseDangerZone
+                                executeAction={executeAction}
+                                actions={actions}
+                            />
+                        </>
+                    )}
                 </div>
             </section>
         </>

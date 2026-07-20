@@ -8,24 +8,17 @@ import LicenseManager from "./components/LicenseManager";
 export default function LicensePage() {
 
     const { user } = useAuth();
-
     const isSuperAdmin = user?.Rol === "superAdmin";
-
     const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
-
-
     const businessId = isSuperAdmin
         ? selectedBusinessId
-        : user?.business_id;
-
+        : user?.Business_id;
 
     return (
         <section className="space-y-6">
-
             {
                 isSuperAdmin && (
                     <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
-
                         <BusinessAutocomplete
                             onSelect={(business) =>
                                 setSelectedBusinessId(business.id)
@@ -34,7 +27,6 @@ export default function LicensePage() {
                                 setSelectedBusinessId(null)
                             }
                         />
-
                         {
                             !businessId && (
                                 <p className="mt-4 text-sm text-gray-500">
@@ -42,11 +34,9 @@ export default function LicensePage() {
                                 </p>
                             )
                         }
-
                     </div>
                 )
             }
-
 
             {
                 businessId && (
