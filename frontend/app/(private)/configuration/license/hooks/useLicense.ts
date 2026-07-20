@@ -7,12 +7,17 @@ import { getLicense, createTrialLicense, getLicenseStatus, renewLicense, extendL
 import { License, LicenseStatus } from "@/types/License";
 
 export function useLicense(businessId: number) {
+    type Notification = {
+        type: "success" | "error";
+        message: string;
+    };
+
     const [license, setLicense] = useState<License | null>(null);
     const [status, setStatus] = useState<LicenseStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [noLicense, setNoLicense] = useState(false);
-    const [message, setMessage] = useState("");
+    const [notification, setNotification] = useState<Notification | null>(null);
     const [duration, setDuration] = useState(1);
     const [durationUnit, setDurationUnit] = useState<"DAY" | "MONTH" | "YEAR">("MONTH");
 
@@ -33,7 +38,10 @@ export function useLicense(businessId: number) {
                 setLicense(null);
                 setStatus(null);
             } else {
-                setMessage(error.message ?? "Error al cargar la licencia");
+                setNotification({
+                    type: "error",
+                    message: error.message ?? "Error al cargar la licencia"
+                });
             }
         } finally {
             setLoading(false);
@@ -56,10 +64,16 @@ export function useLicense(businessId: number) {
 
             await loadLicense();
 
-            setMessage(success);
+            setNotification({
+                type: "success",
+                message: success
+            });
 
         } catch (error: any) {
-            setMessage(error.message ?? "Error ejecutando acción");
+            setNotification({
+                type: "error",
+                message: error.message ?? "Error ejecutando acción"
+            });
 
         } finally {
             setProcessing(false);
@@ -73,8 +87,8 @@ export function useLicense(businessId: number) {
 
 
     return {
-        license, status, loading, processing, noLicense, message, duration, setDuration, 
-        durationUnit, setDurationUnit, executeAction, reload: loadLicense,
+        license, status, loading, processing, noLicense, notification, duration, setDuration, 
+        durationUnit, setDurationUnit, clearNotification: () => setNotification(null), executeAction, reload: loadLicense,
         actions: {
             renewLicense: () =>
                 renewLicense(businessId, duration, durationUnit),

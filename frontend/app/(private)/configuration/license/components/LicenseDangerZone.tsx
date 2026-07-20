@@ -1,6 +1,8 @@
 "use client";
 
 import { AlertTriangle, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ConfirmDeleteModal } from "@/components/ConfirmDelete";
 
 interface LicenseDangerZoneProps {
     executeAction: (
@@ -17,6 +19,7 @@ export default function LicenseDangerZone({
     executeAction,
     actions,
 }: LicenseDangerZoneProps) {
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
     return (
         <section className="rounded-2xl border border-red-200 bg-red-50/60 p-6">
             <div className="flex items-start gap-3">
@@ -52,18 +55,26 @@ export default function LicenseDangerZone({
                     hover:bg-red-700
                     active:scale-95
                 "
-                onClick={() => {
-                    if (confirm("¿Eliminar licencia?")) {
-                        executeAction(
-                            actions.revokeLicense,
-                            "Licencia eliminada"
-                        );
-                    }
-                }}
+                onClick={() => setOpenDeleteModal(true)}
             >
                 <Trash2 className="h-4 w-4" />
                 Eliminar licencia
             </button>
+            <ConfirmDeleteModal
+                isOpen={openDeleteModal}
+                onClose={() => setOpenDeleteModal(false)}
+                isDeleting={false}
+                title="¿Revocar licencia?"
+                description="Esta acción eliminará la licencia actual y el negocio perderá acceso al sistema."
+                onConfirm={() => {
+                    setOpenDeleteModal(false);
+
+                    executeAction(
+                        actions.revokeLicense,
+                        "Licencia revocada correctamente"
+                    );
+                }}
+            />
         </section>
     );
 }
