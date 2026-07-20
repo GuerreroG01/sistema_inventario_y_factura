@@ -5,6 +5,7 @@ import LicenseInfo from "./LicenseInfo";
 import LicenseActions from "./LicenseActions";
 import LicenseDangerZone from "./LicenseDangerZone";
 import { ShieldCheck, KeyRound, Clock3, Zap } from "lucide-react";
+import { licenseTypeTranslations, licenseStatusTranslations } from "../constants/licenseTranslations"
 
 type Props = {
     businessId: number;
@@ -114,7 +115,7 @@ export default function LicenseManager({ businessId }: Props) {
 
                     <LicenseCard
                         title="Estado"
-                        value={status.status}
+                        value={licenseStatusTranslations[status.status]}
                         icon={<ShieldCheck />}
                         color="blue"
                     />
@@ -122,7 +123,7 @@ export default function LicenseManager({ businessId }: Props) {
 
                     <LicenseCard
                         title="Tipo"
-                        value={status.type}
+                        value={licenseTypeTranslations[status.type]}
                         icon={<Zap />}
                         color="purple"
                     />

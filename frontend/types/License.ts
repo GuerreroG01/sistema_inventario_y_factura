@@ -18,3 +18,14 @@ export type LicenseStatus = {
     expires_at: string | null;
     days_remaining: number | null;
 };
+
+export type LicenseType =
+    | "TRIAL_PERIOD"
+    | "SUBSCRIPTION"
+    | "LIFETIME";
+
+
+export type LicenseStatusType =
+    | "ACTIVE"
+    | "EXPIRED"
+    | "SUSPENDED";

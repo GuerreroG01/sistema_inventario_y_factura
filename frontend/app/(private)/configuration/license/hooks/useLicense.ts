@@ -1,16 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-    getLicense,
-    createTrialLicense,
-    getLicenseStatus,
-    renewLicense,
-    extendLicense,
-    suspendLicense,
-    reactivateLicense,
-    createLifetimeLicense,
-    revokeLicense
+import { getLicense, createTrialLicense, getLicenseStatus, renewLicense, extendLicense,
+    suspendLicense, reactivateLicense, createLifetimeLicense, revokeLicense
 } from "@/services/licenseService";
 import { License, LicenseStatus } from "@/types/License";
 
@@ -81,18 +73,8 @@ export function useLicense(businessId: number) {
 
 
     return {
-        license,
-        status,
-        loading,
-        processing,
-        noLicense,
-        message,
-        duration,
-        setDuration,
-        durationUnit,
-        setDurationUnit,
-        executeAction,
-        reload: loadLicense,
+        license, status, loading, processing, noLicense, message, duration, setDuration, 
+        durationUnit, setDurationUnit, executeAction, reload: loadLicense,
         actions: {
             renewLicense: () =>
                 renewLicense(businessId, duration, durationUnit),
