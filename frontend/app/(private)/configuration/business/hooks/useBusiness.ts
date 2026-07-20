@@ -9,6 +9,9 @@ export function useBusinesses() {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+    const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+    const [success, setSuccess] = useState("");
 
     useEffect(() => {
         loadBusinesses();
@@ -34,6 +37,7 @@ export function useBusinesses() {
         try {
             setLoading(true);
             await createBusiness(name);
+            setSuccess("El negocio se creó correctamente.");
             setName("");
             await loadBusinesses();
         } catch (error: any) {
@@ -51,6 +55,7 @@ export function useBusinesses() {
                     ? "INACTIVE"
                     : "ACTIVE"
             );
+            setSuccess("El estado del negocio se actualizó correctamente.");
             await loadBusinesses();
         } catch (error: any) {
             setError(error.message);
@@ -58,19 +63,21 @@ export function useBusinesses() {
     }
 
     async function handleDelete(id: number) {
-        const confirmDelete = window.confirm(
-            "¿Desea eliminar esta empresa?"
-        );
-        if (!confirmDelete) return;
         try {
+            setLoading(true);
             await deleteBusiness(id);
+            setSuccess("El negocio se eliminó correctamente.");
             await loadBusinesses();
         } catch (error: any) {
             setError(error.message);
+        } finally {
+            setLoading(false);
         }
     }
     const activeBusinesses = businesses.filter(business => business.status === "ACTIVE").length;
     return {
-        businesses, loading, error, handleCreate, handleStatus, handleDelete, activeBusinesses, name, setName
+        businesses, loading, error, setError, handleCreate, handleStatus, handleDelete, 
+        activeBusinesses, name, setName, isDeleteOpen, setIsDeleteOpen, selectedBusiness,
+        setSelectedBusiness, success, setSuccess
     };
 }

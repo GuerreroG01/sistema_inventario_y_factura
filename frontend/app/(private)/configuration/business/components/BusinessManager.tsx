@@ -3,9 +3,12 @@
 import { Building2, Plus, Activity } from "lucide-react";
 import { useBusinesses } from "../hooks/useBusiness";
 
-export default function BusinessesPage() {
-    const { businesses, loading, error, handleCreate, handleStatus, handleDelete, activeBusinesses, name, setName } = useBusinesses();
-
+type BusinessManagerProps = ReturnType<typeof useBusinesses>;
+export default function BusinessManager({businesses, loading, handleCreate,
+    handleStatus, handleDelete, activeBusinesses, name, setName, isDeleteOpen, 
+    setIsDeleteOpen, selectedBusiness, setSelectedBusiness}: BusinessManagerProps) 
+{
+    
     return (
         <section
             className="
@@ -202,47 +205,6 @@ export default function BusinessesPage() {
                         </h2>
                     </div>
                 </div>
-                {
-                    error && (
-                        <div
-                            className="
-                                mb-8
-                                flex
-                                items-center
-                                gap-4
-                                rounded-2xl
-                                border
-                                border-red-200
-                                bg-red-50
-                                p-5
-                            "
-                        >
-                            <div
-                                className="
-                                    flex
-                                    h-10
-                                    w-10
-                                    items-center
-                                    justify-center
-                                    rounded-xl
-                                    bg-red-100
-                                    text-red-600
-                                    font-bold
-                                "
-                            >
-                                !
-                            </div>
-                            <div>
-                                <p className="font-semibold text-red-700">
-                                    Ha ocurrido un error
-                                </p>
-                                <p className="text-sm text-red-600">
-                                    {error}
-                                </p>
-                            </div>
-                        </div>
-                    )
-                }
                 <div
                     className="
                         rounded-2xl
@@ -579,11 +541,10 @@ export default function BusinessesPage() {
                                                                 }
                                                             </button>
                                                             <button
-                                                                onClick={() =>
-                                                                    handleDelete(
-                                                                        business.id
-                                                                    )
-                                                                }
+                                                                onClick={() => {
+                                                                    setSelectedBusiness(business);
+                                                                    setIsDeleteOpen(true);
+                                                                }}
                                                                 className="
                                                                     rounded-xl
                                                                     border
