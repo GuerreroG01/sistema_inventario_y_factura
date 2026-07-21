@@ -1,4 +1,4 @@
-import { validateLicense } from "../services/licenseService.js";
+import { validateLicense } from "../services/LicenseService.js";
 
 const licenseMiddleware = async (req, res, next) => {
     try {
