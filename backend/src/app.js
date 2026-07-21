@@ -22,7 +22,7 @@ const allowedOrigins = [
     "http://localhost:3000",
     "https://09tvrbf2-3000.use2.devtunnels.ms",
     "https://lynwood-unperfidious-abdullah.ngrok-free.dev",
-    "https://sistema-inventario-y-factura-ftut.onrender.com"
+    "https://sistema-inventario-y-factura.vercel.app/"
 ];
 app.use(cors({
     origin(origin, callback) {
