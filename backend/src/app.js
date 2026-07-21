@@ -17,8 +17,23 @@ import "./models/associations.js";
 
 const app = express();
 
+
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://09tvrbf2-3000.use2.devtunnels.ms",
+    "https://lynwood-unperfidious-abdullah.ngrok-free.dev",
+    "https://sistema-inventario-y-factura-ftut.onrender.com"
+];
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin(origin, callback) {
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
 }));
