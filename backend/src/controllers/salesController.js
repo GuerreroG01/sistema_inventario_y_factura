@@ -5,7 +5,7 @@ import { normalizeDate } from "../utils/formatters.js";
 import { clearCategoryCache } from "../utils/categoryCache.js";
 import { getSaleStatuses, clearStatusCache } from "../utils/salesStatusCache.js";
 import SaleDetail from "../models/SaleDetails.js";
-import InventoryMovService from "../Services/Inventory_MovService.js";
+import InventoryMovService from "../services/Inventory_MovService.js";
 import Product from "../models/Products.js";
 import { cacheService, CacheKeys } from "../services/cache/index.js";
 

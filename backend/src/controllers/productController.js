@@ -2,7 +2,7 @@ import Product from "../models/Products.js";
 import { ValidationError, UniqueConstraintError, fn, col, literal, Op, where } from "sequelize";
 import { normalizeDate } from "../utils/formatters.js"
 import { invalidateCategoryCache, clearCategoryCache, getCategoryCache, setCategoryCache  } from "../utils/categoryCache.js";
-import InventoryMovService from "../Services/Inventory_MovService.js";
+import InventoryMovService from "../services/Inventory_MovService.js";
 import { cacheService, CacheKeys } from "../services/cache/index.js";
 import { getCriticalStockProducts } from "../services/ProductService.js";
 
