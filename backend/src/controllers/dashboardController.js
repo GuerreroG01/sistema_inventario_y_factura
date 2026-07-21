@@ -1,6 +1,6 @@
 import { 
     getDashboardMetrics, getProfitabilityTrendMetrics, getSalesRankingMetrics, getInventoryAlertsMetrics, getExpiringProductsMetrics
-} from "../services/dashboardService.js";
+} from "../services/DashboardService.js";
 
 export const dashboardMetrics = async (req, res) => {
     try {

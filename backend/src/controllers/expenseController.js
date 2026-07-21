@@ -1,4 +1,4 @@
-import { createExpense, getAllExpenses, getExpenseById, updateExpense, deleteExpense, getAllCategories, getCurrentMonthTotalExpenses } from "../services/expenseService.js";
+import { createExpense, getAllExpenses, getExpenseById, updateExpense, deleteExpense, getAllCategories, getCurrentMonthTotalExpenses } from "../services/ExpenseService.js";
 
 export const create = async (req, res) => {
     try {

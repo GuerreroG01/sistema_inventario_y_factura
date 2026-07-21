@@ -1,5 +1,5 @@
 
-import * as licenseService from "../services/licenseService.js";
+import * as licenseService from "../services/LicenseService.js";
 
 export const getLicense = async (req, res) => {
     try {
