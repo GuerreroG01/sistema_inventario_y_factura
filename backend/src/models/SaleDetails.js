@@ -23,7 +23,7 @@ const SaleDetails = sequelize.define("SaleDetails", {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: "Product",
+            model: "Products",//Cambio aqui para render
             key: "id",
         },
         onUpdate: "CASCADE",
