@@ -17,7 +17,9 @@ export const getCriticalStockProducts = async (business_id) => {
             const exhausted = await Product.findAll({
                 attributes,
                 where: {
+                    business_id,
                     active: true,
+                    type_item: "Producto",
                     stock: 0
                 }
             });
@@ -27,6 +29,7 @@ export const getCriticalStockProducts = async (business_id) => {
                 where: {
                     business_id,
                     active: true,
+                    type_item: "Producto",
                     stock: {
                         [Op.between]: [1, 5]
                     }
@@ -39,6 +42,7 @@ export const getCriticalStockProducts = async (business_id) => {
             };
 
         },
-        CacheTTL.ONE_HOUR
+        CacheTTL.ONE_HOUR,
+        business_id 
     );
 };

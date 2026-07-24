@@ -527,6 +527,7 @@ export const getInventoryAlertsMetrics = async (businessId) => {
                     where: {
                         business_id:businessId,
                         active: true,
+                        type_item: "Producto",
                         stock: {
                             [Op.gt]: 0,
                             [Op.lte]: 5,
@@ -545,6 +546,7 @@ export const getInventoryAlertsMetrics = async (businessId) => {
                     where: {
                         business_id:businessId,
                         active: true,
+                        type_item: "Producto",
                         stock: 0,
                     },
                 });
@@ -611,6 +613,7 @@ export const getExpiringProductsMetrics = async (businessId, page = 1, limit = 1
                 where: {
                     business_id: businessId,
                     active: true,
+                    type_item:"Producto",
                     expirationDate: {
                         [Op.lte]: db.literal("CURRENT_DATE + INTERVAL '30 days'"),
                         [Op.gte]: db.literal("CURRENT_DATE"),
@@ -628,6 +631,7 @@ export const getExpiringProductsMetrics = async (businessId, page = 1, limit = 1
                 where: {
                     business_id: businessId,
                     active: true,
+                    type_item:"Producto",
                     expirationDate: {
                         [Op.lte]: db.literal("CURRENT_DATE + INTERVAL '30 days'"),
                         [Op.gte]: db.literal("CURRENT_DATE"),
