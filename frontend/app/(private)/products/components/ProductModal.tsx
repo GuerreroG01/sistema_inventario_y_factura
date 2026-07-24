@@ -13,11 +13,25 @@ type ProductModalProps = {
     onSubmitSuccess?: () => void;
     productToEdit?: any | null;
 };
+type ProductForm = {
+    name: string;
+    barcode: string;
+    category: string;
+    type_item: "Producto" | "Servicio";
+    unit: string;
+    price: string;
+    cost: string;
+    stock: number;
+    entryDate: string;
+    expirationDate: string;
+    active: boolean;
+};
 
-const initialFormState = (todayDate: string) => ({
+const initialFormState = (todayDate: string): ProductForm => ({
     name: "",
     barcode: "",
     category: "",
+    type_item: "Producto",
     unit: "",
     price: "",
     cost: "",
@@ -34,7 +48,7 @@ export default function ProductModal({
     productToEdit = null,
 }: ProductModalProps) {
     const today = new Date().toISOString().split("T")[0];
-    const [formData, setFormData] = useState(initialFormState(today));
+    const [formData, setFormData] = useState<ProductForm>(initialFormState(today));
     const [isSubmitting, setIsSubmitting] = useState(false);
     const isEditMode = Boolean(productToEdit && productToEdit.id);
     const [showError, setShowError] = useState(false);
@@ -50,6 +64,7 @@ export default function ProductModal({
                     name: productToEdit.name || "",
                     barcode: productToEdit.barcode || "",
                     category: productToEdit.category || "",
+                    type_item: productToEdit.type_item || "Producto",
                     unit: productToEdit.unit || "",
                     price: productToEdit.price !== undefined ? String(productToEdit.price) : "",
                     cost: productToEdit.cost !== undefined ? String(productToEdit.cost) : "",
@@ -80,12 +95,16 @@ export default function ProductModal({
                 ...formData,
                 price: Number(formData.price),
                 cost: formData.cost ? Number(formData.cost) : undefined,
-                stock: newStock,
+                stock: formData.type_item === "Servicio" ? 0 : newStock,
                 stockObservation: undefined,
             };
 
             if (isEditMode && productToEdit) {
-                if (diff < 0) {
+                const isReducingProductStock =
+                    productToEdit.type_item === "Producto" &&
+                    formData.type_item === "Producto" &&
+                    diff < 0;
+                if (isReducingProductStock) {
                     setPendingPayload(payload);
                     setShowStockReasonModal(true);
                     setIsSubmitting(false);
@@ -193,6 +212,28 @@ export default function ProductModal({
 
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
+                                Tipo
+                            </label>
+
+                            <select
+                                className={inputClass}
+                                value={formData.type_item}
+                                disabled={isSubmitting}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        type_item: e.target.value as "Producto" | "Servicio",
+                                        stock: e.target.value === "Servicio" ? 0 : formData.stock
+                                    })
+                                }
+                            >
+                                <option value="Producto">Producto</option>
+                                <option value="Servicio">Servicio</option>
+                            </select>
+                        </div>
+
+                        <div className="relative">
+                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
                                 Código de barras
                             </label>
                             <QrCode className="w-4 h-4 absolute left-3 top-8 text-slate-400" />
@@ -284,21 +325,23 @@ export default function ProductModal({
                             />
                         </div>
 
-                        <div className="relative">
-                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
-                                Stock Inicial / Disponible
-                            </label>
-                            <Package className="w-4 h-4 absolute left-3 top-8 text-slate-400" />
-                            <input
-                                type="number"
-                                min="0"
-                                className={inputClass}
-                                value={formData.stock}
-                                disabled={isSubmitting}
-                                onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) || 0 })}
-                                placeholder="0"
-                            />
-                        </div>
+                        {formData.type_item === "Producto" && (
+                            <div className="relative">
+                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
+                                    Stock Inicial / Disponible
+                                </label>
+                                <Package className="w-4 h-4 absolute left-3 top-8 text-slate-400" />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    className={inputClass}
+                                    value={formData.stock}
+                                    disabled={isSubmitting}
+                                    onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) || 0 })}
+                                    placeholder="0"
+                                />
+                            </div>
+                        )}
 
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
@@ -314,19 +357,21 @@ export default function ProductModal({
                             />
                         </div>
 
-                        <div className="relative">
-                            <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
-                                Fecha de Vencimiento / Caducidad
-                            </label>
-                            <CalendarClock className="w-4 h-4 absolute left-3 top-8 text-slate-400" />
-                            <input
-                                type="date"
-                                className={inputClass}
-                                value={formData.expirationDate}
-                                disabled={isSubmitting}
-                                onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })}
-                            />
-                        </div>
+                        {formData.type_item === "Producto" && (
+                            <div className="relative">
+                                <label className="text-xs font-bold text-slate-500 uppercase block mb-1">
+                                    Fecha de Vencimiento / Caducidad
+                                </label>
+                                <CalendarClock className="w-4 h-4 absolute left-3 top-8 text-slate-400" />
+                                <input
+                                    type="date"
+                                    className={inputClass}
+                                    value={formData.expirationDate}
+                                    disabled={isSubmitting}
+                                    onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="sm:col-span-2 flex justify-end gap-3 pt-4 border-t border-slate-100 flex-shrink-0">

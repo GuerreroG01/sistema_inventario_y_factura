@@ -61,6 +61,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         }`}>
                         {isActive ? "Activo" : "Inactivo"}
                         </span>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700">
+                            {product.type_item}
+                        </span>
                     </div>
                     <h3 className="text-xl font-black text-slate-900 tracking-tight line-clamp-1">
                         {product.name}
@@ -100,14 +103,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     }`}>
                         <Layers className="w-3.5 h-3.5" /> Inventario Real
                     </span>
-                    <div className="flex items-baseline gap-1">
-                        <span className={`text-2xl font-black tracking-tight ${isStockAvailable ? "text-emerald-950" : "text-rose-950"}`}>
-                        {product.stock}
+                    {product.type_item === "Servicio" ? (
+                        <span className="text-sm font-bold text-indigo-700">
+                            No maneja inventario
                         </span>
-                        <span className="text-xs font-medium text-slate-500 lowercase">
-                        {product.unit || "uds"}
-                        </span>
-                    </div>
+                    ) : (
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-2xl font-black tracking-tight">
+                                {product.stock}
+                            </span>
+                            <span className="text-xs font-medium text-slate-500 lowercase">
+                                {product.unit || "uds"}
+                            </span>
+                        </div>
+                    )}
                     </div>
                 </div>
 
@@ -173,8 +182,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         </div>
                     ) : (
                         <div className="text-xs text-slate-400 italic bg-amber-50/50 border border-amber-100 text-amber-800 p-2.5 rounded-xl flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-                        Define un costo de compra para calcular el margen de utilidad.
+                            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                            Define un costo base para calcular la utilidad.
                         </div>
                     )}
                     </div>
@@ -191,13 +200,42 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" /> {formatDate(product.entryDate)}
                         </span>
                     </div>
-                    <div className={`p-3 rounded-xl border ${product.expirationDate ? 'bg-amber-50/20 border-amber-100' : 'bg-slate-50/40 border-slate-100'}`}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Vencimiento</span>
-                        <span className={`text-xs font-bold flex items-center gap-1.5 ${product.expirationDate ? "text-amber-700" : "text-slate-600"}`}>
-                        <Calendar className={`w-3.5 h-3.5 ${product.expirationDate ? "text-amber-500" : "text-slate-400"}`} /> 
-                        {formatDate(product.expirationDate)}
-                        </span>
-                    </div>
+                    {product.type_item === "Servicio" ? (
+                        <div className="bg-indigo-50/30 border border-indigo-100 p-3 rounded-xl">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 block mb-1">
+                                Control
+                            </span>
+
+                            <span className="text-xs font-bold flex items-center gap-1.5 text-indigo-700">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Servicio sin control de vencimiento
+                            </span>
+                        </div>
+                    ) : (
+                        <div className={`p-3 rounded-xl border ${
+                            product.expirationDate
+                                ? "bg-amber-50/20 border-amber-100"
+                                : "bg-slate-50/40 border-slate-100"
+                        }`}>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                                Vencimiento
+                            </span>
+
+                            <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                                product.expirationDate
+                                    ? "text-amber-700"
+                                    : "text-slate-600"
+                            }`}>
+                                <Calendar className={`w-3.5 h-3.5 ${
+                                    product.expirationDate
+                                        ? "text-amber-500"
+                                        : "text-slate-400"
+                                }`} />
+
+                                {formatDate(product.expirationDate)}
+                            </span>
+                        </div>
+                    )}
                     </div>
                 </div>
 

@@ -24,6 +24,11 @@ const Product = sequelize.define("Products", {
         allowNull: true,
     },
 
+    type_item: {
+        type: DataTypes.ENUM("Producto", "Servicio"),
+        defaultValue: "Producto",
+    },
+
     unit: {
         type: DataTypes.STRING,
         defaultValue: "unit",

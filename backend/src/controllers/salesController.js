@@ -139,25 +139,27 @@ export const createSale = async (req, res) => {
                 throw new Error(`Producto no encontrado: ${item.product_id}`);
             }
 
-            if (product.stock < item.cantidad) {
-                throw new Error(`Stock insuficiente para el producto ${product.name}`);
-            }
-
             const subtotal = item.cantidad * item.precio_unitario;
             total += subtotal;
+            const isService = product.type_item === "Servicio";
+            if (!isService) {
+                if (product.stock < item.cantidad) {
+                    throw new Error(`Stock insuficiente para el producto ${product.name}`);
+                }
 
-            await product.update({
-                stock: product.stock - item.cantidad
-            }, { transaction: t });
+                await product.update({
+                    stock: product.stock - item.cantidad
+                }, { transaction: t });
 
-            await InventoryMovService.create({
-                product_id: product.id,
-                tipo: "salida",
-                cantidad: item.cantidad,
-                referencia: sale.id,
-                observacion: null,
-                business_id: req.user.business_id
-            }, t);
+                await InventoryMovService.create({
+                    product_id: product.id,
+                    tipo: "salida",
+                    cantidad: item.cantidad,
+                    referencia: sale.id,
+                    observacion: null,
+                    business_id: req.user.business_id
+                }, t);
+            }
 
             details.push({
                 sale_id: sale.id,
@@ -326,18 +328,20 @@ export const updateSaleStatus = async (req, res) => {
                     throw new Error(`Producto no encontrado: ${item.product_id}`);
                 }
 
-                await product.update({
-                    stock: Number(product.stock) + Number(item.cantidad)
-                }, { transaction: t });
+                if (product.type_item === "Producto") {
+                    await product.update({
+                        stock: Number(product.stock) + Number(item.cantidad)
+                    }, { transaction: t });
 
-                await InventoryMovService.create({
-                    product_id: item.product_id,
-                    tipo: "entrada",
-                    cantidad: item.cantidad,
-                    referencia: sale.id,
-                    observacion: "Cancelación de venta",
-                    business_id: req.user.business_id
-                }, t);
+                    await InventoryMovService.create({
+                        product_id: item.product_id,
+                        tipo: "entrada",
+                        cantidad: item.cantidad,
+                        referencia: sale.id,
+                        observacion: "Cancelación de venta",
+                        business_id: req.user.business_id
+                    }, t);
+                }
             }
         }
 
@@ -362,20 +366,22 @@ export const updateSaleStatus = async (req, res) => {
                     throw new Error(`Producto no encontrado: ${item.product_id}`);
                 }
 
-                await product.update({
-                    stock: Number(product.stock) - Number(item.cantidad)
-                }, { 
-                    transaction: t 
-                });
+                if (product.type_item === "Producto") {
+                    await product.update({
+                        stock: Number(product.stock) - Number(item.cantidad)
+                    }, {
+                        transaction: t
+                    });
 
-                await InventoryMovService.create({
-                    product_id: item.product_id,
-                    tipo: "salida",
-                    cantidad: item.cantidad,
-                    referencia: sale.id,
-                    observacion: "Reactivación de venta cancelada",
-                    business_id: req.user.business_id
-                }, t);
+                    await InventoryMovService.create({
+                        product_id: item.product_id,
+                        tipo: "salida",
+                        cantidad: item.cantidad,
+                        referencia: sale.id,
+                        observacion: "Reactivación de venta cancelada",
+                        business_id: req.user.business_id
+                    }, t);
+                }
             }
         }
 

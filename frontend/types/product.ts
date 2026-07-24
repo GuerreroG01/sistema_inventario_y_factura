@@ -3,6 +3,7 @@ export type Product = {
     name: string;
     barcode?: string;
     category?: string;
+    type_item: "Producto" | "Servicio";
     unit?: string;
     price: number;
     cost?: number;

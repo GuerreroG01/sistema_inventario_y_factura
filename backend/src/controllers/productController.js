@@ -21,7 +21,7 @@ const generateBarcode = async (business_id) => {
 
 export const createProduct = async (req, res) => {
     try {
-        let { name, barcode, category, unit, price, cost, stock, entryDate, expirationDate, active } = req.body;
+        let { name, barcode, category, type_item, unit, price, cost, stock, entryDate, expirationDate, active } = req.body;
 
         if (!name || name.trim() === "") {
             return res.status(400).json({
@@ -45,10 +45,11 @@ export const createProduct = async (req, res) => {
             name,
             barcode,
             category,
+            type_item: type_item ?? "Producto",
             unit,
             price,
             cost,
-            stock,
+            stock: type_item === "Servicio" ? 0 : stock,
             entryDate: normalizeDate(entryDate),
             expirationDate: normalizeDate(expirationDate),
             active,
@@ -57,7 +58,7 @@ export const createProduct = async (req, res) => {
             business_id: req.user.business_id
         });
 
-        if (stock && Number(stock) > 0) {
+        if (type_item === "Producto" && stock && Number(stock) > 0 ) {
             await InventoryMovService.create({
                 product_id: product.id,
                 tipo: "entrada",
@@ -199,7 +200,7 @@ export const getProductById = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, barcode, category, unit, price, cost, stock, entryDate, expirationDate, active, stockObservation } = req.body;
+        const { name, barcode, category, type_item, unit, price, cost, stock, entryDate, expirationDate, active, stockObservation } = req.body;
 
         const product = await Product.findOne({
             where:{
@@ -214,6 +215,8 @@ export const updateProduct = async (req, res) => {
             });
         }
 
+        const newType = type_item ?? product.type_item;
+
         if (name !== undefined && name.trim() === "") {
             return res.status(400).json({
                 error: "validation_error",
@@ -227,11 +230,28 @@ export const updateProduct = async (req, res) => {
                 message: "El campo 'price' debe ser un número válido."
             });
         }
-
+        const oldType = product.type_item;
         const oldStock = product.stock;
         const oldCategory = product.category;
 
-        if (stock !== undefined && Number(stock) !== Number(oldStock)) {
+
+        if (oldType === "Producto" && newType === "Servicio") {
+            if (oldStock > 0) {
+                await InventoryMovService.create({
+                    product_id: product.id,
+                    tipo: "ajuste",
+                    cantidad: -oldStock,
+                    observacion: "Cambio de producto a servicio",
+                    business_id: req.user.business_id
+                });
+            }
+
+        }
+        if (
+            newType === "Producto" &&
+            stock !== undefined &&
+            Number(stock) !== Number(oldStock)
+        ) {
 
             const diff = Number(stock) - Number(oldStock);
 
@@ -256,10 +276,11 @@ export const updateProduct = async (req, res) => {
             name: name ?? product.name,
             barcode: barcode ?? product.barcode,
             category: category ?? product.category,
+            type_item: newType,
             unit: unit ?? product.unit,
             price: price ?? product.price,
             cost: cost ?? product.cost,
-            stock: stock ?? product.stock,
+            stock: newType === "Servicio" ? 0 : (stock ?? product.stock),
             entryDate: normalizeDate(entryDate) ?? product.entryDate,
             expirationDate: normalizeDate(expirationDate) ?? product.expirationDate,
             active: active ?? product.active,
@@ -349,9 +370,14 @@ export const getProductStats = async (req, res) => {
     const business_id = req.user.business_id;
     try {
         const totalProducts = await Product.count({where:{business_id}});
-        const totalStock = await Product.sum('stock',{where:{business_id}});
+        const totalStock = await Product.sum('stock',{
+            where:{
+                business_id,
+                type_item:"Producto"
+            }
+        });
         const activeProducts = await Product.count({ where: { business_id, active: true } });
-        const lowStock = await Product.count({ where: { business_id, stock: { [Op.between]: [1, 20] } } });
+        const lowStock = await Product.count({ where: { business_id, type_item:"Producto", stock: { [Op.between]: [1, 20] } } });
 
         return res.json({
             totalProducts,
@@ -432,7 +458,7 @@ export const getProductsAutocomplete = async (req, res) => {
 
             const products = await Product.findAll({
                 where,
-                attributes: ["id", "name", "barcode", "price", "stock", "category"],
+                attributes: ["id", "name", "barcode", "price", "stock", "category", "type_item"],
                 limit: 10
             });
 
@@ -446,7 +472,7 @@ export const getProductsAutocomplete = async (req, res) => {
 
             const products = await Product.findAll({
                 where,
-                attributes: ["id", "name", "barcode", "price", "stock", "category"],
+                attributes: ["id", "name", "barcode", "price", "stock", "category", "type_item"],
                 limit: 10,
                 order: [["name", "ASC"]]
             });
