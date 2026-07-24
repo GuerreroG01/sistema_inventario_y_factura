@@ -8,4 +8,5 @@ export const CacheKeys = {
     PRODUCTS: "products",
     SALES: "sales",
     CATEGORIESEXP: "categories.expenses",
+    HAS_PENDING_LICENSE: "license.pending"
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getLicense, createTrialLicense, getLicenseStatus, renewLicense, extendLicense,
+import { getLicense, createTrialLicense, getLicenseStatus, renewLicense, extendLicense, hasPendingLicense,
     suspendLicense, reactivateLicense, createLifetimeLicense, revokeLicense, activatePendingLicense
 } from "@/services/licenseService";
 import { License, LicenseStatus } from "@/types/License";
@@ -24,6 +24,7 @@ export function useLicense(businessId: number) {
     const { user } = useAuth();
     const isSuperAdmin = user?.Rol === "superAdmin";
     const [licenseKey, setLicenseKey] = useState("");
+    const [hasPending, setHasPending] = useState(false);
 
     const loadLicense = async () => {
         try {
@@ -67,7 +68,7 @@ export function useLicense(businessId: number) {
             }
 
             await loadLicense();
-
+            setHasPending(false);
             setNotification({
                 type: "success",
                 message: success
@@ -83,17 +84,31 @@ export function useLicense(businessId: number) {
             setProcessing(false);
         }
     };
+    const checkPendingLicense = async () => {
+        try {
+            const pending = await hasPendingLicense();
+
+            setHasPending(pending);
+
+        } catch (error: any) {
+            setNotification({
+                type: "error",
+                message: error.message ?? "Error al verificar licencia pendiente"
+            });
+        }
+    };
 
 
     useEffect(() => {
         loadLicense();
+        checkPendingLicense();
     }, [businessId]);
 
 
     return {
         license, status, loading, processing, noLicense, notification, duration, setDuration, isSuperAdmin,
         durationUnit, setDurationUnit, clearNotification: () => setNotification(null), executeAction, 
-        reload: loadLicense, licenseKey, setLicenseKey,
+        reload: loadLicense, licenseKey, setLicenseKey, hasPending,
         actions: {
             renewLicense: () =>
                 renewLicense(businessId, duration, durationUnit),

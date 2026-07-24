@@ -1,6 +1,6 @@
 import Business from "../models/Business.js";
 import License from "../models/License.js";
-import { createTrialLicense, getLicenseByBusiness, suspendLicense, reactivateLicense } from "./LicenseService.js";
+import { createTrialLicense, getLicenseByBusiness, suspendLicense, reactivateLicense } from "./license/LicenseService.js";
 import { Op, ForeignKeyConstraintError } from "sequelize";
 export const createBusiness = async (data) => {
     const { name } = data;

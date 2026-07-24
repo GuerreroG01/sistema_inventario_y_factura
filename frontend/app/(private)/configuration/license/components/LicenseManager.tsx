@@ -17,14 +17,10 @@ type Props = {
 export default function LicenseManager({ businessId }: Props) {
     const { license, status, loading, processing, noLicense, duration, setDuration, isSuperAdmin,
         durationUnit, setDurationUnit, executeAction, actions, notification, clearNotification,
-        licenseKey, setLicenseKey
+        licenseKey, setLicenseKey, hasPending
     } = useLicense(businessId);
-    
-    const requiresManualActivation =
-        !!license &&
-        license.status === "PENDING" &&
-        license.activated_at === null &&
-        license.expires_at === null;
+
+    const requiresManualActivation = hasPending;
     if (loading) {
         return (
             <section className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
@@ -50,15 +46,6 @@ export default function LicenseManager({ businessId }: Props) {
             />
         );
     }
-
-    /*if (requiresManualActivation) {
-        return (
-            <ManualActivation
-                license={license}
-                businessId={businessId}
-            />
-        );
-    }*/
 
     if (!license || !status) {
         return null;
@@ -155,6 +142,11 @@ export default function LicenseManager({ businessId }: Props) {
                         />
 
                     </div>
+                    
+                    <LicenseInfo
+                        license={license}
+                    />
+
                     {requiresManualActivation && !isSuperAdmin && (
                         <ManualActivation
                             licenseKey={licenseKey}
@@ -168,12 +160,7 @@ export default function LicenseManager({ businessId }: Props) {
                             }
                         />
                     )}
-                    
-                    {(!requiresManualActivation || isSuperAdmin) && (
-                        <LicenseInfo
-                            license={license}
-                        />
-                    )}
+
                     {isSuperAdmin && (
                         <>
                             <LicenseActions

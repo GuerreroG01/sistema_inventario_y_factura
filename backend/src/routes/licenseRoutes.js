@@ -4,6 +4,7 @@ import * as licenseController from "../controllers/licenseController.js";
 const router = Router();
 
 router.get("/Test", licenseController.methodTest);
+router.get("/pending", licenseController.checkPendingLicense);
 router.get("/:businessId", licenseController.getLicense);
 router.get("/:businessId/status", licenseController.getStatus);
 router.post("/", licenseController.createTrialLicense)

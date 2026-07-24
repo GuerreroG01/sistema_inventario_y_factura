@@ -1,6 +1,10 @@
-import License from "../models/License.js";
+import License from "../../models/License.js";
 import crypto from "crypto";
 import { Op } from "sequelize";
+import { cacheService, CacheKeys, CacheTTL } from "../cache/index.js";
+import { getBusinessById } from "../businessService.js";
+import Business from "../../models/Business.js"
+import { emailService } from "../email/EmailServices.js";
 
 const generateLicenseKey = () => {
     return crypto
@@ -64,12 +68,17 @@ export const createTrialLicense = async (businessId,days = 14) => {
     return license;
 };
 
-export const getLicenseByBusiness = async ( businessId ) => {
-    const license = await License.findOne({ where:{ business_id:businessId } });
+export const getLicenseByBusiness = async (businessId) => {
+    const license = await License.findOne({
+        where: {
+            business_id: businessId,
+            status: "ACTIVE"
+        }
+    });
 
-    if(!license){
+    if (!license) {
         throw new Error(
-            "Licencia no encontrada"
+            "Licencia activa no encontrada"
         );
     }
 
@@ -274,45 +283,104 @@ export const getLicenseStatus = async ( businessId ) => {
 export const getExpiredLicenses = async () => {
     const now = new Date();
 
-    const licenses = await License.findAll({
+    const fiveDaysLater = new Date();
+    fiveDaysLater.setDate(now.getDate() + 5);
+
+    const businesses = await License.findAll({
         attributes: [
-            "business_id"
+            "business_id",
+            "status",
+            "expires_at"
         ],
         where: {
-            expires_at: {
-                [Op.lt]: now
-            },
-            status: "EXPIRED"
+            status: {
+                [Op.in]: [
+                    "ACTIVE",
+                    "EXPIRED"
+                ]
+            }
         },
+        order: [
+            ["business_id", "ASC"],
+            ["expires_at", "DESC"]
+        ],
         raw: true
     });
+
+    const licensesByBusiness = {};
+
+    for (const license of businesses) {
+        if (!licensesByBusiness[license.business_id]) {
+            licensesByBusiness[license.business_id] = license;
+        }
+    }
+
+    const expiredBusinesses = Object.values(licensesByBusiness)
+        .filter(license => {
+
+            const expiresAt = new Date(license.expires_at);
+
+            return (
+                license.status === "EXPIRED" ||
+                (
+                    license.status === "ACTIVE" &&
+                    expiresAt >= now &&
+                    expiresAt <= fiveDaysLater
+                )
+            );
+        })
+        .map(license => license.business_id);
+
     return {
-        business: licenses.map(
-            license => license.business_id
-        )
+        business: expiredBusinesses
     };
 };
 
 export const recreateExpiredLicenses = async (businessIds) => {
     const results = [];
 
+    const now = new Date();
+    const fiveDaysLater = new Date();
+    fiveDaysLater.setDate(now.getDate() + 5);
+
     for (const businessId of businessIds) {
-        const expiredLicense = await License.findOne({
+        const activeLicense = await License.findOne({
             where: {
                 business_id: businessId,
-                status: "EXPIRED"
+                status: {
+                    [Op.in]: [
+                        "ACTIVE",
+                        "EXPIRED"
+                    ]
+                },
+                expires_at: {
+                    [Op.between]: [now, fiveDaysLater]
+                }
             }
         });
 
-        if (!expiredLicense) {
+        if (!activeLicense) {
             results.push({
                 business_id: businessId,
-                message: "No existe licencia expirada"
+                message: "No existe una licencia próxima a vencer en los próximos 5 días"
             });
             continue;
         }
-        await expiredLicense.destroy();
-        const now = new Date();
+
+        const pendingLicense = await License.findOne({
+            where: {
+                business_id: businessId,
+                status: "PENDING"
+            }
+        });
+
+        if (pendingLicense) {
+            results.push({
+                business_id: businessId,
+                message: "El negocio ya tiene una licencia pendiente"
+            });
+            continue;
+        }
 
         const newLicense = await License.create({
             business_id: businessId,
@@ -324,20 +392,61 @@ export const recreateExpiredLicenses = async (businessIds) => {
             activated_at: null,
             expires_at: null
         });
-
+        const business = await getBusinessById(businessId);
         results.push({
             business_id: businessId,
+            business_name: business.name,
             license_id: newLicense.id,
+            license_key: newLicense.license_key,
+            expiration_date: newLicense.expires_at,
             message: "Licencia creada correctamente"
         });
     }
+
     return results;
 };
 
-export const activatePendingLicense = async (licenseKey) => {
+export const processExpiredLicenses = async () => {
+    const expiredBusinesses = await getExpiredLicenses();
+    const businessIds = expiredBusinesses.business;
+
+    if (!businessIds.length) {
+        return [];
+    }
+    return await recreateExpiredLicenses(businessIds);
+};
+
+const replacePreviousLicense = async (businessId, newLicenseId) => {
+    const previousLicense = await License.findOne({
+        where: {
+            business_id: businessId,
+            id: {
+                [Op.ne]: newLicenseId
+            },
+            status: {
+                [Op.in]: [
+                    "ACTIVE",
+                    "EXPIRED"
+                ]
+            }
+        },
+        order: [
+            ["createdAt", "DESC"]
+        ]
+    });
+
+    if (previousLicense) {
+        await previousLicense.update({
+            status: "EXPIRED"
+        });
+    }
+};
+
+export const activatePendingLicense = async (businessId, licenseKey) => {
     const license = await License.findOne({
         where: {
             license_key: licenseKey,
+            business_id: businessId,
             status: "PENDING"
         }
     });
@@ -347,6 +456,7 @@ export const activatePendingLicense = async (licenseKey) => {
             "Licencia pendiente no encontrada o ya activada"
         );
     }
+
     const now = new Date();
     const expirationDate = calculateExpirationDate(
         license.duration,
@@ -354,10 +464,55 @@ export const activatePendingLicense = async (licenseKey) => {
         now
     );
 
+    await replacePreviousLicense(
+        license.business_id,
+        license.id
+    );
+
     await license.update({
         status: "ACTIVE",
         activated_at: now,
         expires_at: expirationDate
     });
+
+    await cacheService.del(
+        CacheKeys.HAS_PENDING_LICENSE,
+        license.business_id
+    );
+
+    const business = await Business.findByPk(license.business_id);
+
+    try {
+        await emailService.sendLicenseActivatedEmail({
+            developerEmail: "guerrerog675@gmail.com",
+            license: {
+                business_id: license.business_id,
+                business_name: business?.name ?? "Desconocido",
+                license_id: license.id,
+                license_key: license.license_key,
+                expiration_date: license.expires_at
+            }
+        });
+    } catch (error) {
+        console.error("Error enviando correo de licencia activada:", error);
+    }
+
     return license;
+};
+
+export const hasPendingLicense = async (businessId) => {
+    return await cacheService.remember(
+        CacheKeys.HAS_PENDING_LICENSE,
+        async () => {
+            const pendingLicense = await License.findOne({
+                where: {
+                    business_id: businessId,
+                    status: "PENDING"
+                }
+            });
+            return !!pendingLicense;
+        },
+        CacheTTL.ONE_DAY,
+        businessId
+    );
 };

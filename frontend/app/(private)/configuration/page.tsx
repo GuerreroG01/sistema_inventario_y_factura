@@ -21,7 +21,7 @@ const configurationModules = [
     {
         title: "Usuarios",
         description:"Registra usuarios.",
-        href: "/auth/register",
+        href: "/configuration/user",
         icon: Users,
         allowedRoles: ["admin", "superadmin"],
         color: {

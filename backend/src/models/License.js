@@ -11,7 +11,6 @@ const License = sequelize.define("License", {
     business_id: { //Licencia por negocio
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique: true,
         references: {
             model: "Business",
             key: "id"

@@ -1,5 +1,5 @@
 
-import * as licenseService from "../services/LicenseService.js";
+import * as licenseService from "../services/license/LicenseService.js";
 
 export const getLicense = async (req, res) => {
     try {
@@ -212,9 +212,27 @@ export const methodTest = async (req, res) => {
 };
 export const activatePendings = async (req, res) => {
     try {
+        const businessId = req.user.business_id;
         const { licenseKey } = req.body;
-        const response = await licenseService.activatePendingLicense(licenseKey);
+        const response = await licenseService.activatePendingLicense(businessId, licenseKey);
         return res.status(200).json(response);
+
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message
+        });
+    }
+};
+export const checkPendingLicense = async (req, res) => {
+    try {
+        const businessId = req.user.business_id;
+        const hasPending = await licenseService.hasPendingLicense(
+            businessId
+        );
+
+        return res.status(200).json({
+            hasPendingLicense: hasPending
+        });
 
     } catch (error) {
         return res.status(400).json({

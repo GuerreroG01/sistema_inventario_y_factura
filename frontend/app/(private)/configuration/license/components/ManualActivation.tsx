@@ -7,12 +7,7 @@ type Props = {
     onActivate: () => void;
 };
 
-export default function ManualActivation({
-    licenseKey,
-    setLicenseKey,
-    processing,
-    onActivate,
-}: Props) {
+export default function ManualActivation({ licenseKey, setLicenseKey, processing, onActivate }: Props) {
     return (
         <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
             <div className="flex items-start gap-4">
@@ -26,8 +21,8 @@ export default function ManualActivation({
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-600">
-                        Esta licencia se encuentra pendiente de activación.
-                        Ingresa la clave de licencia para validarla y activarla.
+                        Ya puedes activar tu nueva licencia.
+                        Ingresa la clave de licencia para validarla y activarla e iniciar tu nuevo ciclo.
                     </p>
 
                     <div className="mt-6 space-y-4">

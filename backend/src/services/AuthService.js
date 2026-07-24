@@ -46,7 +46,7 @@ export const registerMethod = async (datosUsuario, currentUser) => {
         Email,
         Telefono,
         Rol: "Empleado",
-        business_id: currentUser.business_id
+        business_id: currentUser?.business_id ?? 1
     });
 
     return {

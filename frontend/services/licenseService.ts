@@ -212,3 +212,18 @@ export async function activatePendingLicense(licenseKey: string): Promise<Licens
     );
   }
 }
+export async function hasPendingLicense(): Promise<boolean> {
+  try {
+    const { data } = await api.get<{
+      hasPendingLicense: boolean;
+    }>("/licenses/pending");
+
+    return data.hasPendingLicense;
+
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+      "Error al verificar licencia pendiente"
+    );
+  }
+}
