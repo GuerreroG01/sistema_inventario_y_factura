@@ -16,7 +16,7 @@ export function useAuth() {
             setUser(JSON.parse(storedUser));
         }
     }, []);
-
+    const businessName = user?.Business?.Nombre ?? null;
 
     const logout = async () => {
         const token = localStorage.getItem("token");
@@ -38,5 +38,5 @@ export function useAuth() {
         }
     };
 
-    return {user,logout};
+    return {user,logout,businessName};
 }

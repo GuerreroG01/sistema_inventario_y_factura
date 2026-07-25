@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import Business from "../models/Business.js"
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -72,9 +73,18 @@ export const login = async (usuario, clave) => {
     const user = await User.findOne({
         where: {
             Usuario: usuario
-        }
+        },
+        include: [
+            {
+                model: Business,
+                as: "business",
+                attributes: [
+                    "id",
+                    "name"
+                ]
+            }
+        ]
     });
-
     if (!user) {
         throw {
             statusCode: 401,
@@ -124,7 +134,11 @@ export const login = async (usuario, clave) => {
             Usuario: user.Usuario,
             Rol: user.Rol,
             Activo: user.Activo,
-            Business_id: user.business_id
+            Business_id: user.business_id,
+            Business: {
+                Id: user.business.id,
+                Nombre: user.business.name
+            }
         }
     };
 };

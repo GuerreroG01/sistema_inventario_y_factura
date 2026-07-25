@@ -11,6 +11,7 @@ import SalesRankingMetrics from "./dashboard/SalesRankingMetrics/SalesRankingMet
 import InventoryAlerts from "./dashboard/Components/InventoryAlerts/InventoryAlerts";
 import ExpiringProductsMetrics from "./dashboard/Components/ExpiringProductsMetrics/ExpiringProductsMetrics";
 import InventoryMovements from "./dashboard/Components/InventoryMovements/InventoryMovements";
+import DashboardWelcome from "./dashboard/Components/DashboardWelcome";
 
 export default function Home() {
   return (
@@ -21,16 +22,7 @@ export default function Home() {
           <div className="flex flex-col lg:flex-row items-center gap-10">
             
             <div className="flex-1 space-y-6">
-              <div>
-                <h1 className="text-4xl sm:text-5xl font-extrabold drop-shadow-lg">
-                  Bienvenido a Inventarium
-                </h1>
-
-                <p className="mt-4 text-indigo-100 text-lg sm:text-xl max-w-xl">
-                  Administra tu inventario y facturación de manera eficiente.
-                  Visualiza el estado de tu negocio y toma decisiones rápidas.
-                </p>
-              </div>
+              <DashboardWelcome />
 
               <Link
                 href="/sales/create"

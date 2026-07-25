@@ -18,8 +18,7 @@ export default function Header() {
         { label: "Gastos", href: "/expense" },
         //{ label: "Reportes", href: "#" },
     ];
-    const { logout, user } = useAuth();
-
+    const { logout, user, businessName } = useAuth();
     return (
         <header className="sticky top-0 z-50 w-full border-b border-slate-200/40 bg-white/70 backdrop-blur-xl transition-all duration-500 hover:bg-white/80">
             <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -33,11 +32,55 @@ export default function Header() {
                     </div>
                     
                     <div className="flex flex-col">
-                        <h1 className="text-base font-extrabold tracking-tight text-slate-900 sm:text-lg transition-colors duration-300 group-hover:text-blue-600">
-                            Inventarium<span className="text-blue-600 font-black"> System</span>
+                        <h1
+                            className="
+                                max-w-[220px]
+                                truncate
+                                text-base
+                                sm:text-lg
+                                font-black
+                                tracking-tight
+                                text-slate-900
+                                leading-tight
+                                transition-all
+                                duration-300
+                                group-hover:text-blue-600
+                            "
+                        >
+                            {businessName ? (
+                                businessName
+                            ) : (
+                                <span
+                                    className="
+                                        block
+                                        h-5
+                                        w-32
+                                        rounded-md
+                                        bg-slate-200
+                                        animate-pulse
+                                    "
+                                />
+                            )}
                         </h1>
-                        <p className="hidden text-[10px] font-bold uppercase tracking-wider text-slate-400 sm:block leading-none mt-0.5 transition-colors duration-300 group-hover:text-slate-600">
-                            Inventario y Facturación
+
+                        <p
+                            className="
+                                hidden
+                                text-[10px]
+                                font-bold
+                                uppercase
+                                tracking-[0.18em]
+                                text-slate-400
+                                sm:block
+                                leading-none
+                                mt-1
+                                transition-colors
+                                duration-300
+                                group-hover:text-slate-600
+                            "
+                        >
+                            Inventarium
+                            <span className="text-blue-600 font-black"> System</span>
                         </p>
                     </div>
                 </a>
