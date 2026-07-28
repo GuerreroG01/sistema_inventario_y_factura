@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   ],
   authors: [
     {
-      name: "InventarioPro Team"
+      name: "Gabriel Guerrero By LocalNet Systems"
     }
   ],
 };

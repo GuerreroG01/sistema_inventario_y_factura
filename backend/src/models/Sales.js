@@ -29,6 +29,16 @@ const Sales = sequelize.define ("Sales",{
         allowNull: true,
     },
 
+    payment_type:{
+        type: DataTypes.ENUM(
+            "CASH",
+            "CREDIT",
+            "CARD",
+            "TRANSFER"
+        ),
+        defaultValue:"CASH"
+    },
+
     created_by: {
         type: DataTypes.INTEGER,
         allowNull: true,
