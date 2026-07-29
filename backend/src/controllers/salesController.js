@@ -8,6 +8,8 @@ import SaleDetail from "../models/SaleDetails.js";
 import InventoryMovService from "../services/Inventory_MovService.js";
 import Product from "../models/Products.js";
 import { cacheService, CacheKeys } from "../services/cache/index.js";
+import Customer from "../models/Customers.js";
+import { updateCustomer } from "../services/CustomerService.js";
 
 export const getSales = async (req, res) => {
     try {
@@ -68,6 +70,11 @@ export const getSaleById = async (req, res) => {
                 {
                     model: SaleDetail,
                     as: "details"
+                },
+                {
+                    model: Customer,
+                    as: "customer",
+                    attributes: ["id", "name", "identification"]
                 }
             ]
         });
@@ -94,7 +101,7 @@ export const createSale = async (req, res) => {
     const t = await sequelize.transaction();
 
     try {
-        let { fecha, category, client_id, items } = req.body;
+        let { fecha, category, client_id, payment_type, items } = req.body;
 
         if (!fecha) {
             return res.status(400).json({
@@ -115,6 +122,7 @@ export const createSale = async (req, res) => {
             total: 0,
             category,
             client_id,
+            payment_type,
             created_by: req.user.id,
             updated_by: req.user.id,
             business_id: req.user.business_id
@@ -176,6 +184,33 @@ export const createSale = async (req, res) => {
         await SaleDetail.bulkCreate(details, { transaction: t });
 
         await sale.update({ total }, { transaction: t });
+        if (payment_type === "CREDIT" && client_id) {
+            const customer = await Customer.findOne({
+                where: {
+                    id: client_id,
+                    business_id: req.user.business_id
+                },
+                transaction: t
+            });
+            if (!customer) {
+                throw new Error("Cliente no encontrado");
+            }
+            const newBalance = Number(customer.balance) + Number(total);
+            if (
+                customer.credit_limit > 0 &&
+                newBalance > Number(customer.credit_limit)
+            ) {
+                throw new Error(
+                    "El cliente supera su límite de crédito"
+                );
+            }
+
+            await customer.update({
+                balance: newBalance
+            }, {
+                transaction: t
+            });
+        }
         await t.commit();
         cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
         cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
@@ -303,6 +338,46 @@ export const updateSaleStatus = async (req, res) => {
         }
 
         await sale.save({ transaction: t });
+
+        if (sale.payment_type === "CREDIT" && sale.client_id) {
+            const pendingStatuses = ["PENDING"];
+
+            const previousAffectsBalance = pendingStatuses.includes(previousStatus);
+            const currentAffectsBalance = pendingStatuses.includes(status);
+
+            if (previousAffectsBalance !== currentAffectsBalance) {
+
+                const customer = await Customer.findOne({
+                    where: {
+                        id: sale.client_id,
+                        business_id: req.user.business_id
+                    },
+                    transaction: t
+                });
+
+                if (!customer) {
+                    throw new Error("Cliente no encontrado");
+                }
+
+                let newBalance = Number(customer.balance);
+
+                // Sale deja de generar deuda
+                if (previousAffectsBalance && !currentAffectsBalance) {
+                    newBalance -= Number(sale.total);
+                }
+
+                // Sale vuelve a generar deuda
+                if (!previousAffectsBalance && currentAffectsBalance) {
+                    newBalance += Number(sale.total);
+                }
+
+                await customer.update({
+                    balance: newBalance
+                }, {
+                    transaction: t
+                });
+            }
+        }
 
         if (status === "CANCELLED" && previousStatus !== "CANCELLED") {
 

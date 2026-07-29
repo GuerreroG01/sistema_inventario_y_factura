@@ -102,6 +102,21 @@ export default function SalesRightPanel({
                                         {selected.fecha}
                                     </p>
                                 </div>
+                                {selected.customer && (
+                                    <div className="bg-white/70 border border-slate-200/60 rounded-xl p-5 shadow-sm hover:shadow-md transition">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            Cliente
+                                        </p>
+
+                                        <p className="text-sm font-semibold text-slate-700 mt-3">
+                                            {selected.customer.name}
+                                        </p>
+
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            {selected.customer.identification}
+                                        </p>
+                                    </div>
+                                )}
 
                                 {username && (
                                     <div className="bg-white/70 border border-slate-200/60 rounded-xl p-5 shadow-sm hover:shadow-md transition">

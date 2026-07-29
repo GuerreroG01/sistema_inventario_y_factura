@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { createSale } from "@/services/salesService";
 import { autocompleteProducts } from "@/services/productService";
+import { getCustomerAutocomplete } from "@/services/customerService";
+import { CustomerAutocomplete } from "@/types/Customer";
 
 export type SaleItem = {
     product_id: number;
@@ -24,6 +26,9 @@ export function useCreateSale() {
     const [fecha] = useState(new Date().toISOString().split("T")[0]);
     const [category, setCategory] = useState("");
     const [client_id, setClientId] = useState<number | null>(null);
+    const [payment_type, setPaymentType] = useState<
+        "CASH" | "CREDIT" | "CARD" | "TRANSFER"
+    >("CASH");
 
     const [items, setItems] = useState<SaleItem[]>([]);
     const [item, setItem] = useState<SaleItem>(emptyItem);
@@ -31,6 +36,10 @@ export function useCreateSale() {
     const [searchProduct, setSearchProduct] = useState("");
     const [productResults, setProductResults] = useState<any[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
+    const [customerResults, setCustomerResults] = useState<CustomerAutocomplete[]>([]);
+    const [searchLoadingCus, setSearchLoadingCus] = useState(false);
+    const [searchCustomer, setSearchCustomer] = useState("");
+    const [selectedCustomer, setSelectedCustomer] = useState<CustomerAutocomplete | null>(null);
 
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
@@ -63,6 +72,28 @@ export function useCreateSale() {
         }
     };
 
+    const searchCustomers = async (value: string) => {
+        try {
+            const data = await getCustomerAutocomplete(value);
+
+            setCustomerResults(data.customers);
+
+        } catch (error) {
+            console.error("Error autocomplete clientes:", error);
+            setCustomerResults([]);
+
+        } finally {
+            setSearchLoadingCus(false);
+        }
+    };
+
+    const selectCustomer = (customer: CustomerAutocomplete) => {
+        setSelectedCustomer(customer);
+        setClientId(customer.id);
+        setSearchCustomer(customer.name);
+        setCustomerResults([]);
+    };
+
     useEffect(() => {
 
         if (searchProduct.length === 0) {
@@ -79,6 +110,40 @@ export function useCreateSale() {
         return () => clearTimeout(timeout);
 
     }, [searchProduct]);
+
+    useEffect(() => {
+        if (
+            selectedCustomer &&
+            searchCustomer === selectedCustomer.name
+        ) {
+            setCustomerResults([]);
+            setSearchLoadingCus(false);
+            return;
+        }
+
+        if (searchCustomer.length === 0) {
+            setCustomerResults([]);
+            setClientId(null);
+            setSelectedCustomer(null);
+            setSearchLoadingCus(false);
+            return;
+        }
+
+        if (searchCustomer.length < 2) {
+            setCustomerResults([]);
+            setSearchLoadingCus(false);
+            return;
+        }
+
+        setSearchLoadingCus(true);
+
+        const timeout = setTimeout(() => {
+            searchCustomers(searchCustomer);
+        }, 500);
+
+        return () => clearTimeout(timeout);
+
+    }, [searchCustomer, selectedCustomer]);
 
     const addProductDirect = (product: any) => {
         setItems(prev => {
@@ -174,6 +239,7 @@ export function useCreateSale() {
                 fecha,
                 category,
                 client_id: client_id ?? undefined,
+                payment_type,
                 items
             });
             setSuccessOpen(true);
@@ -191,6 +257,8 @@ export function useCreateSale() {
         fecha, category, client_id, setCategory, setClientId, items, setItems, item, setItem,
         searchProduct, setSearchProduct, productResults, setProductResults, searchLoading,
         addProductDirect, addItem, removeItem, updateItemQuantity, updateItem, now,
-        total, loading, message, submit, successOpen, setSuccessOpen,
+        total, loading, message, submit, successOpen, setSuccessOpen, searchCustomer,
+        setSearchCustomer, customerResults, setCustomerResults, searchLoadingCus, selectCustomer,
+        selectedCustomer, setSelectedCustomer, payment_type, setPaymentType,
     };
 }

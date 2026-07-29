@@ -71,8 +71,7 @@ export const createTrialLicense = async (businessId,days = 14) => {
 export const getLicenseByBusiness = async (businessId) => {
     const license = await License.findOne({
         where: {
-            business_id: businessId,
-            status: "ACTIVE"
+            business_id: businessId
         }
     });
 

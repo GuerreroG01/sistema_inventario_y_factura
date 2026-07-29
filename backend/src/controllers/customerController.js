@@ -1,4 +1,4 @@
-import { getAllCustomers, getById, createCustomer, updateCustomer, changeCustomerStatus } from "../services/CustomerService.js";
+import { getAllCustomers, getById, createCustomer, updateCustomer, changeCustomerStatus, getCustomerByName } from "../services/CustomerService.js";
 
 export const getCustomers = async (req, res) => {
     try {
@@ -108,6 +108,24 @@ export const changeStatus = async (req, res) => {
     } catch (error) {
         return res.status(400).json({
             success: false,
+            message: error.message
+        });
+    }
+};
+
+export const getCustomerAutocomplete = async (req, res) => {
+    try {
+        const result = await getCustomerByName(
+            req.query,
+            req.user.business_id
+        );
+
+        return res.json(result);
+    } catch (error) {
+        console.error("getCustomerAutocomplete error:", error);
+
+        return res.status(500).json({
+            error: "internal_error",
             message: error.message
         });
     }

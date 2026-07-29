@@ -5,6 +5,7 @@ const router = Router();
 
 router.post("/", customerController.create);
 router.get("/", customerController.getCustomers);
+router.get("/autocomplete",customerController.getCustomerAutocomplete);
 router.get("/:id", customerController.getCustomerById);
 router.put("/:id", customerController.update);
 router.patch("/:id/status", customerController.changeStatus);

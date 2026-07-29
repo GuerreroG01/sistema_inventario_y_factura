@@ -19,3 +19,9 @@ export type CustomerResponse = {
     success: boolean;
     data: Customer;
 };
+
+export interface CustomerAutocomplete {
+    id: number;
+    name: string;
+    identification: string | null;
+}

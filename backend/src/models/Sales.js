@@ -58,16 +58,6 @@ const Sales = sequelize.define ("Sales",{
         onUpdate:"CASCADE",
         onDelete:"RESTRICT"
     }
-    /*client_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-            model: 'Clients', // nombre de la tabla (o modelo si usas referencia directa)
-            key: 'id',
-        },
-        onUpdate: 'CASCADE',
-        onDelete: 'SET NULL',
-    }*/
 });
 
 export default Sales;

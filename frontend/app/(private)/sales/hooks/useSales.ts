@@ -102,6 +102,7 @@ export function useSales() {
             setLoading(true);
 
             const sale = await getSale(id);
+            console.log("Información de la venta:",sale);
             const user = await getUsernameById(sale.created_by);
             setUsername(user);
             setSelected(sale);
@@ -124,7 +125,6 @@ export function useSales() {
         if (!res.ok) {
             setErrorMessage(res.message);
 
-            // 👇 ahora depende del "code", no de requiresObservation
             if (
                 res.code === "REFUND_OBSERVATION_REQUIRED" &&
                 status === "REFUNDED"

@@ -1,5 +1,5 @@
 import api from "./api";
-import { Customer, CustomerResponse } from "@/types/Customer";
+import { Customer, CustomerResponse, CustomerAutocomplete } from "@/types/Customer";
 
 export async function getCustomers(
     page: number = 1,
@@ -100,6 +100,34 @@ export async function changeCustomerStatus( id:number, status:"ACTIVE" | "INACTI
         throw new Error(
         error.response?.data?.message ||
         "Error al cambiar estado del cliente"
+        );
+    }
+}
+
+export async function getCustomerAutocomplete(
+    search: string = "",
+    page: number = 1
+): Promise<{
+    total: number;
+    page: number;
+    totalPages: number;
+    customers: CustomerAutocomplete[];
+}> {
+    try {
+        const { data } = await api.get("/customers/autocomplete", {
+            params: {
+                search,
+                page
+            }
+        });
+
+        return data;
+
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message ||
+            error.message ||
+            "Error al buscar clientes"
         );
     }
 }

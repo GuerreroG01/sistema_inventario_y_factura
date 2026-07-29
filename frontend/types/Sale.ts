@@ -1,13 +1,15 @@
+import {Customer} from "../types/Customer"
+
 export interface Sale {
     id: number;
     fecha: string;
     total: number;
     category?: string;
     status: string;
-    client_id?: number;
     updatedAt: string;
     created_by: number;
     details?: SaleDetail[];
+    customer?: Customer | null;
 }
 export interface SaleDetail {
     id?: number;
@@ -32,5 +34,6 @@ export interface CreateSaleRequest {
     fecha: string;
     category?: string;
     client_id?: number;
+    payment_type: "CASH" | "CREDIT" | "CARD" | "TRANSFER";
     items: CreateSaleItem[];
 }

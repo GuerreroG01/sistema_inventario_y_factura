@@ -186,3 +186,44 @@ export const changeCustomerStatus = async ( id, status, updated_by, businessId )
     await customer.update({status, updated_by});
     return customer;
 };
+
+export const getCustomerByName = async (query, businessId) => {
+    const page = parseInt(query.page) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    const where = {
+        business_id: businessId,
+        status: "ACTIVE"
+    };
+
+    if (query.search) {
+        where[Op.or] = [
+            {
+                name: {
+                    [Op.iLike]: `%${query.search}%`
+                }
+            },
+            {
+                identification: {
+                    [Op.iLike]: `%${query.search}%`
+                }
+            }
+        ];
+    }
+
+    const { count, rows } = await Customer.findAndCountAll({
+        where,
+        attributes: ["id", "name", "identification"],
+        order: [["name", "ASC"]],
+        limit,
+        offset
+    });
+
+    return {
+        total: count,
+        page,
+        totalPages: Math.ceil(count / limit),
+        customers: rows
+    };
+};
