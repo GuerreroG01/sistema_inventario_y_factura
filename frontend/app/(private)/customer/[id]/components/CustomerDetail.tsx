@@ -297,15 +297,15 @@ export default function CustomerDetail({ id }: { id:number }) {
                         </div>
                     </div>
                 </div>
+                {preferences && (
+                    <CustomerPreferences
+                        data={preferences}
+                    />
+                )}
                 {salesHistory && (
                     <CustomerSaleHistory
                         data={salesHistory}
                         onPageChange={reloadSales}
-                    />
-                )}
-                {preferences && (
-                    <CustomerPreferences
-                        data={preferences}
                     />
                 )}
             </div>

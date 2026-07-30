@@ -56,10 +56,10 @@ export default function CustomerPreferences({data}: CustomerPreferencesProps) {
 
                         <div>
                             <h3 className="font-bold text-slate-900">
-                                Historial de crédito
+                                Comportamiento de pago
                             </h3>
                             <p className="text-sm text-slate-500">
-                                Comportamiento del cliente al pagar sus compras a crédito
+                                Evaluación del cliente al pagar sus compras a crédito
                             </p>
                         </div>
                     </div>

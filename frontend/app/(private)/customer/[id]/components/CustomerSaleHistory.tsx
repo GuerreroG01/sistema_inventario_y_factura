@@ -223,7 +223,7 @@ export default function CustomerSaleHistory({
                                     font-semibold
                                     transition
                                     ${
-                                        page === pagination.page
+                                        page === Number(pagination.page)
                                             ? "bg-indigo-600 text-white"
                                             : "bg-white text-gray-700 hover:bg-gray-100"
                                     }
