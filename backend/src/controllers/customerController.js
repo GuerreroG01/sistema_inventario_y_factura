@@ -1,4 +1,7 @@
-import { getAllCustomers, getById, createCustomer, updateCustomer, changeCustomerStatus, getCustomerByName } from "../services/CustomerService.js";
+import { getAllCustomers, getById, createCustomer, updateCustomer, changeCustomerStatus, 
+    getCustomerByName, getCustomerSummary, getCustomerSalesHistory, getCustomerIndicators,
+    getCustomerPreferences
+} from "../services/CustomerService.js";
 
 export const getCustomers = async (req, res) => {
     try {
@@ -126,6 +129,127 @@ export const getCustomerAutocomplete = async (req, res) => {
 
         return res.status(500).json({
             error: "internal_error",
+            message: error.message
+        });
+    }
+};
+
+export const summaryCustomer = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "El id del cliente es requerido.",
+            });
+        }
+
+        const result = await getCustomerSummary(
+            id,
+            req.user.business_id
+        );
+
+        return res.status(200).json({
+            success: true,
+            data: result,
+        });
+
+    } catch (error) {
+        console.error(
+            "[getCustomerSummaryController] Error:",
+            error
+        );
+
+        return res.status(404).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+export const salesHistory = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const {
+            page = 1,
+            limit = 10
+        } = req.query;
+
+        const result = await getCustomerSalesHistory(
+            id,
+            req.user.business_id,
+            page,
+            limit
+        );
+
+        return res.status(200).json({
+            success: true,
+            data: result
+        });
+
+    } catch (error) {
+        console.error(
+            "[salesHistory] Error:",
+            error
+        );
+
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+export const indicatorsCustomer = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await getCustomerIndicators(
+            id,
+            req.user.business_id
+        );
+
+        return res.status(200).json({
+            success: true,
+            data: result
+        });
+
+    } catch (error) {
+        console.error(
+            "[indicatorsCustomer] Error:",
+            error
+        );
+
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+export const customerPreferences = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const businessId = req.user.business_id;
+        const preferences =
+            await getCustomerPreferences(
+                id,
+                businessId
+            );
+
+        return res.status(200).json({
+            ok: true,
+            data: preferences
+        });
+    } catch (error) {
+        console.error(
+            "Error obteniendo preferencias del cliente:",
+            error
+        );
+        return res.status(404).json({
+            ok: false,
             message: error.message
         });
     }

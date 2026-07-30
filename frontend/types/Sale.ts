@@ -10,6 +10,7 @@ export interface Sale {
     created_by: number;
     details?: SaleDetail[];
     customer?: Customer | null;
+    payment_type: "CASH" | "CREDIT" | "CARD" | "TRANSFER" | null;
 }
 export interface SaleDetail {
     id?: number;

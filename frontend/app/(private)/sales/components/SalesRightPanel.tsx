@@ -12,11 +12,12 @@ type Props = {
         label: string;
         description: string;
     }[];
+    paymentTypeLabels: Record<Exclude<Sale["payment_type"], null>, string>;
     username: string;
 };
 
 export default function SalesRightPanel({
-    selected, statusStyle, handleStatusChange, statusOptions, username
+    selected, statusStyle, handleStatusChange, statusOptions, username, paymentTypeLabels
 }: Props) {
     return (
         <div className="lg:col-span-2 bg-white/60 backdrop-blur-xl border border-white/40 rounded-2xl shadow-lg h-full overflow-hidden flex flex-col">
@@ -129,14 +130,37 @@ export default function SalesRightPanel({
                                     </div>
                                 )}
 
-                                {selected.category && (
+                                {(selected.category || selected.payment_type) && (
                                     <div className="bg-white/70 border border-slate-200/60 rounded-xl p-5 shadow-sm hover:shadow-md transition">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                            Categoría
-                                        </p>
-                                        <p className="text-sm font-semibold text-slate-700 mt-3">
-                                            {selected.category}
-                                        </p>
+                                        <div
+                                            className={`grid gap-4 ${
+                                                selected.category && selected.payment_type
+                                                    ? "grid-cols-2"
+                                                    : "grid-cols-1"
+                                            }`}
+                                        >
+                                            {selected.category && (
+                                                <div>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                        Categoría
+                                                    </p>
+                                                    <p className="text-sm font-semibold text-slate-700 mt-3">
+                                                        {selected.category}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {selected.payment_type && (
+                                                <div>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                        Tipo de pago
+                                                    </p>
+                                                    <p className="text-sm font-semibold text-slate-700 mt-3">
+                                                        {paymentTypeLabels[selected.payment_type] ?? selected.payment_type}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
 

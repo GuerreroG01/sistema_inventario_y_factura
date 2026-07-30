@@ -29,6 +29,7 @@ type Props = {
     statusStyle: (status: string) => string;
     handleStatusChange: (status: string) => Promise<void>;
     statusOptions: StatusOption[];
+    paymentTypeLabels: Record<Exclude<Sale["payment_type"], null>,string>;
 
     showRefundModal: boolean;
     setShowRefundModal: (value: boolean) => void;

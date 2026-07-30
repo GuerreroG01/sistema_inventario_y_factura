@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { getSales, getSale, updateSaleStatus } from "@/services/salesService";
 import { getUsernameById } from "@/services/authService";
 import { Sale } from "@/types/Sale";
+import { statusOptions} from "@/app/constants/saleStatuses";
+import { paymentTypeLabels } from "@/app/constants/paymentTypes";
 
 export function useSales() {
     const [sales, setSales] = useState<Sale[]>([]);
@@ -17,34 +19,6 @@ export function useSales() {
     const [errorMessage, setErrorMessage] = useState("");
     const [username, setUsername] = useState("");
     
-
-    const statusOptions = [
-        {
-            value: "PENDING",
-            label: "Pendiente",
-            description: "Venta creada pero aún no procesada o pagada.",
-        },
-        {
-            value: "PAID",
-            label: "Pagada",
-            description: "El pago fue recibido correctamente.",
-        },
-        {
-            value: "COMPLETED",
-            label: "Completada",
-            description: "La venta fue entregada/finalizada con éxito.",
-        },
-        {
-            value: "CANCELLED",
-            label: "Cancelada",
-            description: "La venta fue cancelada antes de completarse.",
-        },
-        {
-            value: "REFUNDED",
-            label: "Devolución",
-            description: "Se devolvió el dinero al cliente.",
-        }
-    ];
 
     const statusStyle = (status: string) => {
         switch (status) {
@@ -174,6 +148,6 @@ export function useSales() {
     return {
         sales, selected, setSelected: selectSale, loading, startDate, setStartDate, endDate, setEndDate, page, setPage,
         totalPages, totalSales, fetchSales, statusStyle, handleStatusChange, statusOptions, showRefundModal, setShowRefundModal,
-        pendingStatus, confirmRefund, errorMessage, username
+        pendingStatus, confirmRefund, errorMessage, username, paymentTypeLabels
     };
 }

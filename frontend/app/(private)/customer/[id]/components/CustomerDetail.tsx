@@ -1,12 +1,16 @@
 "use client";
 
 import { useCustomerDetail } from "../hooks/useCustomerDetail";
-import { Phone, Mail, MapPin, CreditCard, User } from "lucide-react";
+import { Phone, Mail, MapPin, CreditCard, User, CalendarDays, ShoppingCart, Clock, DollarSign } from "lucide-react";
 import { InfoCard } from "./InfoCard";
 import { CreditBox } from "./CreditBox";
+import CustomerSaleHistory from "./CustomerSaleHistory";
+import CustomerPreferences from "./CustomerPreferences";
 
 export default function CustomerDetail({ id }: { id:number }) {
-    const { customer, loading } = useCustomerDetail(id);
+    const {
+        customer, indicators, summary, salesHistory, loading, preferences, reloadSales
+    } = useCustomerDetail(id);
 
     if (loading) {
         return (
@@ -125,6 +129,98 @@ export default function CustomerDetail({ id }: { id:number }) {
                         />
                     </div>
                 </div>
+                {indicators && (
+                    <div className="space-y-4">
+
+                        <h2 className="text-lg font-bold text-slate-900">
+                            Indicadores del cliente
+                        </h2>
+
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+
+                            <InfoCard
+                                icon={<CalendarDays />}
+                                title="Cliente desde"
+                                value={
+                                    new Date(
+                                        indicators.customerSince
+                                    ).toLocaleDateString("es-ES")
+                                }
+                            />
+
+                            <InfoCard
+                                icon={<Clock />}
+                                title="Última compra"
+                                value={
+                                    indicators.lastPurchase
+                                    ? new Date(
+                                        indicators.lastPurchase
+                                    ).toLocaleDateString("es-ES")
+                                    : "Sin compras"
+                                }
+                            />
+
+                            <InfoCard
+                                icon={<ShoppingCart />}
+                                title="Ventas pendientes"
+                                value={String(indicators.pendingSales)}
+                            />
+                        </div>
+                    </div>
+                )}
+                {summary && (
+                    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+                        <h2 className="mb-6 text-lg font-bold text-slate-900">
+                            Resumen de compras
+                        </h2>
+
+
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+
+                            <CreditBox
+                                title="Cantidad de Compras"
+                                value={String(summary.totalSales)}
+                            />
+
+                            <CreditBox
+                                title="Total comprado"
+                                value={summary.totalPurchased.toLocaleString(
+                                    "es-ES",
+                                    {
+                                        style:"currency",
+                                        currency:"NIO"
+                                    }
+                                )}
+                            />
+
+                            <CreditBox
+                                title="Compras crédito"
+                                value={summary.creditPurchases.toLocaleString(
+                                    "es-ES",
+                                    {
+                                        style:"currency",
+                                        currency:"NIO"
+                                    }
+                                )}
+                            />
+
+                            <CreditBox
+                                title="Compras contado"
+                                value={summary.cashPurchases.toLocaleString(
+                                    "es-ES",
+                                    {
+                                        style:"currency",
+                                        currency:"NIO"
+                                    }
+                                )}
+                            />
+
+                        </div>
+
+                    </section>
+                )}
+                
                 <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-3">
@@ -201,6 +297,17 @@ export default function CustomerDetail({ id }: { id:number }) {
                         </div>
                     </div>
                 </div>
+                {salesHistory && (
+                    <CustomerSaleHistory
+                        data={salesHistory}
+                        onPageChange={reloadSales}
+                    />
+                )}
+                {preferences && (
+                    <CustomerPreferences
+                        data={preferences}
+                    />
+                )}
             </div>
         </section>
     );
