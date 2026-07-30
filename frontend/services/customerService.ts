@@ -9,7 +9,7 @@ export async function getCustomers(
         name?: string;
         phone?: string;
         status?: string;
-        hasDebt?: boolean;
+        hasDebt?: string;
     } = {}
 ) {
     try {

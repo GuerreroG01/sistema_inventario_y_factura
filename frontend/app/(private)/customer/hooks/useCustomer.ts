@@ -8,7 +8,8 @@ export function useCustomer () {
     const [filters, setFilters] = useState({
         name: "",
         phone: "",
-        hasDebt: false,
+        status:"",
+        hasDebt: "",
     });
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({
@@ -20,17 +21,34 @@ export function useCustomer () {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
-    const loadCustomers = async () => {
+    const updateFilter = (key:string,value:string)=>{
+        setFilters(prev=>({
+            ...prev,
+            [key]:value
+        }));
+    };
+    const loadCustomers = async (currentPage = page) => {
         try {
             setLoading(true);
-            const response = await getCustomers(page, filters);
+
+            const response = await getCustomers(
+                currentPage,
+                filters
+            );
+
             setCustomers(response.data);
             setPagination(response.pagination);
+
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const applyFilters = ()=>{
+        setPage(1);
+        loadCustomers(1);
     };
 
     useEffect(() => {
@@ -105,6 +123,6 @@ export function useCustomer () {
     return {
         customers, loading, pagination, filters, totalDebtCount, activeCustomersCount, setFilters,
         setPage, loadCustomers, isModalOpen, selectedCustomer, openCreateModal, openEditModal, closeModal,
-        handleSubmit, handleChangeStatus
+        handleSubmit, handleChangeStatus, updateFilter, applyFilters
     };
 }

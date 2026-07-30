@@ -5,15 +5,18 @@ import { Users, CreditCard, UserCheck, AlertCircle, Eye, Edit, MoreVertical, Plu
 import { MetricCard } from "./MetricCard";
 import { useCustomer } from "../hooks/useCustomer";
 import { CustomerModal } from "./CustomerModal";
+import CustomerFilters from "./CustomerFilters";
 import { useRouter } from "next/navigation";
 
 type CustomerManagerProps = ReturnType<typeof useCustomer>;
 
 export default function CustomerManager({
     customers, loading, pagination, totalDebtCount, activeCustomersCount, isModalOpen, selectedCustomer, 
-    openCreateModal, openEditModal, closeModal, handleSubmit, handleChangeStatus
+    openCreateModal, openEditModal, closeModal, handleSubmit, handleChangeStatus, updateFilter, 
+    applyFilters, filters
 }: CustomerManagerProps) {
     const [openMenuId, setOpenMenuId] = useState<number | null>(null)
+    const [openFilters, setOpenFilters] = useState(false);
     const router = useRouter();
     return (
         <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 md:p-10 shadow-sm">
@@ -74,6 +77,13 @@ export default function CustomerManager({
                         color="violet"
                     />
                 </div>
+                <CustomerFilters
+                    filters={filters}
+                    updateFilter={updateFilter}
+                    applyFilters={applyFilters}
+                    open={openFilters}
+                    setOpen={setOpenFilters}
+                />
 
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
