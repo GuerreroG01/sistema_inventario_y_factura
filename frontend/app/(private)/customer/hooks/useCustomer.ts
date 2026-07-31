@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCustomers, createCustomer, updateCustomer, changeCustomerStatus } from "@/services/customerService";
+import { getCustomers, createCustomer, updateCustomer, changeCustomerStatus, getCustomerStats } from "@/services/customerService";
 import { Customer } from "@/types/Customer";
 
 export function useCustomer () {
@@ -20,6 +20,21 @@ export function useCustomer () {
     });
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [stats, setStats] = useState({
+        totalCustomers: 0,
+        activeCustomers: 0,
+        customersWithDebt: 0,
+        totalDebt: 0,
+    });
+
+    const loadCustomerStats = async () => {
+        try {
+            const response = await getCustomerStats();
+            setStats(response);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const updateFilter = (key:string,value:string)=>{
         setFilters(prev=>({
@@ -52,16 +67,11 @@ export function useCustomer () {
     };
 
     useEffect(() => {
+        loadCustomerStats();
+    }, []);
+    useEffect(() => {
         loadCustomers();
     }, [page]);
-
-    const totalDebtCount = customers.filter(
-        (customer) => customer.balance > 0
-    ).length;
-
-    const activeCustomersCount = customers.filter(
-        (customer) => customer.status === "ACTIVE"
-    ).length;
 
     const openCreateModal = () => {
         setSelectedCustomer(null);
@@ -121,7 +131,7 @@ export function useCustomer () {
     };
 
     return {
-        customers, loading, pagination, filters, totalDebtCount, activeCustomersCount, setFilters, page,
+        customers, loading, pagination, filters, stats, setFilters, page,
         setPage, loadCustomers, isModalOpen, selectedCustomer, openCreateModal, openEditModal, closeModal,
         handleSubmit, handleChangeStatus, updateFilter, applyFilters
     };

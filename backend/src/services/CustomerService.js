@@ -569,3 +569,37 @@ export const getCustomerPreferences = async (id, businessId) => {
         creditBehavior
     };
 };
+
+export const getCustomerStats = async ({ businessId }) => {
+    const totalCustomers = await Customer.count({
+        where: {
+            business_id: businessId
+        }
+    });
+    const activeCustomers = await Customer.count({
+        where: {
+            business_id: businessId,
+            status: "ACTIVE"
+        }
+    });
+    const customersWithDebt = await Customer.count({
+        where: {
+            business_id: businessId,
+            balance: {
+                [Op.gt]: 0
+            }
+        }
+    });
+    const totalDebt = await Customer.sum("balance", {
+        where: {
+            business_id: businessId
+        }
+    });
+
+    return {
+        totalCustomers,
+        activeCustomers,
+        customersWithDebt,
+        totalDebt: Number(totalDebt || 0)
+    };
+};

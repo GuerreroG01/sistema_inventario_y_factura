@@ -24,8 +24,6 @@ export async function getCustomers(
         },
         });
 
-        console.log("RESPUESTA CUSTOMERS:", response.data);
-
         return {
         data: response.data.data.data,
         pagination: response.data.data.pagination,
@@ -195,6 +193,21 @@ export async function getCustomerPreferences(id: number): Promise<CustomerPrefer
             error.response?.data?.message ||
             error.message ||
             "Error al obtener preferencias del cliente"
+        );
+    }
+}
+
+export async function getCustomerStats() {
+    try {
+        const response = await api.get("/customers/stats");
+        console.log("RESPUESTA CUSTOMER STATS:", response.data);
+        return response.data.data;
+
+    } catch (error: any) {
+        throw new Error(
+            error.response?.data?.message ||
+            error.message ||
+            "Error al obtener estadísticas de clientes"
         );
     }
 }

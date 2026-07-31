@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 type CustomerManagerProps = ReturnType<typeof useCustomer>;
 
 export default function CustomerManager({
-    customers, loading, pagination, filters, totalDebtCount, activeCustomersCount, page,
+    customers, loading, pagination, filters, stats, page,
     setPage, isModalOpen, selectedCustomer, openCreateModal, openEditModal, closeModal,
     handleSubmit, handleChangeStatus, updateFilter, applyFilters
 }: CustomerManagerProps) {
@@ -56,28 +56,31 @@ export default function CustomerManager({
                     <MetricCard
                         icon={Users}
                         title="Clientes registrados"
-                        value={pagination.total}
+                        value={stats.totalCustomers}
                         color="blue"
                     />
 
                     <MetricCard
                         icon={UserCheck}
                         title="Clientes activos"
-                        value={activeCustomersCount}
+                        value={stats.activeCustomers}
                         color="emerald"
                     />
 
                     <MetricCard
                         icon={AlertCircle}
                         title="Clientes con deuda"
-                        value={totalDebtCount}
+                        value={stats.customersWithDebt}
                         color="rose"
                     />
 
                     <MetricCard
                         icon={CreditCard}
-                        title="Ventas a crédito"
-                        value="0"
+                        title="Saldo pendiente"
+                        value={stats.totalDebt.toLocaleString("es-NI", {
+                            style: "currency",
+                            currency: "NIO",
+                        })}
                         color="violet"
                     />
                 </div>

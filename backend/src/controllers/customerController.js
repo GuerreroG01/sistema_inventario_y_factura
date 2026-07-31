@@ -1,6 +1,6 @@
 import { getAllCustomers, getById, createCustomer, updateCustomer, changeCustomerStatus, 
     getCustomerByName, getCustomerSummary, getCustomerSalesHistory, getCustomerIndicators,
-    getCustomerPreferences
+    getCustomerPreferences, getCustomerStats
 } from "../services/CustomerService.js";
 
 export const getCustomers = async (req, res) => {
@@ -250,6 +250,25 @@ export const customerPreferences = async (req, res) => {
         );
         return res.status(404).json({
             ok: false,
+            message: error.message
+        });
+    }
+};
+
+export const customersStats = async (req, res) => {
+    try {
+        const stats = await getCustomerStats({
+            businessId: req.user.business_id
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: stats
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
             message: error.message
         });
     }
