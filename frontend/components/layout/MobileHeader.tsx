@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X, ChevronRight, UserRoundPlus, LogOut } from "lucide-react";
+import { Menu, X, ChevronRight, LogOut, Cog } from "lucide-react";
 import { User } from "@/types/Auth";
 
 type NavItem = {
@@ -118,41 +118,42 @@ export default function MobileHeader({ navItems, user, logout }: Props) {
                             <ChevronRight className="relative z-10 h-4 w-4 text-slate-400 transform transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1) group-hover:translate-x-1 group-hover:text-blue-500" />
                         </a>
                     ))}
-                    {(user?.Rol?.toLowerCase() === "admin" || user?.Rol?.toLowerCase() === "superadmin") && (
-                    <a
-                        href="/auth/register"
-                        onClick={() => setMenuOpen(false)}
-                        className={`
-                            group
-                            relative
-                            flex
-                            items-center
-                            justify-between
-                            w-full
-                            px-4
-                            py-3.5
-                            text-sm
-                            font-semibold
-                            text-slate-700
-                            rounded-xl
-                            transition-all
-                            duration-300
-                            hover:text-blue-600
-                            active:scale-[0.99]
-                            overflow-hidden
-                            ${menuOpen ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"}
-                        `}
-                    >
-                        <span className="absolute inset-0 z-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                    {(user?.Rol?.toLowerCase() === "admin" ||
+                        user?.Rol?.toLowerCase() === "superadmin") && (
+                        <a
+                            href="/configuration"
+                            onClick={() => setMenuOpen(false)}
+                            className={`
+                                group
+                                relative
+                                flex
+                                items-center
+                                justify-between
+                                w-full
+                                px-4
+                                py-3.5
+                                text-sm
+                                font-semibold
+                                text-slate-700
+                                rounded-xl
+                                transition-all
+                                duration-300
+                                hover:text-blue-600
+                                active:scale-[0.99]
+                                overflow-hidden
+                                ${menuOpen ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"}
+                            `}
+                        >
+                            <span className="absolute inset-0 z-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-                        <div className="relative z-10 flex items-center gap-3 transition-transform duration-300 group-hover:translate-x-1.5">
-                            <UserRoundPlus className="h-4 w-4" />
-                            <span>Registrar usuario</span>
-                        </div>
+                            <div className="relative z-10 flex items-center gap-3 transition-transform duration-300 group-hover:translate-x-1.5">
+                                <Cog className="h-4 w-4" />
+                                <span>Configuración</span>
+                            </div>
 
-                        <ChevronRight className="relative z-10 h-4 w-4 text-slate-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-blue-500" />
-                    </a>
-                )}
+                            <ChevronRight className="relative z-10 h-4 w-4 text-slate-400 transition-all duration-300 group-hover:translate-x-1 group-hover:text-blue-500" />
+                        </a>
+                    )}
 
                 <button
                     onClick={() => {
