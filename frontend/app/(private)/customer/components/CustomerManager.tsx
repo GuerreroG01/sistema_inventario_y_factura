@@ -11,13 +11,17 @@ import { useRouter } from "next/navigation";
 type CustomerManagerProps = ReturnType<typeof useCustomer>;
 
 export default function CustomerManager({
-    customers, loading, pagination, totalDebtCount, activeCustomersCount, isModalOpen, selectedCustomer, 
-    openCreateModal, openEditModal, closeModal, handleSubmit, handleChangeStatus, updateFilter, 
-    applyFilters, filters
+    customers, loading, pagination, filters, totalDebtCount, activeCustomersCount, page,
+    setPage, isModalOpen, selectedCustomer, openCreateModal, openEditModal, closeModal,
+    handleSubmit, handleChangeStatus, updateFilter, applyFilters
 }: CustomerManagerProps) {
     const [openMenuId, setOpenMenuId] = useState<number | null>(null)
     const [openFilters, setOpenFilters] = useState(false);
     const router = useRouter();
+    const pages = Array.from(
+        { length: pagination.totalPages },
+        (_, i) => i + 1
+    );
     return (
         <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 md:p-10 shadow-sm">
             <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-blue-100/60 blur-3xl pointer-events-none" />
@@ -289,6 +293,70 @@ export default function CustomerManager({
                                 </div>
                             );
                         })}
+                    </div>
+                )}
+                {pagination.totalPages > 1 && (
+                    <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
+                        <button
+                            type="button"
+                            disabled={page === 1}
+                            onClick={() => setPage(page - 1)}
+                            className="
+                                px-4
+                                py-2
+                                rounded-xl
+                                border
+                                border-slate-200
+                                bg-white
+                                text-slate-700
+                                font-semibold
+                                shadow-sm
+                                hover:bg-slate-100
+                                disabled:opacity-50
+                                disabled:cursor-not-allowed
+                                transition-all
+                            "
+                        >
+                            Anterior
+                        </button>
+
+                        {pages.map((p) => (
+                            <button
+                                key={p}
+                                type="button"
+                                onClick={() => setPage(p)}
+                                className={`min-w-11 px-4 py-2 rounded-xl font-semibold transition-all shadow-sm ${
+                                    p === page
+                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 scale-105"
+                                        : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                                }`}
+                            >
+                                {p}
+                            </button>
+                        ))}
+
+                        <button
+                            type="button"
+                            disabled={page === pagination.totalPages}
+                            onClick={() => setPage(page + 1)}
+                            className="
+                                px-4
+                                py-2
+                                rounded-xl
+                                border
+                                border-slate-200
+                                bg-white
+                                text-slate-700
+                                font-semibold
+                                shadow-sm
+                                hover:bg-slate-100
+                                disabled:opacity-50
+                                disabled:cursor-not-allowed
+                                transition-all
+                            "
+                        >
+                            Siguiente
+                        </button>
                     </div>
                 )}
             </div>

@@ -121,7 +121,7 @@ export function useCustomer () {
     };
 
     return {
-        customers, loading, pagination, filters, totalDebtCount, activeCustomersCount, setFilters,
+        customers, loading, pagination, filters, totalDebtCount, activeCustomersCount, setFilters, page,
         setPage, loadCustomers, isModalOpen, selectedCustomer, openCreateModal, openEditModal, closeModal,
         handleSubmit, handleChangeStatus, updateFilter, applyFilters
     };
