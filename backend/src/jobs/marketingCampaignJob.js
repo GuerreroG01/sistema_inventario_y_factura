@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { generateMarketingCampaign, registerMarketingSent } from "../services/marketingService.js";
+import { generateMarketingCampaign, registerMarketingSent } from "../services/MarketingService.js";
 import Business from "../models/Business.js";
 import { emailService } from "../services/email/EmailServices.js";
 
