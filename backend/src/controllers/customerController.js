@@ -2,6 +2,7 @@ import { getAllCustomers, getById, createCustomer, updateCustomer, changeCustome
     getCustomerByName, getCustomerSummary, getCustomerSalesHistory, getCustomerIndicators,
     getCustomerPreferences, getCustomerStats
 } from "../services/CustomerService.js";
+import { getMarketingCustomers, evaluateCustomerMarketingScore, getCustomerMarketingPreferences, generateMarketingCampaign } from "../services/MarketingService.js";
 
 export const getCustomers = async (req, res) => {
     try {
@@ -271,5 +272,26 @@ export const customersStats = async (req, res) => {
             success: false,
             message: error.message
         });
+    }
+};
+
+export const testMarketingCustomers = async (req, res) => {
+    try {
+        const evaluation = await generateMarketingCampaign(
+            req.user.business_id
+        );
+
+        return res.status(200).json({
+            success: true,
+            evaluation
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
     }
 };

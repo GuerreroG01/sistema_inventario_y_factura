@@ -7,6 +7,7 @@ import Expense from "./Expense.js";
 import User from "./User.js";
 import License from './License.js';
 import Customer from "./Customers.js";
+import CustomerMarketing from "./CustomerMarketing.js";
 
 Business.hasMany(User,{
     foreignKey:"business_id",
@@ -117,4 +118,26 @@ Sales.belongsTo(Customer,{
 Customer.hasMany(Sales,{
     foreignKey:"client_id",
     as:"sales"
+});
+
+Customer.hasOne(CustomerMarketing,{
+    foreignKey:"customer_id",
+    as:"marketing"
+});
+
+
+CustomerMarketing.belongsTo(Customer,{
+    foreignKey:"customer_id",
+    as:"customer"
+});
+
+Business.hasMany(CustomerMarketing,{
+    foreignKey:"business_id",
+    as:"customerMarketing"
+});
+
+
+CustomerMarketing.belongsTo(Business,{
+    foreignKey:"business_id",
+    as:"business"
 });

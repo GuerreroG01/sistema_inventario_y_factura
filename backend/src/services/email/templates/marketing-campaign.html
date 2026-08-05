@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Productos recomendados para ti</title>
+
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+</head>
+
+<body style="
+    margin:0;
+    padding:0;
+    background-color:#f4f6f9;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    color:#1f2937;
+    -webkit-text-size-adjust:100%;
+    -ms-text-size-adjust:100%;
+">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f6f9;padding:40px 15px;">
+        <tr>
+            <td align="center">
+
+                <!--[if mso]>
+                <table role="presentation" width="600" align="center">
+                    <tr>
+                        <td>
+                <![endif]-->
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="
+                    max-width:600px;
+                    background:#ffffff;
+                    border-radius:16px;
+                    overflow:hidden;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+                    border-collapse:separate;
+                ">
+
+                    <!-- Encabezado -->
+                    <tr>
+                        <td style="
+                            background:#0f172a;
+                            background-image:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+                            padding:40px 32px;
+                            text-align:center;
+                        ">
+                            <!-- Badge con Icono SVG (Estrella) -->
+                            <table role="presentation" align="center" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 16px auto;">
+                                <tr>
+                                    <td style="
+                                        background:rgba(59,130,246,0.15);
+                                        border:1px solid rgba(96,165,250,0.3);
+                                        padding:6px 14px;
+                                        border-radius:20px;
+                                    ">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td style="padding-right:6px; vertical-align:middle;">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                    </svg>
+                                                </td>
+                                                <td style="vertical-align:middle;">
+                                                    <span style="
+                                                        font-size:11px;
+                                                        font-weight:700;
+                                                        color:#93c5fd;
+                                                        text-transform:uppercase;
+                                                        letter-spacing:0.08em;
+                                                    ">
+                                                        Recomendaciones personalizadas
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <h1 style="
+                                margin:0;
+                                color:#ffffff;
+                                font-size:24px;
+                                font-weight:800;
+                                letter-spacing:-0.02em;
+                                line-height:1.3;
+                            ">
+                                Seleccionados especialmente para ti
+                            </h1>
+                        </td>
+                    </tr>
+
+                    <!-- Contenido principal -->
+                    <tr>
+                        <td style="padding:36px 32px 24px 32px;">
+
+                            <!-- Saludo con Icono SVG (Usuario) -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
+                                <tr>
+                                    <td style="vertical-align:middle;">
+                                        <p style="
+                                            margin:0;
+                                            font-size:16px;
+                                            font-weight:700;
+                                            color:#0f172a;
+                                        ">
+                                            Hola, {{customer_name}}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="
+                                margin:0 0 28px;
+                                font-size:14px;
+                                line-height:1.6;
+                                color:#4b5563;
+                            ">
+                                Analizamos tus gustos y últimas interacciones para ofrecerte productos que sabemos que te encantarán. ¡Échales un vistazo!
+                            </p>
+
+                            <!-- Bucle de productos -->
+                            {{products}}
+
+                            <!-- Banner informativo con Icono SVG (Bombilla / Info) -->
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="
+                                margin-top:24px;
+                                background:#f8fafc;
+                                border:1px solid #e2e8f0;
+                                border-radius:12px;
+                            ">
+                                <tr>
+                                    <td style="padding:16px 20px;">
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td width="24" style="vertical-align:top; padding-right:12px;">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <circle cx="12" cy="12" r="10"></circle>
+                                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                                    </svg>
+                                                </td>
+                                                <td style="vertical-align:middle;">
+                                                    <p style="
+                                                        margin:0;
+                                                        font-size:13px;
+                                                        line-height:1.5;
+                                                        color:#64748b;
+                                                    ">
+                                                        Estas recomendaciones se actualizan de forma automática según tus preferencias en <strong>{{business_name}}</strong>.
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="
+                                margin:32px 0 0;
+                                font-size:14px;
+                                line-height:1.5;
+                                color:#4b5563;
+                            ">
+                                ¡Gracias por confiar en nosotros!
+                                <br><br>
+                                <strong style="color:#0f172a; font-size:15px;">
+                                    El equipo de {{business_name}}
+                                </strong>
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Pie de página -->
+                    <tr>
+                        <td style="
+                            background:#f8fafc;
+                            padding:24px 32px;
+                            text-align:center;
+                            border-top:1px solid #e2e8f0;
+                        ">
+                            <p style="
+                                margin:0 0 8px;
+                                font-size:12px;
+                                color:#94a3b8;
+                                line-height:1.4;
+                            ">
+                                Recibes este correo porque estás suscrito a las novedades de {{business_name}}.
+                            </p>
+                            <p style="
+                                margin:0;
+                                font-size:11px;
+                                color:#cbd5e1;
+                            ">
+                                &copy; {{year}} {{business_name}} &bull; Impulsado por Inventarium-System.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+
+                <!--[if mso]>
+                        </td>
+                    </tr>
+                </table>
+                <![endif]-->
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

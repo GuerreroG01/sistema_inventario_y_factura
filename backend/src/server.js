@@ -3,6 +3,7 @@ dotenv.config();
 
 import app, { startServer } from "./app.js";
 import "./jobs/licenseJob.js";
+import "./jobs/marketingCampaignJob.js";
 
 const PORT = process.env.PORT || 5000;
 

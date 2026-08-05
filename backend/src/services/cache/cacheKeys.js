@@ -6,6 +6,7 @@ export const CacheKeys = {
     PRODUCTSALERTS: "products.alerts",
     EXPIRINGPRODUCTS: "products.expiring",
     PRODUCTS: "products",
+    MARKETING_PRODUCTS_CATEGORY: "marketing.products.category",
     SALES: "sales",
     CATEGORIESEXP: "categories.expenses",
     HAS_PENDING_LICENSE: "license.pending"

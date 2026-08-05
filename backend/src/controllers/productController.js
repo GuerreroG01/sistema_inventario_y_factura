@@ -75,6 +75,10 @@ export const createProduct = async (req, res) => {
         cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
         cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
         cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
+        await cacheService.del(
+            `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${category}`,
+            req.user.business_id
+        );
         return res.status(201).json(product);
 
     } catch (error) {
@@ -299,6 +303,10 @@ export const updateProduct = async (req, res) => {
         cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
         cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
         cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
+        await cacheService.del(
+            `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${category}`,
+            req.user.business_id
+        );
         return res.json(product);
 
     } catch (error) {
@@ -351,6 +359,10 @@ export const deleteProduct = async (req, res) => {
         cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
         cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
         cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
+        await cacheService.del(
+            `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${category}`,
+            req.user.business_id
+        );
         clearCategoryCache(req.user.business_id);
 
         return res.json({
@@ -377,7 +389,7 @@ export const getProductStats = async (req, res) => {
             }
         });
         const activeProducts = await Product.count({ where: { business_id, active: true } });
-        const lowStock = await Product.count({ where: { business_id, type_item:"Producto", stock: { [Op.between]: [1, 20] } } });
+        const lowStock = await Product.count({ where: { business_id, type_item:"Producto", stock: { [Op.between]: [1, 5] } } });
 
         return res.json({
             totalProducts,

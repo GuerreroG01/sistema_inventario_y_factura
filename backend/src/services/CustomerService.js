@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import Customer from "../models/Customers.js";
+import CustomerMarketing from "../models/CustomerMarketing.js";
 import Sales from "../models/Sales.js";
 import SaleDetails from "../models/SaleDetails.js";
 import Product from "../models/Products.js";

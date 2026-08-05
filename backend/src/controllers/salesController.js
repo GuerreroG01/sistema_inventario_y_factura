@@ -10,6 +10,7 @@ import Product from "../models/Products.js";
 import { cacheService, CacheKeys } from "../services/cache/index.js";
 import Customer from "../models/Customers.js";
 import { updateCustomer } from "../services/CustomerService.js";
+import { resetCustomerMarketingAfterPurchase } from "../services/MarketingService.js";
 
 export const getSales = async (req, res) => {
     try {
@@ -340,10 +341,8 @@ export const updateSaleStatus = async (req, res) => {
         await sale.save({ transaction: t });
 
         if (sale.payment_type === "CREDIT" && sale.client_id) {
-            const pendingStatuses = ["PENDING"];
-
-            const previousAffectsBalance = pendingStatuses.includes(previousStatus);
-            const currentAffectsBalance = pendingStatuses.includes(status);
+            const previousAffectsBalance = previousStatus === "PENDING";
+            const currentAffectsBalance = status === "PENDING";
 
             if (previousAffectsBalance !== currentAffectsBalance) {
 
@@ -361,21 +360,21 @@ export const updateSaleStatus = async (req, res) => {
 
                 let newBalance = Number(customer.balance);
 
-                // Sale deja de generar deuda
+                // La venta deja de generar deuda:
+                // PENDING -> COMPLETED / CANCELLED / REFUNDED
                 if (previousAffectsBalance && !currentAffectsBalance) {
                     newBalance -= Number(sale.total);
                 }
 
-                // Sale vuelve a generar deuda
+                // La venta vuelve a generar deuda:
+                // COMPLETED / CANCELLED / REFUNDED -> PENDING
                 if (!previousAffectsBalance && currentAffectsBalance) {
                     newBalance += Number(sale.total);
                 }
-
-                await customer.update({
-                    balance: newBalance
-                }, {
-                    transaction: t
-                });
+                await customer.update(
+                    { balance: newBalance },
+                    { transaction: t }
+                );
             }
         }
 
@@ -459,6 +458,15 @@ export const updateSaleStatus = async (req, res) => {
                 }
             }
         }
+
+        if ( status === "COMPLETED" && ["PENDING", "PAID"].includes(previousStatus) && sale.client_id ) {
+            await resetCustomerMarketingAfterPurchase(
+                sale.client_id,
+                req.user.business_id,
+                sale.updatedAt
+            );
+        }
+
 
         clearStatusCache();
 
