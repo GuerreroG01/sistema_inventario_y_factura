@@ -1,22 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Product } from "@/types/product";
 import { Package, Trash2, Info, Pencil } from "lucide-react";
 import { useProductCard } from "../hooks/useProductCard";
 import Pagination from "./Pagination";
 import { ConfirmDeleteModal } from "@/components/ConfirmDelete";
 import { ProductDetailModal } from "./ProductDetailModal";
-import ProductModal from "./ProductModal";
 import ProductFilters from "./ProductFilters";
 
 export default function ProductCards() {
   const {
-    products, loading, page, totalPages,
-    isDeleteModalOpen, isDeleting, isDetailModalOpen, selectedProduct, isFormModalOpen, productToEdit,
-    handlePageChange, openDeleteModal, openDetailModal, openEditModal, handleConfirmDelete, fetchProducts,
-    setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen, setPage,
-    setProductToEdit, updateFilter, filters, applyFilters, filtersOpen, setFiltersOpen, categories
+    products, loading, page, totalPages, isDeleteModalOpen, isDeleting, isDetailModalOpen, selectedProduct,
+    handlePageChange, openDeleteModal, openDetailModal, handleConfirmDelete, setIsDeleteModalOpen, setIsDetailModalOpen,
+    setSelectedProduct, updateFilter, filters, applyFilters, filtersOpen, setFiltersOpen, categories, isPromotionActive
   } = useProductCard();
 
   return (
@@ -55,15 +52,39 @@ export default function ProductCards() {
                     <div className="mt-5 space-y-3 text-gray-700">
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500">Precio</span>
-                        <span className="font-bold text-slate-900">C${p.price}</span>
+
+                        {isPromotionActive(p) ? (
+                          <div className="flex flex-col items-end">
+                            <span className="font-bold text-green-600">
+                              C${p.promotionPrice}
+                            </span>
+
+                            <span className="text-xs text-gray-400 line-through">
+                              C${p.price}
+                            </span>
+                          </div>
+                        ):(
+                          <span className="font-bold text-slate-900">
+                            C${p.price}
+                          </span>
+                        )}
                       </div>
+                      {p.type_item === "Producto" ? (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-500">Stock</span>
+                          <span className="font-semibold">{p.stock}</span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-500">Tipo</span>
+                          <span className="font-semibold text-blue-600">
+                            Servicio
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500">Stock</span>
-                        <span className="font-semibold">{p.stock}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500">Unidad</span>
-                        <span className="font-semibold">{p.unit || "unit"}</span>
+                        <span className="text-slate-500">Medida</span>
+                        <span className="font-semibold">{p.unit || "Unidad"}</span>
                       </div>
                     </div>
                   </div>
@@ -77,13 +98,13 @@ export default function ProductCards() {
                       <Info className="w-5 h-5" />
                     </button>
 
-                    <button
-                      onClick={() => openEditModal(p)}
+                    <Link
+                      href={`/products/form/${p.id}/update`}
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-50 text-amber-600 shadow-sm transition-all duration-200 hover:bg-amber-500 hover:text-white hover:shadow-lg hover:shadow-amber-200 hover:scale-110 active:scale-95"
                       title="Editar producto"
                     >
                       <Pencil className="w-4 h-4" />
-                    </button>
+                    </Link>
 
                     <button
                       onClick={() => openDeleteModal(p.id)}
@@ -94,7 +115,13 @@ export default function ProductCards() {
                     </button>
                   </div>
 
-                  <span className={`absolute top-4 right-4 rounded-full px-3 py-1 text-xs font-semibold shadow ${p.active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  <span
+                    className={`absolute bottom-4 left-4 rounded-full px-3 py-1 text-xs font-semibold shadow ${
+                      p.active
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
                     {p.active ? "Activo" : "Inactivo"}
                   </span>
                 </div>
@@ -121,19 +148,6 @@ export default function ProductCards() {
         onClose={() => {
           setIsDetailModalOpen(false);
           setSelectedProduct(null);
-        }}
-      />
-
-      <ProductModal
-        isOpen={isFormModalOpen}
-        productToEdit={productToEdit}
-        onClose={() => {
-          setIsFormModalOpen(false);
-          setProductToEdit(null);
-        }}
-        onSubmitSuccess={() => {
-          setPage(1);
-          fetchProducts(1);
         }}
       />
     </>

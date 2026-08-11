@@ -9,7 +9,7 @@ export default function CreateSaleForm() {
         searchProduct, productResults, searchLoading, setSearchProduct, addProductDirect,
         removeItem, updateItemQuantity, now, total, loading, submit, successOpen, setSuccessOpen,
         searchCustomer, setSearchCustomer, customerResults, setCustomerResults, searchLoadingCus,
-        selectCustomer, selectedCustomer, setSelectedCustomer, payment_type, setPaymentType
+        selectCustomer, selectedCustomer, setSelectedCustomer, payment_type, setPaymentType, isPromotionActive
     } = useCreateSale();
 
     return (
@@ -126,12 +126,6 @@ export default function CreateSaleForm() {
                                     </div>
                                 )}
                             </div>
-                            {/*
-                            Aqui quedé, ya agregué el estilo visual y también todo el flujo para los nuevos atributos del modelo
-                            como el tipo de pago y lo relacionado al cliente, pero falta modificar el flujo del módulo customers
-                            ya que al realizar una venta no la agrega al atributo balance para ver la deuda del cliente en caso
-                            de tener la deuda si hizo un pago al credito o tiene pago pendiente.
-                            */}
                             <div>
                                 <label className="block text-xs font-semibold text-slate-600 mb-1">
                                     Tipo de pago
@@ -160,7 +154,6 @@ export default function CreateSaleForm() {
                                         <option value="TRANSFER">Transferencia</option>
                                     </select>
 
-                                    {/* Flecha personalizada */}
                                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
                                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -215,7 +208,7 @@ export default function CreateSaleForm() {
                                             key={p.id}
                                             onClick={() => addProductDirect(p)}
                                             className="
-                                                px-4 py-1
+                                                px-4 py-2
                                                 cursor-pointer
                                                 hover:bg-indigo-50
                                                 transition
@@ -227,7 +220,30 @@ export default function CreateSaleForm() {
                                             </p>
 
                                             <p className="text-xs text-slate-500">
-                                                C${p.price} · Stock {p.stock}
+                                                {isPromotionActive(p) ? (
+                                                    <>
+                                                        <span className="font-bold text-emerald-600">
+                                                            C${Number(p.promotionPrice).toFixed(2)}
+                                                        </span>
+
+                                                        <span className="ml-1 text-slate-400 line-through">
+                                                            C${Number(p.price).toFixed(2)}
+                                                        </span>
+
+                                                        <span className="ml-2 font-semibold text-emerald-600">
+                                                            Promoción
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>
+                                                            C${Number(p.price).toFixed(2)}
+                                                        </span>
+                                                    </>
+                                                )}
+
+                                                {" · Stock "}
+                                                {p.stock}
                                             </p>
                                         </div>
                                     ))}

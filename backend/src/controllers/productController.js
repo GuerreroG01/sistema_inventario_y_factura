@@ -21,7 +21,10 @@ const generateBarcode = async (business_id) => {
 
 export const createProduct = async (req, res) => {
     try {
-        let { name, barcode, category, type_item, unit, price, cost, stock, entryDate, expirationDate, active } = req.body;
+        let { 
+            name, barcode, category, type_item, unit, price, hasPromotion, promotionPrice, promotionStart, promotionEnd, 
+            cost, stock, entryDate, expirationDate, active
+        } = req.body;
 
         if (!name || name.trim() === "") {
             return res.status(400).json({
@@ -36,6 +39,18 @@ export const createProduct = async (req, res) => {
                 message: "El campo 'price' es obligatorio y debe ser un número."
             });
         }
+        if (Boolean(hasPromotion) && promotionPrice && Number(promotionPrice) >= Number(price)) {
+            return res.status(400).json({
+                error: "validation_error",
+                message: "El precio de promoción debe ser menor al precio normal."
+            });
+        }
+        if (Boolean(hasPromotion) && promotionStart && promotionEnd && new Date(promotionStart) > new Date(promotionEnd)) {
+            return res.status(400).json({
+                error: "validation_error",
+                message: "La fecha de inicio de promoción debe ser anterior a la fecha de fin."
+            });
+        }
 
         if (!barcode || barcode.trim() === "") {
             barcode = await generateBarcode(req.user.business_id);
@@ -48,6 +63,10 @@ export const createProduct = async (req, res) => {
             type_item: type_item ?? "Producto",
             unit,
             price,
+            hasPromotion,
+            promotionPrice,
+            promotionStart: normalizeDate(promotionStart),
+            promotionEnd: normalizeDate(promotionEnd),
             cost,
             stock: type_item === "Servicio" ? 0 : stock,
             entryDate: normalizeDate(entryDate),
@@ -106,10 +125,10 @@ export const createProduct = async (req, res) => {
 export const getProducts = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 10;
+        const limit = 12;
         const offset = (page - 1) * limit;
 
-        const { name, barcode, category, active, priceMin, priceMax, costMin, costMax } = req.query;
+        const { name, barcode, category, active, priceMin, priceMax, hasPromotion } = req.query;
         const where = {business_id: req.user.business_id};
 
         if (name) {
@@ -139,15 +158,35 @@ export const getProducts = async (req, res) => {
                 where.price[Op.lte] = parseFloat(priceMax);
             }
         }
+        if (hasPromotion === "true") {
+            where.hasPromotion = true;
 
-        if (costMin || costMax) {
-            where.cost = {};
-            if (costMin) {
-                where.cost[Op.gte] = parseFloat(costMin);
-            }
-            if (costMax) {
-                where.cost[Op.lte] = parseFloat(costMax);
-            }
+            where[Op.and] = [
+                {
+                    [Op.or]: [
+                        { promotionStart: null },
+                        { promotionStart: { [Op.lte]: new Date() } }
+                    ]
+                },
+                {
+                    [Op.or]: [
+                        { promotionEnd: null },
+                        { promotionEnd: { [Op.gte]: new Date() } }
+                    ]
+                }
+            ];
+        }
+
+        if (hasPromotion === "false") {
+            where[Op.or] = [
+                { hasPromotion: false },
+                {
+                    hasPromotion: true,
+                    promotionEnd: {
+                        [Op.lt]: new Date()
+                    }
+                }
+            ];
         }
 
         const { count, rows: products } = await Product.findAndCountAll({
@@ -204,7 +243,10 @@ export const getProductById = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, barcode, category, type_item, unit, price, cost, stock, entryDate, expirationDate, active, stockObservation } = req.body;
+        const { 
+            name, barcode, category, type_item, unit, price, hasPromotion, promotionPrice, promotionStart, promotionEnd,
+            cost, stock, entryDate, expirationDate, active, stockObservation 
+        } = req.body;
 
         const product = await Product.findOne({
             where:{
@@ -283,6 +325,10 @@ export const updateProduct = async (req, res) => {
             type_item: newType,
             unit: unit ?? product.unit,
             price: price ?? product.price,
+            hasPromotion: hasPromotion ?? product.hasPromotion,
+            promotionPrice: promotionPrice ?? product.promotionPrice,
+            promotionStart: normalizeDate(promotionStart) ?? product.promotionStart,
+            promotionEnd: normalizeDate(promotionEnd) ?? product.promotionEnd,
             cost: cost ?? product.cost,
             stock: newType === "Servicio" ? 0 : (stock ?? product.stock),
             entryDate: normalizeDate(entryDate) ?? product.entryDate,
@@ -360,7 +406,7 @@ export const deleteProduct = async (req, res) => {
         cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
         cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
         await cacheService.del(
-            `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${category}`,
+            `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${product.category}`,
             req.user.business_id
         );
         clearCategoryCache(req.user.business_id);
@@ -470,7 +516,7 @@ export const getProductsAutocomplete = async (req, res) => {
 
             const products = await Product.findAll({
                 where,
-                attributes: ["id", "name", "barcode", "price", "stock", "category", "type_item"],
+                attributes: ["id", "name", "barcode", "price", "hasPromotion", "promotionPrice", "promotionStart", "promotionEnd", "stock", "category", "type_item"],
                 limit: 10
             });
 
@@ -484,7 +530,7 @@ export const getProductsAutocomplete = async (req, res) => {
 
             const products = await Product.findAll({
                 where,
-                attributes: ["id", "name", "barcode", "price", "stock", "category", "type_item"],
+                attributes: ["id", "name", "barcode", "price", "hasPromotion", "promotionPrice", "promotionStart", "promotionEnd", "stock", "category", "type_item"],
                 limit: 10,
                 order: [["name", "ASC"]]
             });

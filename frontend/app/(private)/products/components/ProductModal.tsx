@@ -20,6 +20,10 @@ type ProductForm = {
     type_item: "Producto" | "Servicio";
     unit: string;
     price: string;
+    hasPromotion: boolean;
+    promotionPrice: string;
+    promotionStart: string;
+    promotionEnd: string;
     cost: string;
     stock: number;
     entryDate: string;
@@ -34,6 +38,10 @@ const initialFormState = (todayDate: string): ProductForm => ({
     type_item: "Producto",
     unit: "",
     price: "",
+    hasPromotion: false,
+    promotionPrice: "",
+    promotionStart: todayDate,
+    promotionEnd: "",
     cost: "",
     stock: 0,
     entryDate: todayDate,
@@ -55,7 +63,7 @@ export default function ProductModal({
     const [errorMessage, setErrorMessage] = useState("");
     const [showStockReasonModal, setShowStockReasonModal] = useState(false);
     const [pendingPayload, setPendingPayload] = useState<any>(null);
-    const [stockObservation, setStockObservation] = useState("");
+    const [showPromotionPopover, setShowPromotionPopover] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -67,6 +75,20 @@ export default function ProductModal({
                     type_item: productToEdit.type_item || "Producto",
                     unit: productToEdit.unit || "",
                     price: productToEdit.price !== undefined ? String(productToEdit.price) : "",
+                    hasPromotion: productToEdit.hasPromotion ?? false,
+                    promotionPrice:
+                        productToEdit.promotionPrice !== undefined &&
+                        productToEdit.promotionPrice !== null
+                            ? String(productToEdit.promotionPrice)
+                            : "",
+                    promotionStart:
+                        productToEdit.promotionStart
+                            ? productToEdit.promotionStart.split("T")[0]
+                            : "",
+                    promotionEnd:
+                        productToEdit.promotionEnd
+                            ? productToEdit.promotionEnd.split("T")[0]
+                            : "",
                     cost: productToEdit.cost !== undefined ? String(productToEdit.cost) : "",
                     stock: productToEdit.stock || 0,
                     entryDate: productToEdit.entryDate ? productToEdit.entryDate.split("T")[0] : today,
@@ -94,9 +116,21 @@ export default function ProductModal({
             const payload = {
                 ...formData,
                 price: Number(formData.price),
+                hasPromotion: formData.hasPromotion,
+                promotionPrice:
+                    formData.hasPromotion && formData.promotionPrice
+                        ? Number(formData.promotionPrice)
+                        : undefined,
+                promotionStart:
+                    formData.hasPromotion
+                        ? formData.promotionStart
+                        : undefined,
+                promotionEnd:
+                    formData.hasPromotion
+                        ? formData.promotionEnd
+                        : undefined,
                 cost: formData.cost ? Number(formData.cost) : undefined,
                 stock: formData.type_item === "Servicio" ? 0 : newStock,
-                stockObservation: undefined,
             };
 
             if (isEditMode && productToEdit) {
@@ -308,6 +342,163 @@ export default function ProductModal({
                                 required
                             />
                         </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 relative">
+    <div className="flex items-center justify-between">
+        <div>
+            <p className="text-xs font-bold uppercase text-slate-500">
+                Promoción
+            </p>
+
+            {formData.hasPromotion ? (
+                <>
+                    <p className="mt-1 font-semibold text-emerald-600">
+                        ● Promoción activa
+                    </p>
+
+                    <p className="text-sm text-slate-500">
+                        ${formData.promotionPrice || "--"} ·
+                        {" "}
+                        {formData.promotionStart || "--"}
+                        {" "}
+                        al
+                        {" "}
+                        {formData.promotionEnd || "--"}
+                    </p>
+                </>
+            ) : (
+                <p className="mt-1 text-sm text-slate-500">
+                    Sin promoción configurada
+                </p>
+            )}
+        </div>
+
+        <button
+            type="button"
+            onClick={() =>
+                setShowPromotionPopover(!showPromotionPopover)
+            }
+            className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-white"
+        >
+            {formData.hasPromotion ? "Editar" : "Configurar"}
+        </button>
+    </div>
+
+    {showPromotionPopover && (
+        <div className="absolute right-0 top-full z-20 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+
+            <div className="flex items-center justify-between mb-5">
+
+                <span className="font-bold text-slate-700">
+                    Configurar promoción
+                </span>
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        setShowPromotionPopover(false)
+                    }
+                >
+                    <X size={18}/>
+                </button>
+
+            </div>
+
+            <div className="space-y-4">
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        setFormData({
+                            ...formData,
+                            hasPromotion:
+                                !formData.hasPromotion
+                        })
+                    }
+                    className={`w-full rounded-xl py-2 font-semibold border ${
+                        formData.hasPromotion
+                            ? "bg-indigo-600 text-white border-indigo-600"
+                            : "bg-slate-100"
+                    }`}
+                >
+                    {formData.hasPromotion
+                        ? "Promoción activada"
+                        : "Activar promoción"}
+                </button>
+
+                {formData.hasPromotion && (
+                    <>
+                        <div>
+                            <label className="text-xs font-bold uppercase text-slate-500">
+                                Precio promocional
+                            </label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                className={inputClass}
+                                value={formData.promotionPrice}
+                                onChange={(e)=>
+                                    setFormData({
+                                        ...formData,
+                                        promotionPrice:e.target.value
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-bold uppercase text-slate-500">
+                                Inicio
+                            </label>
+
+                            <input
+                                type="date"
+                                className={inputClass}
+                                value={formData.promotionStart}
+                                onChange={(e)=>
+                                    setFormData({
+                                        ...formData,
+                                        promotionStart:e.target.value
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-bold uppercase text-slate-500">
+                                Fin
+                            </label>
+
+                            <input
+                                type="date"
+                                className={inputClass}
+                                value={formData.promotionEnd}
+                                onChange={(e)=>
+                                    setFormData({
+                                        ...formData,
+                                        promotionEnd:e.target.value
+                                    })
+                                }
+                            />
+                        </div>
+                    </>
+                )}
+
+                <button
+                    type="button"
+                    className="w-full rounded-xl bg-indigo-600 py-2 font-bold text-white"
+                    onClick={() =>
+                        setShowPromotionPopover(false)
+                    }
+                >
+                    Aplicar
+                </button>
+
+            </div>
+
+        </div>
+    )}
+</div>
 
                         <div className="relative">
                             <label className="text-xs font-bold text-slate-500 uppercase block mb-1">

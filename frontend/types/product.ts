@@ -6,6 +6,10 @@ export type Product = {
     type_item: "Producto" | "Servicio";
     unit?: string;
     price: number;
+    hasPromotion?: boolean;
+    promotionPrice?: number;
+    promotionStart?: string;   // YYYY-MM-DD
+    promotionEnd?: string;     // YYYY-MM-DD
     cost?: number;
     stock: number;
 

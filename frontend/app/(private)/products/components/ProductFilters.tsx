@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Barcode, Tags, ToggleLeft, DollarSign, X, SlidersHorizontal, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Barcode, Tags, ToggleLeft, DollarSign, X, SlidersHorizontal, ChevronDown, ChevronUp, BadgePercent } from "lucide-react";
 
 type Props = {
     filters: any;
@@ -26,6 +26,7 @@ export default function ProductFilters({
         updateFilter("active", "");
         updateFilter("priceMin", "");
         updateFilter("priceMax", "");
+        updateFilter("hasPromotion", "");
     };
 
     return (
@@ -128,17 +129,38 @@ export default function ProductFilters({
                         </select>
                     </div>
 
-                    <div className="relative">
-                        <ToggleLeft className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                        <select
-                            value={filters.active}
-                            onChange={(e) => updateFilter("active", e.target.value)}
-                            className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                        >
-                            <option value="">Todos los estados</option>
-                            <option value="true">Activos</option>
-                            <option value="false">Inactivos</option>
-                        </select>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="relative">
+                            <ToggleLeft className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+
+                            <select
+                                value={filters.active}
+                                onChange={(e) =>
+                                    updateFilter("active", e.target.value)
+                                }
+                                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            >
+                                <option value="">Todos los estados</option>
+                                <option value="true">Activos</option>
+                                <option value="false">Inactivos</option>
+                            </select>
+                        </div>
+
+                        <div className="relative">
+                            <BadgePercent className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+
+                            <select
+                                value={filters.hasPromotion}
+                                onChange={(e) =>
+                                    updateFilter("hasPromotion", e.target.value)
+                                }
+                                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            >
+                                <option value="">Todos</option>
+                                <option value="true">Con promoción</option>
+                                <option value="false">Sin promoción</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className="relative">

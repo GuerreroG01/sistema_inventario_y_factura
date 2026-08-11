@@ -9,8 +9,7 @@ const emptyFilters = {
     active: "",
     priceMin: "",
     priceMax: "",
-    costMin: "",
-    costMax: ""
+    hasPromotion: ""
 };
 
 export function useProductCard() {
@@ -131,6 +130,17 @@ export function useProductCard() {
             console.error("Error fetching categories:", err);
         }
     };
+    const isPromotionActive = (product: Product) => {
+        const now = new Date();
+        return (
+            product.hasPromotion &&
+            product.promotionPrice != null &&
+            (!product.promotionStart ||
+                new Date(product.promotionStart) <= now) &&
+            (!product.promotionEnd ||
+                new Date(product.promotionEnd) >= now)
+        );
+    };
     useEffect(() => {
         fetchCategories();
     }, []);
@@ -140,6 +150,7 @@ export function useProductCard() {
         filters, updateFilter, applyFilters, clearFilters, filtersOpen, setFiltersOpen,
         isDeleteModalOpen, isDeleting, isDetailModalOpen, selectedProduct, isFormModalOpen, productToEdit,
         handlePageChange, openDeleteModal, openDetailModal, openEditModal, handleConfirmDelete, fetchProducts, setPage,
-        setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen, setProductToEdit, categories
+        setIsDeleteModalOpen, setIsDetailModalOpen, setSelectedProduct, setIsFormModalOpen, setProductToEdit, categories,
+        isPromotionActive
     };
 }

@@ -3,7 +3,7 @@
 import React from "react";
 import { Product } from "@/types/product";
 import { 
-    X, Package, DollarSign, Layers, Tag, 
+    X, Package, DollarSign, Layers, Tag, BadgePercent, 
     Barcode as BarCodeIcon, Calendar, Clock, CheckCircle2, AlertTriangle, TrendingUp 
 } from "lucide-react";
 import Barcode from "react-barcode";
@@ -20,6 +20,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     product,
 }) => {
     if (!isOpen || !product) return null;
+    
+    console.log("Lo que manda la api sobre el producto",product);
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return "No registrado";
@@ -36,6 +38,27 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
     const isStockAvailable = product.stock > 0;
     const isActive = product.active !== false;
+    const now = new Date();
+
+    const promotionStart = product.promotionStart
+        ? new Date(product.promotionStart)
+        : null;
+
+    const promotionEnd = product.promotionEnd
+        ? new Date(product.promotionEnd)
+        : null;
+
+    const isPromotionActive =
+        product.hasPromotion === true &&
+        product.promotionPrice != null &&
+        (!promotionStart || promotionStart <= now) &&
+        (!promotionEnd || promotionEnd >= now);
+
+    const isPromotionExpired =
+        product.hasPromotion === true &&
+        product.promotionEnd != null &&
+        promotionEnd !== null &&
+        promotionEnd < now;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-x-hidden overflow-y-auto">
@@ -84,39 +107,66 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <div className="p-6 space-y-6 overflow-y-auto flex-1 bg-white">
                 
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-br from-indigo-50/40 to-indigo-50/10 border border-indigo-100/60 p-4 rounded-3xl shadow-sm">
-                    <span className="text-xs font-semibold text-indigo-600/80 block mb-1 flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5" /> Precio al Público
-                    </span>
-                    <span className="text-2xl font-black text-indigo-950 tracking-tight">
-                        C${Number(product.price).toFixed(2)}
-                    </span>
-                    </div>
+                    <div
+                        className={`p-4 rounded-3xl border shadow-sm ${
+                            isPromotionActive
+                                ? "bg-gradient-to-br from-emerald-50/60 to-emerald-50/10 border-emerald-100"
+                                : "bg-gradient-to-br from-indigo-50/40 to-indigo-50/10 border-indigo-100/60"
+                        }`}
+                    >
+                        <span
+                            className={`text-xs font-semibold block mb-1 flex items-center gap-1 ${
+                                isPromotionActive
+                                    ? "text-emerald-600"
+                                    : "text-indigo-600/80"
+                            }`}
+                        >
+                            <DollarSign className="w-3.5 h-3.5" />
 
-                    <div className={`p-4 rounded-3xl border shadow-sm transition-colors ${
-                    isStockAvailable 
-                        ? "bg-gradient-to-br from-emerald-50/40 to-emerald-50/10 border-emerald-100/60" 
-                        : "bg-gradient-to-br from-rose-50/40 to-rose-50/10 border-rose-100/60"
-                    }`}>
-                    <span className={`text-xs font-semibold block mb-1 flex items-center gap-1 ${
-                        isStockAvailable ? "text-emerald-600" : "text-rose-600"
-                    }`}>
-                        <Layers className="w-3.5 h-3.5" /> Inventario Real
-                    </span>
-                    {product.type_item === "Servicio" ? (
-                        <span className="text-sm font-bold text-indigo-700">
-                            No maneja inventario
+                            {isPromotionActive ? "Precio en Promoción" : "Precio al Público"}
                         </span>
-                    ) : (
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-2xl font-black tracking-tight">
-                                {product.stock}
+
+                        {isPromotionActive ? (
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-black text-emerald-700 tracking-tight">
+                                    C${Number(product.promotionPrice).toFixed(2)}
+                                </span>
+
+                                <span className="text-sm font-semibold text-slate-400 line-through">
+                                    C${Number(product.price).toFixed(2)}
+                                </span>
+                            </div>
+                        ) : (
+                            <span className="text-2xl font-black text-indigo-950 tracking-tight">
+                                C${Number(product.price).toFixed(2)}
                             </span>
-                            <span className="text-xs font-medium text-slate-500 lowercase">
-                                {product.unit || "uds"}
+                        )}
+                    </div>
+                    <div className={`p-4 rounded-3xl border shadow-sm transition-colors ${
+                        isStockAvailable 
+                            ? "bg-gradient-to-br from-emerald-50/40 to-emerald-50/10 border-emerald-100/60" 
+                            : "bg-gradient-to-br from-rose-50/40 to-rose-50/10 border-rose-100/60"
+                        }`}
+                    >
+                        <span className={`text-xs font-semibold block mb-1 flex items-center gap-1 ${
+                            isStockAvailable ? "text-emerald-600" : "text-rose-600"
+                        }`}>
+                            <Layers className="w-3.5 h-3.5" /> Inventario Real
+                        </span>
+                        {product.type_item === "Servicio" ? (
+                            <span className="text-sm font-bold text-indigo-700">
+                                No maneja inventario
                             </span>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-2xl font-black tracking-tight">
+                                    {product.stock}
+                                </span>
+                                <span className="text-xs font-medium text-slate-500 lowercase">
+                                    {product.unit || "uds"}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -186,6 +236,146 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             Define un costo base para calcular la utilidad.
                         </div>
                     )}
+                    </div>
+                </div>
+
+                <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                            Promoción
+                        </h4>
+
+                        {isPromotionActive && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                Activa
+                            </span>
+                        )}
+
+                        {isPromotionExpired && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-700">
+                                <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                Vencida
+                            </span>
+                        )}
+
+                        {!product.hasPromotion && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                Sin promoción
+                            </span>
+                        )}
+                    </div>
+
+                    <div
+                        className={`rounded-2xl border p-4 ${
+                            isPromotionActive
+                                ? "border-emerald-100 bg-emerald-50/30"
+                                : isPromotionExpired
+                                    ? "border-rose-100 bg-rose-50/30"
+                                    : "border-slate-100 bg-slate-50/60"
+                        }`}
+                    >
+
+                        {!product.hasPromotion ? (
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+                                    <BadgePercent className="h-5 w-5 text-slate-400" />
+                                </div>
+
+                                <div>
+                                    <p className="text-sm font-semibold text-slate-700">
+                                        Sin promoción configurada
+                                    </p>
+
+                                    <p className="text-xs text-slate-400">
+                                        El producto utiliza su precio normal.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+
+                                <div className="grid grid-cols-2 gap-4">
+
+                                    <div>
+                                        <span className="text-[11px] font-medium text-slate-400 block mb-1">
+                                            Precio normal
+                                        </span>
+
+                                        <span className="text-sm font-bold text-slate-600">
+                                            C${Number(product.price).toFixed(2)}
+                                        </span>
+                                    </div>
+
+                                    <div>
+                                        <span className="text-[11px] font-medium text-slate-400 block mb-1">
+                                            Precio promocional
+                                        </span>
+
+                                        <span
+                                            className={`text-xl font-black ${
+                                                isPromotionActive
+                                                    ? "text-emerald-600"
+                                                    : "text-slate-500"
+                                            }`}
+                                        >
+                                            {product.promotionPrice != null
+                                                ? `C$${Number(product.promotionPrice).toFixed(2)}`
+                                                : "—"}
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="rounded-xl border border-slate-100 bg-white p-3">
+                                        <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                            Inicio
+                                        </span>
+                                        <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                                            <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+                                            {formatDate(product.promotionStart)}
+                                        </span>
+                                    </div>
+
+                                    <div className="rounded-xl border border-slate-100 bg-white p-3">
+                                        <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                            Finalización
+                                        </span>
+                                        <span
+                                            className={`flex items-center gap-1.5 text-xs font-semibold ${
+                                                isPromotionExpired
+                                                    ? "text-rose-700"
+                                                    : "text-slate-700"
+                                            }`}
+                                        >
+                                            <Calendar
+                                                className={`h-3.5 w-3.5 ${
+                                                    isPromotionExpired
+                                                        ? "text-rose-500"
+                                                        : "text-indigo-500"
+                                                }`}
+                                            />
+
+                                            {formatDate(product.promotionEnd)}
+                                        </span>
+                                    </div>
+
+                                </div>
+                                {isPromotionActive && (
+                                    <div className="flex items-center gap-2 rounded-xl bg-emerald-100/60 px-3 py-2.5 text-xs font-medium text-emerald-700">
+                                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                        Esta promoción está vigente actualmente.
+                                    </div>
+                                )}
+                                {isPromotionExpired && (
+                                    <div className="flex items-center gap-2 rounded-xl bg-rose-100/60 px-3 py-2.5 text-xs font-medium text-rose-700">
+                                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                                        Esta promoción ya finalizó. El producto utiliza su precio normal.
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 

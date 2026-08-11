@@ -10,8 +10,7 @@ export async function getProducts(
     active?: string;
     priceMin?: string;
     priceMax?: string;
-    costMin?: string;
-    costMax?: string;
+    hasPromotion?: string;
   } = {}
 ) {
   try {
@@ -30,20 +29,15 @@ export async function getProducts(
         )
       }
     });
-
     return data;
-
+    
   } catch (error: any) {
-
-    console.log("ERROR COMPLETO:", error);
-
     throw new Error(
-        error?.response?.data?.error ||
-        error?.message ||
-        "Error al obtener productos"
+      error?.response?.data?.error ||
+      error?.message ||
+      "Error al obtener productos"
     );
-}
-}
+}}
 
 export async function createProduct(product: Omit<Product, "id">): Promise<Product> {
   try {

@@ -35,14 +35,37 @@ const Product = sequelize.define("Products", {
     },
 
     price: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: DataTypes.DECIMAL(10,2),
         allowNull: false,
+    },
+
+    hasPromotion: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+    },
+    //Revisar los metodos modificados del backend por el nuevo valor booleano.
+    promotionPrice: {
+        type: DataTypes.DECIMAL(10,2),
+        allowNull: true,
+    },
+
+    promotionStart: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+
+    promotionEnd: {
+        type: DataTypes.DATE,
+        allowNull: true,
     },
 
     cost: {
         type: DataTypes.DECIMAL(10, 2), // Este valor de costo servirá solo para en el frontend
         allowNull: true, // ver el margen de ganancia en base al costo y precio del producto.
     }, // Lo mejor es que los costos sean manejados desde la tabla de egresos.
+
+    //A
 
     stock: {
         type: DataTypes.INTEGER,

@@ -1,14 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { Package, Boxes, BarChart3, CheckCircle2, AlertTriangle, Plus } from "lucide-react";
 import { useProductStats } from "../hooks/useProductStats";
 import { MetricCard } from "../../customer/components/MetricCard";
 
-type DashboardProps = {
-  onAddProduct: () => void;
-};
 
-export default function Dashboard({ onAddProduct}: DashboardProps) {
+export default function Dashboard() {
 
   const { stats } = useProductStats();
 
@@ -29,13 +27,13 @@ export default function Dashboard({ onAddProduct}: DashboardProps) {
                     Administra inventario, existencias y disponibilidad de productos.
                 </p>
             </div>
-            <button
-                onClick={onAddProduct}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-700"
+            <Link
+              href="/products/form"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-700"
             >
               <Plus className="h-5 w-5" />
               Nuevo producto
-            </button>
+            </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
           <MetricCard

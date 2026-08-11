@@ -55,6 +55,19 @@ export function useCreateSale() {
             }).format(new Date())
         );
     }, []);
+    
+    const isPromotionActive = (product: any) => {
+        const now = new Date();
+
+        return (
+            product.hasPromotion === true &&
+            product.promotionPrice != null &&
+            (!product.promotionStart ||
+                new Date(product.promotionStart) <= now) &&
+            (!product.promotionEnd ||
+                new Date(product.promotionEnd) >= now)
+        );
+    };
 
     const searchProducts = async (value: string) => {
 
@@ -62,6 +75,7 @@ export function useCreateSale() {
             const data = await autocompleteProducts({
                 name: value
             });
+            console.log("Datos obtenidos del producto", data);
 
             setProductResults(data);
 
@@ -146,6 +160,12 @@ export function useCreateSale() {
     }, [searchCustomer, selectedCustomer]);
 
     const addProductDirect = (product: any) => {
+        const promotionActive = isPromotionActive(product);
+
+        const salePrice = promotionActive
+            ? Number(product.promotionPrice)
+            : Number(product.price);
+
         setItems(prev => {
             const existingItem = prev.find(
                 item => item.product_id === product.id
@@ -168,8 +188,8 @@ export function useCreateSale() {
                     product_id: product.id,
                     descripcion: product.name,
                     cantidad: 1,
-                    precio_unitario: Number(product.price),
-                    tipo_item: product.category
+                    precio_unitario: salePrice,
+                    tipo_item: product.category || "",
                 }
             ];
         });
@@ -259,6 +279,6 @@ export function useCreateSale() {
         addProductDirect, addItem, removeItem, updateItemQuantity, updateItem, now,
         total, loading, message, submit, successOpen, setSuccessOpen, searchCustomer,
         setSearchCustomer, customerResults, setCustomerResults, searchLoadingCus, selectCustomer,
-        selectedCustomer, setSelectedCustomer, payment_type, setPaymentType,
+        selectedCustomer, setSelectedCustomer, payment_type, setPaymentType, isPromotionActive
     };
 }
