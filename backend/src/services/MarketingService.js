@@ -576,9 +576,7 @@ export const resetCustomerMarketingAfterPurchase = async ( customerId, businessI
             });
 
         if (!customerMarketing) {
-            throw new Error(
-                "El cliente no tiene configuración de marketing"
-            );
+            return null;
         }
 
         const nextMarketingDate =
