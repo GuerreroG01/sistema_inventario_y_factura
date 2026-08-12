@@ -44,7 +44,7 @@ const Product = sequelize.define("Products", {
         allowNull: false,
         defaultValue: false,
     },
-    //Revisar los metodos modificados del backend por el nuevo valor booleano.
+    
     promotionPrice: {
         type: DataTypes.DECIMAL(10,2),
         allowNull: true,

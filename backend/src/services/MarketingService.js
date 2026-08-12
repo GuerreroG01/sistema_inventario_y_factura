@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { Op, literal } from "sequelize";
 import Customer from "../models/Customers.js";
 import CustomerMarketing from "../models/CustomerMarketing.js";
 import Sales from "../models/Sales.js";
@@ -383,25 +383,40 @@ export const getProducts = async ({ business_id, category, priceMin, priceMax })
             where.price = {};
 
             if (priceMin) {
-                where.price[Op.gte] =
-                    parseFloat(priceMin);
+                where.price[Op.gte] = parseFloat(priceMin);
             }
 
             if (priceMax) {
-                where.price[Op.lte] =
-                    parseFloat(priceMax);
+                where.price[Op.lte] = parseFloat(priceMax);
             }
         }
 
+        const order = [];
+
+        if (category) {
+            order.push([
+                literal(`
+                    CASE
+                        WHEN "hasPromotion" = true
+                        AND "promotionEnd" IS NOT NULL
+                        AND "promotionEnd" >= CURRENT_TIMESTAMP
+                        THEN 1
+                        ELSE 0
+                    END
+                `),
+                "DESC"
+            ]);
+        }
+
+        order.push(["id", "DESC"]);
+
         return await Product.findAll({
             where,
-            order: [
-                ["id", "DESC"]
-            ]
+            order
         });
     };
 
-    if(useCache){
+    if (useCache) {
         const categoryKey =
             `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${category}`;
 
@@ -447,18 +462,8 @@ export const createCustomerMarketingIfNotExists = async (customerId, businessId)
 };
 //Metodo que utiliza todos los metodos del servicio para seguir el flujo correcto de la campaña
 export const generateMarketingCampaign = async (businessId) => {
-    const customers =
-        await getMarketingCustomers(
-            businessId
-        );
-    /*console.log(`generateMarketingCampaign - Clientes elegibles para campaña en negocio ${businessId}: ${customers.length}`);
-    console.dir(
-        customers,
-        {
-            depth: null,
-            colors: true
-        }
-    );*/
+    const customers = await getMarketingCustomers(businessId);
+
     const campaign = [];
 
     for (const customer of customers) {
@@ -468,7 +473,7 @@ export const generateMarketingCampaign = async (businessId) => {
                 businessId
             );
 
-        if(!evaluation.eligible){
+        if (!evaluation.eligible) {
             continue;
         }
 
@@ -482,7 +487,7 @@ export const generateMarketingCampaign = async (businessId) => {
                 customer.id,
                 businessId
             );
-        if(!preferences.preferences){
+        if (!preferences.preferences) {
             continue;
         }
 
@@ -503,26 +508,39 @@ export const generateMarketingCampaign = async (businessId) => {
                 priceMax: priceRange.max
             });
         }
+
         campaign.push({
-            customerId:
-                customer.id,
-            customer:
-                customer.name,
-            customerEmail:
-                customer.correo,
-            score:
-                evaluation.score,
-            marketingLevel:
-                evaluation.marketingLevel,
-            preferences:
-                preferences.preferences,
-            products:
-                products.map(product => ({
+            customerId: customer.id,
+            customer: customer.name,
+            customerEmail: customer.correo,
+            score: evaluation.score,
+            marketingLevel: evaluation.marketingLevel,
+            preferences: preferences.preferences,
+            products: products.map(product => {
+                const now = new Date();
+                const promotionIsActive =
+                    product.hasPromotion === true &&
+                    product.promotionPrice !== null &&
+                    product.promotionStart !== null &&
+                    product.promotionEnd !== null &&
+                    new Date(product.promotionStart) <= now &&
+                    new Date(product.promotionEnd) >= now;
+
+                return {
                     id: product.id,
                     name: product.name,
                     category: product.category,
-                    price: product.price
-                }))
+                    price: product.price,
+
+                    promotion: promotionIsActive
+                        ? {
+                            price: product.promotionPrice,
+                            start: product.promotionStart,
+                            end: product.promotionEnd
+                        }
+                        : null
+                };
+            })
         });
     }
     return campaign;

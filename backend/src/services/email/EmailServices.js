@@ -168,116 +168,301 @@ class EmailService {
         customer,
         businessName
     }) {
-
         let template = await this.loadTemplate(
             "marketing-campaign.html"
         );
 
         const productsHTML = customer.products
-    .slice(0, 5)
-    .map(product => {
+            .slice(0, 5)
+            .map(product => {
 
-        return `
-            <table
-                role="presentation"
-                width="100%"
-                cellspacing="0"
-                cellpadding="0"
-                border="0"
-                style="
-                    margin-bottom:16px;
-                    border:1px solid #e2e8f0;
-                    border-radius:12px;
-                    border-collapse:separate;
-                    background:#ffffff;
-                    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
-                "
-            >
-                <tr>
-                    <td style="padding:20px;">
+                const hasActivePromotion =
+                    product.promotion &&
+                    product.promotion.price &&
+                    product.promotion.start &&
+                    product.promotion.end;
 
-                        <table
-                            role="presentation"
-                            width="100%"
-                            cellspacing="0"
-                            cellpadding="0"
-                            border="0"
-                        >
-                            <tr>
+                // Formatear fechas de promoción
+                let promotionPeriod = "";
 
-                                <td
-                                    valign="top"
-                                    width="70%"
+                if (hasActivePromotion) {
+                    const startDate = new Date(
+                        product.promotion.start
+                    ).toLocaleDateString("es-NI");
+
+                    const endDate = new Date(
+                        product.promotion.end
+                    ).toLocaleDateString("es-NI");
+
+                    promotionPeriod = `
+                        <div style="
+                            margin-top:10px;
+                            font-size:11px;
+                            color:#166534;
+                            line-height:1.5;
+                        ">
+                            Promoción válida del
+                            <strong>${startDate}</strong>
+                            al
+                            <strong>${endDate}</strong>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <table
+                        role="presentation"
+                        width="100%"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                        style="
+                            margin-bottom:16px;
+                            border:1px solid ${
+                                hasActivePromotion
+                                    ? "#bbf7d0"
+                                    : "#e2e8f0"
+                            };
+                            border-radius:12px;
+                            border-collapse:separate;
+                            background:#ffffff;
+                            box-shadow:0 1px 3px 0 rgba(0, 0, 0, 0.02);
+                        "
+                    >
+                        <tr>
+                            <td style="padding:20px;">
+
+                                <table
+                                    role="presentation"
+                                    width="100%"
+                                    cellspacing="0"
+                                    cellpadding="0"
+                                    border="0"
                                 >
+                                    <tr>
 
-                                    <h3
-                                        style="
-                                            margin:0 0 12px 0;
-                                            font-size:16px;
-                                            font-weight:700;
-                                            color:#0f172a;
-                                            line-height:1.4;
-                                        "
-                                    >
-                                        ${product.name}
-                                    </h3>
+                                        <td
+                                            valign="top"
+                                            width="65%"
+                                        >
 
-                                    <!-- Etiqueta de Categoría con Icono SVG -->
-                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5f9; border:1px solid #e2e8f0; border-radius:20px;">
-                                        <tr>
-                                            <td style="padding:4px 10px 4px 10px; vertical-align:middle;">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                                                </svg>
-                                            </td>
-                                            <td style="padding:4px 10px 4px 0; vertical-align:middle;">
-                                                <span style="
-                                                    color:#334155;
-                                                    font-size:11px;
-                                                    font-weight:600;
-                                                    text-transform:uppercase;
-                                                    letter-spacing:0.04em;
-                                                ">
-                                                    ${product.category}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    </table>
+                                            <h3
+                                                style="
+                                                    margin:0 0 12px 0;
+                                                    font-size:16px;
+                                                    font-weight:700;
+                                                    color:#0f172a;
+                                                    line-height:1.4;
+                                                "
+                                            >
+                                                ${product.name}
+                                            </h3>
 
-                                </td>
+                                            <!-- Categoría -->
+                                            <table
+                                                role="presentation"
+                                                cellspacing="0"
+                                                cellpadding="0"
+                                                border="0"
+                                                style="
+                                                    background:#f1f5f9;
+                                                    border:1px solid #e2e8f0;
+                                                    border-radius:20px;
+                                                "
+                                            >
+                                                <tr>
 
-                                <td
-                                    width="30%"
-                                    align="right"
-                                    valign="middle"
-                                >
+                                                    <td
+                                                        style="
+                                                            padding:4px 10px;
+                                                            vertical-align:middle;
+                                                        "
+                                                    >
+                                                        <svg
+                                                            width="12"
+                                                            height="12"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="#475569"
+                                                            stroke-width="2"
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                        >
+                                                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                                        </svg>
+                                                    </td>
 
-                                    <!-- Bloque de Precio con Icono SVG -->
-                                    <table role="presentation" align="right" cellspacing="0" cellpadding="0" border="0" style="background:#f0fdf4; border:1px solid #dcfce7; border-radius:10px;">
-                                        <tr>
-                                            <td style="padding:10px 14px; text-align:right;">
-                                                <div style="font-size:10px; font-weight:700; color:#166534; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">
-                                                    Precio
-                                                </div>
-                                                <div style="font-size:16px; font-weight:800; color:#15803d;">
-                                                    C$ ${product.price}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
+                                                    <td
+                                                        style="
+                                                            padding:4px 10px 4px 0;
+                                                            vertical-align:middle;
+                                                        "
+                                                    >
+                                                        <span
+                                                            style="
+                                                                color:#334155;
+                                                                font-size:11px;
+                                                                font-weight:600;
+                                                                text-transform:uppercase;
+                                                                letter-spacing:0.04em;
+                                                            "
+                                                        >
+                                                            ${product.category || ""}
+                                                        </span>
+                                                    </td>
 
-                                </td>
+                                                </tr>
+                                            </table>
 
-                            </tr>
-                        </table>
+                                        </td>
 
-                    </td>
-                </tr>
-            </table>
-        `;
+                                        <td
+                                            width="35%"
+                                            align="right"
+                                            valign="middle"
+                                        >
 
-    })
-    .join("");
+                                            ${
+                                                hasActivePromotion
+                                                    ? `
+                                                        <!-- Precio promocional -->
+
+                                                        <table
+                                                            role="presentation"
+                                                            align="right"
+                                                            cellspacing="0"
+                                                            cellpadding="0"
+                                                            border="0"
+                                                            style="
+                                                                background:#f0fdf4;
+                                                                border:1px solid #bbf7d0;
+                                                                border-radius:10px;
+                                                            "
+                                                        >
+                                                            <tr>
+                                                                <td
+                                                                    style="
+                                                                        padding:10px 14px;
+                                                                        text-align:right;
+                                                                    "
+                                                                >
+
+                                                                    <div
+                                                                        style="
+                                                                            font-size:10px;
+                                                                            font-weight:700;
+                                                                            color:#64748b;
+                                                                            text-transform:uppercase;
+                                                                            letter-spacing:0.05em;
+                                                                            margin-bottom:2px;
+                                                                        "
+                                                                    >
+                                                                        Antes
+                                                                    </div>
+
+                                                                    <div
+                                                                        style="
+                                                                            font-size:12px;
+                                                                            color:#94a3b8;
+                                                                            text-decoration:line-through;
+                                                                            margin-bottom:3px;
+                                                                        "
+                                                                    >
+                                                                        C$ ${product.price}
+                                                                    </div>
+
+                                                                    <div
+                                                                        style="
+                                                                            font-size:10px;
+                                                                            font-weight:700;
+                                                                            color:#166534;
+                                                                            text-transform:uppercase;
+                                                                            letter-spacing:0.05em;
+                                                                            margin-bottom:2px;
+                                                                        "
+                                                                    >
+                                                                        Precio promoción
+                                                                    </div>
+
+                                                                    <div
+                                                                        style="
+                                                                            font-size:18px;
+                                                                            font-weight:800;
+                                                                            color:#15803d;
+                                                                        "
+                                                                    >
+                                                                        C$ ${product.promotion.price}
+                                                                    </div>
+
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+
+                                                        ${promotionPeriod}
+                                                    `
+                                                    : `
+                                                        <!-- Precio normal -->
+
+                                                        <table
+                                                            role="presentation"
+                                                            align="right"
+                                                            cellspacing="0"
+                                                            cellpadding="0"
+                                                            border="0"
+                                                            style="
+                                                                background:#f0fdf4;
+                                                                border:1px solid #dcfce7;
+                                                                border-radius:10px;
+                                                            "
+                                                        >
+                                                            <tr>
+                                                                <td
+                                                                    style="
+                                                                        padding:10px 14px;
+                                                                        text-align:right;
+                                                                    "
+                                                                >
+
+                                                                    <div
+                                                                        style="
+                                                                            font-size:10px;
+                                                                            font-weight:700;
+                                                                            color:#166534;
+                                                                            text-transform:uppercase;
+                                                                            letter-spacing:0.05em;
+                                                                            margin-bottom:2px;
+                                                                        "
+                                                                    >
+                                                                        Precio
+                                                                    </div>
+
+                                                                    <div
+                                                                        style="
+                                                                            font-size:16px;
+                                                                            font-weight:800;
+                                                                            color:#15803d;
+                                                                        "
+                                                                    >
+                                                                        C$ ${product.price}
+                                                                    </div>
+
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    `
+                                            }
+
+                                        </td>
+
+                                    </tr>
+                                </table>
+
+                            </td>
+                        </tr>
+                    </table>
+                `;
+            })
+            .join("");
 
         template = template
             .replace(
@@ -303,17 +488,36 @@ class EmailService {
     Tenemos productos recomendados para ti:
 
     ${customer.products
-    .slice(0,5)
-    .map(p=>`${p.name} - C$${p.price}`)
-    .join("\n")}
+        .slice(0, 5)
+        .map(product => {
+
+            if (
+                product.promotion &&
+                product.promotion.price &&
+                product.promotion.start &&
+                product.promotion.end
+            ) {
+                const startDate = new Date(
+                    product.promotion.start
+                ).toLocaleDateString("es-NI");
+
+                const endDate = new Date(
+                    product.promotion.end
+                ).toLocaleDateString("es-NI");
+
+                return `${product.name} - Precio normal: C$${product.price} - Precio promoción: C$${product.promotion.price} - Promoción válida del ${startDate} al ${endDate}`;
+            }
+
+            return `${product.name} - C$${product.price}`;
+        })
+        .join("\n")}
 
     Gracias por preferirnos.
     `;
 
         return this.sendEmail({
             to: customer.customerEmail,
-            subject:
-            `Productos recomendados para ti`,
+            subject: `Productos recomendados para ti`,
             html: template,
             text
         });
