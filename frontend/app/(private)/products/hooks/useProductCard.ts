@@ -132,13 +132,24 @@ export function useProductCard() {
     };
     const isPromotionActive = (product: Product) => {
         const now = new Date();
+
+        const promotionStart = product.promotionStart
+            ? new Date(product.promotionStart)
+            : null;
+        
+        const promotionEnd = product.promotionEnd
+            ? new Date(product.promotionEnd)
+            : null;
+
+        const promotionEndExclusive = promotionEnd
+            ? new Date(promotionEnd.getTime() + 24 * 60 * 60 * 1000)
+            : null;
+
         return (
-            product.hasPromotion &&
+            product.hasPromotion === true &&
             product.promotionPrice != null &&
-            (!product.promotionStart ||
-                new Date(product.promotionStart) <= now) &&
-            (!product.promotionEnd ||
-                new Date(product.promotionEnd) >= now)
+            (!promotionStart || promotionStart <= now) &&
+            (!promotionEndExclusive || now < promotionEndExclusive)
         );
     };
     useEffect(() => {

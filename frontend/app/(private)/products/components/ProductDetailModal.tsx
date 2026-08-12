@@ -47,18 +47,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     const promotionEnd = product.promotionEnd
         ? new Date(product.promotionEnd)
         : null;
+        
+    const promotionEndExclusive = promotionEnd
+        ? new Date(promotionEnd.getTime() + 24 * 60 * 60 * 1000)
+        : null;
 
     const isPromotionActive =
         product.hasPromotion === true &&
         product.promotionPrice != null &&
         (!promotionStart || promotionStart <= now) &&
-        (!promotionEnd || promotionEnd >= now);
+        (!promotionEndExclusive || now < promotionEndExclusive);
 
     const isPromotionExpired =
         product.hasPromotion === true &&
-        product.promotionEnd != null &&
-        promotionEnd !== null &&
-        promotionEnd < now;
+        promotionEndExclusive !== null &&
+        now >= promotionEndExclusive;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-x-hidden overflow-y-auto">

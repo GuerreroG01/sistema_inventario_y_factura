@@ -31,15 +31,18 @@ export default function ProductForm({ formData, updateField, onSubmit, onCancel,
             return "none";
         }
 
-        if (
-            formData.promotionEnd &&
-            new Date(formData.promotionEnd) < new Date()
-        ) {
-            return "expired";
+        if (formData.promotionEnd) {
+            const promotionEnd = new Date(formData.promotionEnd);
+            promotionEnd.setUTCDate(promotionEnd.getUTCDate() + 1);
+
+            if (new Date() >= promotionEnd) {
+                return "expired";
+            }
         }
 
         return "active";
     };
+
     const promotionStatus = getPromotionStatus();
     return (
         <form

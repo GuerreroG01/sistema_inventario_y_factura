@@ -59,13 +59,23 @@ export function useCreateSale() {
     const isPromotionActive = (product: any) => {
         const now = new Date();
 
+        const promotionStart = product.promotionStart
+            ? new Date(product.promotionStart)
+            : null;
+
+        const promotionEnd = product.promotionEnd
+            ? new Date(product.promotionEnd)
+            : null;
+
+        if (promotionEnd) {
+            promotionEnd.setUTCDate(promotionEnd.getUTCDate() + 1);
+        }
+
         return (
             product.hasPromotion === true &&
             product.promotionPrice != null &&
-            (!product.promotionStart ||
-                new Date(product.promotionStart) <= now) &&
-            (!product.promotionEnd ||
-                new Date(product.promotionEnd) >= now)
+            (!promotionStart || promotionStart <= now) &&
+            (!promotionEnd || now < promotionEnd)
         );
     };
 
