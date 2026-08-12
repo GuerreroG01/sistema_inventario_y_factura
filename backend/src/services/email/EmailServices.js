@@ -195,12 +195,15 @@ class EmailService {
                     ).toLocaleDateString("es-NI");
 
                     promotionPeriod = `
-                        <div style="
-                            margin-top:10px;
-                            font-size:11px;
-                            color:#166534;
-                            line-height:1.5;
-                        ">
+                        <div
+                            class="promotion-period"
+                            style="
+                                margin-top:10px;
+                                font-size:11px;
+                                color:#166534;
+                                line-height:1.5;
+                            "
+                        >
                             Promoción válida del
                             <strong>${startDate}</strong>
                             al
@@ -213,6 +216,7 @@ class EmailService {
                     <table
                         role="presentation"
                         width="100%"
+                        class="product-card"
                         cellspacing="0"
                         cellpadding="0"
                         border="0"
@@ -230,7 +234,10 @@ class EmailService {
                         "
                     >
                         <tr>
-                            <td style="padding:20px;">
+                            <td
+                                class="product-content"
+                                style="padding:20px;"
+                            >
 
                                 <table
                                     role="presentation"
@@ -242,6 +249,7 @@ class EmailService {
                                     <tr>
 
                                         <td
+                                            class="product-info"
                                             valign="top"
                                             width="65%"
                                         >
@@ -317,6 +325,7 @@ class EmailService {
                                         </td>
 
                                         <td
+                                            class="product-price"
                                             width="35%"
                                             align="right"
                                             valign="middle"
@@ -330,6 +339,7 @@ class EmailService {
                                                         <table
                                                             role="presentation"
                                                             align="right"
+                                                            class="price-box"
                                                             cellspacing="0"
                                                             cellpadding="0"
                                                             border="0"

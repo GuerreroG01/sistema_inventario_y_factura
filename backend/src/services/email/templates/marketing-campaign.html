@@ -5,6 +5,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <style>
+        @media screen and (max-width: 600px) {
+
+            .email-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
+            }
+
+            .email-content {
+                padding: 28px 18px 20px 18px !important;
+            }
+
+            .email-header {
+                padding: 32px 20px !important;
+            }
+
+            .email-title {
+                font-size: 21px !important;
+                line-height: 1.3 !important;
+            }
+
+            .product-card {
+                width: 100% !important;
+            }
+
+            .product-content {
+                padding: 18px !important;
+            }
+
+            .product-info,
+            .product-price {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                text-align: left !important;
+            }
+
+            .product-price {
+                padding-top: 18px !important;
+            }
+
+            .price-box {
+                width: 100% !important;
+                text-align: left !important;
+            }
+
+            .price-box td {
+                text-align: left !important;
+            }
+
+            .promotion-period {
+                text-align: left !important;
+            }
+
+            .info-banner {
+                margin-top: 20px !important;
+            }
+
+            .footer {
+                padding: 22px 18px !important;
+            }
+        }
+    </style>
+
     <title>Productos recomendados para ti</title>
 
     <!--[if mso]>
@@ -38,7 +103,7 @@
                         <td>
                 <![endif]-->
 
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-container" style="
                     max-width:600px;
                     background:#ffffff;
                     border-radius:16px;
@@ -46,16 +111,15 @@
                     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
                     border-collapse:separate;
                 ">
-
-                    <!-- Encabezado -->
                     <tr>
-                        <td style="
-                            background:#0f172a;
-                            background-image:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
-                            padding:40px 32px;
-                            text-align:center;
+                        <td
+                            class="email-header"
+                            style="
+                                background:#0f172a;
+                                background-image:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+                                padding:40px 32px;
+                                text-align:center;
                         ">
-                            <!-- Badge con Icono SVG (Estrella) -->
                             <table role="presentation" align="center" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto 16px auto;">
                                 <tr>
                                     <td style="
@@ -88,24 +152,22 @@
                                 </tr>
                             </table>
 
-                            <h1 style="
-                                margin:0;
-                                color:#ffffff;
-                                font-size:24px;
-                                font-weight:800;
-                                letter-spacing:-0.02em;
-                                line-height:1.3;
+                            <h1
+                                class="email-title"
+                                style="
+                                    margin:0;
+                                    color:#ffffff;
+                                    font-size:24px;
+                                    font-weight:800;
+                                    letter-spacing:-0.02em;
+                                    line-height:1.3;
                             ">
                                 Seleccionados especialmente para ti
                             </h1>
                         </td>
                     </tr>
-
-                    <!-- Contenido principal -->
                     <tr>
-                        <td style="padding:36px 32px 24px 32px;">
-
-                            <!-- Saludo con Icono SVG (Usuario) -->
+                        <td class="email-content" style="padding:36px 32px 24px 32px;">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
                                 <tr>
                                     <td style="vertical-align:middle;">
