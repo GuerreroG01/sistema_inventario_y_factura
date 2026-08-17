@@ -292,27 +292,30 @@ export const getCategories = async (req, res) => {
 };
 
 export const updateSaleStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status, refundObservation } = req.body;
+
+    if (!status) {
+        return res.status(400).json({
+            error: "validation_error",
+            message: "El campo 'status' es obligatorio."
+        });
+    }
+
+    if (
+        status === "REFUNDED" &&
+        (!refundObservation || refundObservation.trim() === "")
+    ) {
+        return res.status(400).json({
+            error: "validation_error",
+            code: "REFUND_OBSERVATION_REQUIRED",
+            message: "Debe ingresar una observación cuando se procesa un reembolso."
+        });
+    }
+
     const t = await sequelize.transaction();
 
     try {
-        const { id } = req.params;
-        const { status, refundObservation } = req.body;
-
-        if (!status) {
-            return res.status(400).json({
-                error: "validation_error",
-                message: "El campo 'status' es obligatorio."
-            });
-        }
-
-        if (status === "REFUNDED" && (!refundObservation || refundObservation.trim() === "")) {
-            return res.status(400).json({
-                error: "validation_error",
-                code: "REFUND_OBSERVATION_REQUIRED",
-                message: "Debe ingresar una observación cuando se procesa un reembolso."
-            });
-        }
-
         const sale = await Sales.findOne({
             where: {
                 id,
@@ -331,18 +334,39 @@ export const updateSaleStatus = async (req, res) => {
 
         const previousStatus = sale.status;
 
+        const paidStatuses = ["PAID", "COMPLETED"];
+
+        const unpaidStatuses = [
+            "PENDING",
+            "CANCELLED",
+            "REFUSED"
+        ];
+
         sale.status = status;
         sale.updated_by = req.user.id;
+        if (paidStatuses.includes(status)) {
+            if (!sale.paidAt) {
+                sale.paidAt = new Date();
+            }
+        }
+        else if (unpaidStatuses.includes(status)) {
+            sale.paidAt = null;
+        }
 
         if (status === "REFUNDED") {
             sale.observation = refundObservation;
         }
 
-        await sale.save({ transaction: t });
+        await sale.save({
+            transaction: t
+        });
 
         if (sale.payment_type === "CREDIT" && sale.client_id) {
-            const previousAffectsBalance = previousStatus === "PENDING";
-            const currentAffectsBalance = status === "PENDING";
+            const previousAffectsBalance =
+                previousStatus === "PENDING";
+
+            const currentAffectsBalance =
+                status === "PENDING";
 
             if (previousAffectsBalance !== currentAffectsBalance) {
 
@@ -360,26 +384,34 @@ export const updateSaleStatus = async (req, res) => {
 
                 let newBalance = Number(customer.balance);
 
-                // La venta deja de generar deuda:
-                // PENDING -> COMPLETED / CANCELLED / REFUNDED
-                if (previousAffectsBalance && !currentAffectsBalance) {
+                if (
+                    previousAffectsBalance &&
+                    !currentAffectsBalance
+                ) {
                     newBalance -= Number(sale.total);
                 }
 
-                // La venta vuelve a generar deuda:
-                // COMPLETED / CANCELLED / REFUNDED -> PENDING
-                if (!previousAffectsBalance && currentAffectsBalance) {
+                if (
+                    !previousAffectsBalance &&
+                    currentAffectsBalance
+                ) {
                     newBalance += Number(sale.total);
                 }
                 await customer.update(
-                    { balance: newBalance },
-                    { transaction: t }
+                    {
+                        balance: newBalance
+                    },
+                    {
+                        transaction: t
+                    }
                 );
             }
         }
 
-        if (status === "CANCELLED" && previousStatus !== "CANCELLED") {
-
+        if (
+            status === "CANCELLED" &&
+            previousStatus !== "CANCELLED"
+        ) {
             const details = await SaleDetail.findAll({
                 where: {
                     sale_id: id,
@@ -388,45 +420,6 @@ export const updateSaleStatus = async (req, res) => {
                 transaction: t
             });
 
-            for (const item of details) {
-
-                const product = await Product.findOne({
-                    where: {
-                        id: item.product_id,
-                        business_id: req.user.business_id
-                    },
-                    transaction: t
-                });
-
-                if (!product) {
-                    throw new Error(`Producto no encontrado: ${item.product_id}`);
-                }
-
-                if (product.type_item === "Producto") {
-                    await product.update({
-                        stock: Number(product.stock) + Number(item.cantidad)
-                    }, { transaction: t });
-
-                    await InventoryMovService.create({
-                        product_id: item.product_id,
-                        tipo: "entrada",
-                        cantidad: item.cantidad,
-                        referencia: sale.id,
-                        observacion: "Cancelación de venta",
-                        business_id: req.user.business_id
-                    }, t);
-                }
-            }
-        }
-
-        if (status === "COMPLETED" && previousStatus === "CANCELLED") {
-            const details = await SaleDetail.findAll({
-                where: {
-                    sale_id: id,
-                    business_id: req.user.business_id
-                },
-                transaction: t
-            });
             for (const item of details) {
                 const product = await Product.findOne({
                     where: {
@@ -437,33 +430,102 @@ export const updateSaleStatus = async (req, res) => {
                 });
 
                 if (!product) {
-                    throw new Error(`Producto no encontrado: ${item.product_id}`);
+                    throw new Error(
+                        `Producto no encontrado: ${item.product_id}`
+                    );
                 }
 
                 if (product.type_item === "Producto") {
-                    await product.update({
-                        stock: Number(product.stock) - Number(item.cantidad)
-                    }, {
-                        transaction: t
-                    });
+                    await product.update(
+                        {
+                            stock:
+                                Number(product.stock) +
+                                Number(item.cantidad)
+                        },
+                        {
+                            transaction: t
+                        }
+                    );
 
-                    await InventoryMovService.create({
-                        product_id: item.product_id,
-                        tipo: "salida",
-                        cantidad: item.cantidad,
-                        referencia: sale.id,
-                        observacion: "Reactivación de venta cancelada",
-                        business_id: req.user.business_id
-                    }, t);
+                    await InventoryMovService.create(
+                        {
+                            product_id: item.product_id,
+                            tipo: "entrada",
+                            cantidad: item.cantidad,
+                            referencia: sale.id,
+                            observacion: "Cancelación de venta",
+                            business_id: req.user.business_id
+                        },
+                        t
+                    );
                 }
             }
         }
 
-        if ( status === "COMPLETED" && ["PENDING", "PAID"].includes(previousStatus) && sale.client_id ) {
+        if (
+            status === "COMPLETED" &&
+            previousStatus === "CANCELLED"
+        ) {
+            const details = await SaleDetail.findAll({
+                where: {
+                    sale_id: id,
+                    business_id: req.user.business_id
+                },
+                transaction: t
+            });
+
+            for (const item of details) {
+                const product = await Product.findOne({
+                    where: {
+                        id: item.product_id,
+                        business_id: req.user.business_id
+                    },
+                    transaction: t
+                });
+
+                if (!product) {
+                    throw new Error(
+                        `Producto no encontrado: ${item.product_id}`
+                    );
+                }
+
+                if (product.type_item === "Producto") {
+                    await product.update(
+                        {
+                            stock:
+                                Number(product.stock) -
+                                Number(item.cantidad)
+                        },
+                        {
+                            transaction: t
+                        }
+                    );
+
+                    await InventoryMovService.create(
+                        {
+                            product_id: item.product_id,
+                            tipo: "salida",
+                            cantidad: item.cantidad,
+                            referencia: sale.id,
+                            observacion:
+                                "Reactivación de venta cancelada",
+                            business_id: req.user.business_id
+                        },
+                        t
+                    );
+                }
+            }
+        }
+
+        if (
+            status === "COMPLETED" &&
+            ["PENDING", "PAID"].includes(previousStatus) &&
+            sale.client_id
+        ) {
             await resetCustomerMarketingAfterPurchase(
                 sale.client_id,
                 req.user.business_id,
-                sale.updatedAt
+                sale.paidAt
             );
         }
 
@@ -471,12 +533,36 @@ export const updateSaleStatus = async (req, res) => {
         clearStatusCache();
 
         await t.commit();
-        cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
-        cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
-        cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
-        cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
-        cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
-        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
+
+        cacheService.del(
+            CacheKeys.DASHBOARDCARDS,
+            req.user.business_id
+        );
+
+        cacheService.del(
+            CacheKeys.PROFITABILITY,
+            req.user.business_id
+        );
+
+        cacheService.del(
+            CacheKeys.RANKINGMETRICS,
+            req.user.business_id
+        );
+
+        cacheService.del(
+            CacheKeys.INVENTORYALERTS,
+            req.user.business_id
+        );
+
+        cacheService.del(
+            CacheKeys.PRODUCTSALERTS,
+            req.user.business_id
+        );
+
+        cacheService.delOtherByPrefix(
+            CacheKeys.EXPIRINGPRODUCTS,
+            req.user.business_id
+        );
 
         return res.json({
             message: "Status actualizado correctamente",
@@ -484,9 +570,13 @@ export const updateSaleStatus = async (req, res) => {
         });
 
     } catch (error) {
-        await t.rollback();
-        
-        console.error("updateSaleStatus error:", error);
+        if (!t.finished) {
+            await t.rollback();
+        }
+        console.error(
+            "updateSaleStatus error:",
+            error
+        );
 
         return res.status(500).json({
             error: "update_status_error",

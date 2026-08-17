@@ -3,6 +3,7 @@ import db from "../config/database.js";
 import Sales from "../models/Sales.js";
 import Product from "../models/Products.js";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
+import { getMonthDateRange} from "../utils/getMonthDateRange.js"
 
 export const getDashboardMetrics = async (businessId) => {
     return cacheService.remember(
@@ -25,21 +26,27 @@ export const getDashboardMetrics = async (businessId) => {
                 const startOfDay = new Date(now);
                 startOfDay.setHours(0, 0, 0, 0);
 
-                const startOfMonth = new Date(
-                    now.getFullYear(),
-                    now.getMonth(),
-                    1
-                );
+                const endOfDay = new Date(now);
+                endOfDay.setHours(23, 59, 59, 999);
 
+                const {
+                    startDate: startOfMonth,
+                    endDate: startOfNextMonth,
+                } = getMonthDateRange(
+                    now.getMonth() + 1,
+                    now.getFullYear()
+                );
                 try {
                     const ventasHoy = await Sales.sum("total", {
                         where: {
                             business_id: businessId,
-                            fecha: {
+                            paidAt: {
                                 [Op.gte]: startOfDay,
+                                [Op.lt]: endOfDay,
                             },
+
                             status: {
-                                [Op.in]: ["COMPLETED", "PAID"/*, "PENDING"*/],
+                                [Op.in]: ["COMPLETED", "PAID"],
                             },
                         },
                     });
@@ -47,11 +54,13 @@ export const getDashboardMetrics = async (businessId) => {
                     const ventasMes = await Sales.sum("total", {
                         where: {
                             business_id: businessId,
-                            fecha: {
+                            paidAt: {
                                 [Op.gte]: startOfMonth,
+                                [Op.lt]: startOfNextMonth,
                             },
+
                             status: {
-                                [Op.in]: ["COMPLETED", "PAID"/*, "PENDING"*/],
+                                [Op.in]: ["COMPLETED", "PAID"],
                             },
                         },
                     });
@@ -63,6 +72,10 @@ export const getDashboardMetrics = async (businessId) => {
                         warnings.push("No se encontraron registros de ventas");
                     }
                 } catch (error) {
+                    console.error(
+                        "[getDashboardMetrics] Error ventas",
+                        error
+                    );
                     errors.push({
                         module: "ventas",
                         message: error.message,
@@ -98,11 +111,13 @@ export const getDashboardMetrics = async (businessId) => {
                             },
                         },
                     });
+
                 } catch (error) {
                     console.error(
                         "[getDashboardMetrics] Error stock bajo",
                         error
                     );
+
                     errors.push({
                         module: "stockBajo",
                         message: error.message,
@@ -113,7 +128,10 @@ export const getDashboardMetrics = async (businessId) => {
                         `
                         SELECT
                             COALESCE(
-                                SUM((sd.precio_unitario - p.cost) * sd.cantidad),
+                                SUM(
+                                    (sd.precio_unitario - p.cost)
+                                    * sd.cantidad
+                                ),
                                 0
                             ) AS ganancia
                         FROM "SaleDetails" sd
@@ -122,17 +140,23 @@ export const getDashboardMetrics = async (businessId) => {
                         INNER JOIN "Sales" s
                             ON s.id = sd.sale_id
                         WHERE s.business_id = :businessId
-                        AND s.status NOT IN ('PENDING', 'REFUNDED', 'CANCELLED')
+                        AND s.status IN ('PAID', 'COMPLETED')
+                        AND s."paidAt" >= :startOfMonth
+                        AND s."paidAt" < :startOfNextMonth
                         `,
                         {
                             replacements: {
-                                businessId
+                                businessId,
+                                startOfMonth,
+                                startOfNextMonth,
                             },
                             type: QueryTypes.SELECT,
                         }
                     );
 
-                    response.ganancia = Number(result?.[0]?.ganancia ?? 0);
+                    response.ganancia = Number(
+                        result?.[0]?.ganancia ?? 0
+                    );
 
                     if (response.ganancia === 0) {
                         warnings.push(
@@ -194,7 +218,8 @@ export const getProfitabilityMetrics = async (month, year, businessId) => {
     };
 
     try {
-        // Ventas + costo de productos
+        const { startDate, endDate } = getMonthDateRange(month, year);
+
         const salesResult = await db.query(
             `
             SELECT
@@ -202,27 +227,35 @@ export const getProfitabilityMetrics = async (month, year, businessId) => {
             FROM "Sales"
             WHERE business_id = :businessId
                 AND status IN ('COMPLETED', 'PAID')
-                AND EXTRACT(MONTH FROM "createdAt") = :month
-                AND EXTRACT(YEAR FROM "createdAt") = :year
+                AND "paidAt" >= :startDate
+                AND "paidAt" < :endDate
             `,
             {
-                replacements: { month, year, businessId },
+                replacements: {
+                    businessId,
+                    startDate,
+                    endDate,
+                },
                 type: QueryTypes.SELECT,
             }
         );
 
-        // Gastos adicionales (Expenses)
         const expensesResult = await db.query(
             `
-            SELECT COALESCE(SUM(amount), 0) AS gastos
+            SELECT
+                COALESCE(SUM(amount), 0) AS gastos
             FROM "Expenses"
             WHERE business_id = :businessId
-                AND EXTRACT(MONTH FROM date) = :month
-                AND EXTRACT(YEAR FROM date) = :year
+                AND date >= :startDate
+                AND date < :endDate
                 AND status = 'Activo'
             `,
             {
-                replacements: { month, year, businessId },
+                replacements: {
+                    businessId,
+                    startDate,
+                    endDate,
+                },
                 type: QueryTypes.SELECT,
             }
         );
@@ -234,7 +267,9 @@ export const getProfitabilityMetrics = async (month, year, businessId) => {
 
         const ganancia = ventas - costosTotales;
 
-        const margen = ventas > 0 ? (ganancia / ventas) * 100 : 0;
+        const margen = ventas > 0
+            ? (ganancia / ventas) * 100
+            : 0;
 
         const ratioRetornoCosto = costosTotales > 0
             ? ganancia / costosTotales
@@ -253,7 +288,7 @@ export const getProfitabilityMetrics = async (month, year, businessId) => {
         response.roi = Number(roi.toFixed(2));
 
         if (ventas === 0) {
-            warnings.push("No existen ventas registradas para el período seleccionado");
+            warnings.push("No existen ventas cobradas para el período seleccionado");
         }
 
         return {

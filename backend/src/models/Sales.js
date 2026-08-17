@@ -11,6 +11,10 @@ const Sales = sequelize.define ("Sales",{
         type: DataTypes.DATEONLY,
         allowNull: false,
     },
+    paidAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
     total: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
