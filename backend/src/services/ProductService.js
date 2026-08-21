@@ -12,7 +12,11 @@ export const getCriticalStockProducts = async (business_id) => {
                 "name",
                 "category",
                 "price",
-                "stock"
+                "stock",
+                "hasPromotion",
+                "promotionPrice",
+                "promotionStart",
+                "promotionEnd"
             ];
             const exhausted = await Product.findAll({
                 attributes,

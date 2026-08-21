@@ -52,6 +52,14 @@ type SubmitResult =
         payload: any;
     };
 
+type UpdateResult =
+    | {
+        success: true;
+    }
+    | {
+        success: false;
+        message: string;
+    };
 type Props = {
     productId?: number;
 };
@@ -229,19 +237,20 @@ export function useProductForm({ productId }: Props) {
         }
     };
 
-    const submitWithStockReason = async(reason:string):Promise<SubmitResult>=>{
-
-        if(!product){
+    const submitWithStockReason = async (
+        reason: string
+    ): Promise<UpdateResult> => {
+        if (!product) {
             return {
-                success:false,
-                message:"Producto inválido"
+                success: false,
+                message: "Producto inválido"
             };
         }
 
         try {
             const payload = {
                 ...buildPayload(),
-                stockObservation:reason
+                stockObservation: reason
             };
 
             const res = await updateProduct(
@@ -249,17 +258,21 @@ export function useProductForm({ productId }: Props) {
                 payload
             );
 
-            if(!res.ok){
+            if (!res.ok) {
                 return {
-                    success:false,
-                    message:res.message
+                    success: false,
+                    message: res.message
                 };
             }
-            return { success:true };
-        } catch(error:any){
+
             return {
-                success:false,
-                message:error.message ?? "Error inesperado"
+                success: true
+            };
+
+        } catch (error: any) {
+            return {
+                success: false,
+                message: error.message ?? "Error inesperado"
             };
         }
     };

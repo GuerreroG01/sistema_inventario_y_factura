@@ -11,7 +11,7 @@ export default function CustomerDetail({ id }: { id:number }) {
     const {
         customer, indicators, summary, salesHistory, loading, preferences, reloadSales
     } = useCustomerDetail(id);
-
+    console.log("[INDICATORS]:",indicators);
     if (loading) {
         return (
             <section className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
@@ -153,10 +153,8 @@ export default function CustomerDetail({ id }: { id:number }) {
                                 title="Última compra"
                                 value={
                                     indicators.lastPurchase
-                                    ? new Date(
-                                        indicators.lastPurchase
-                                    ).toLocaleDateString("es-ES")
-                                    : "Sin compras"
+                                        ? indicators.lastPurchase.split("-").reverse().join("/")
+                                        : "Sin compras"
                                 }
                             />
 

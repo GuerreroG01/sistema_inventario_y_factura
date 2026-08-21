@@ -5,7 +5,7 @@ export default function PrivateLayout({
     children,
 }: {
     children: React.ReactNode;
-}) { //el header ni footer se muestra lo que significa que hay un problema con los layouts group
+}) {
     return (
         <div
             className="

@@ -9,7 +9,13 @@ interface StockAlertItemProps {
 export default function StockAlertItem({
     product, type
 }: StockAlertItemProps) {
-
+    const isPromotionActive =
+        product.hasPromotion &&
+        product.promotionPrice !== null &&
+        (!product.promotionStart ||
+            new Date() >= new Date(product.promotionStart)) &&
+        (!product.promotionEnd ||
+            new Date() <= new Date(product.promotionEnd));
     return (
         <div
             className={`
@@ -52,9 +58,26 @@ export default function StockAlertItem({
             </div>
 
             <div className="text-right">
-                <p className="font-semibold text-gray-900">
-                    C${product.price}
-                </p>
+                {isPromotionActive ? (
+                    <div>
+                        <p className="text-sm text-gray-400 line-through">
+                            C${product.price}
+                        </p>
+
+                        <p className="font-semibold text-red-600">
+                            C${product.promotionPrice}
+                        </p>
+
+                        <span className="mt-1 inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">
+                            En promoción
+                        </span>
+                    </div>
+                ) : (
+                    <p className="font-semibold text-gray-900">
+                        C${product.price}
+                    </p>
+                )}
+
                 <span
                     className={`
                         inline-flex mt-2 rounded-full px-3 py-1 text-xs font-semibold

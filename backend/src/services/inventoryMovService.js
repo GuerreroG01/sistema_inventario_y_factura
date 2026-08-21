@@ -57,7 +57,8 @@ export const getInventoryMovements = async ({
             "tipo",
             "cantidad",
             "fecha",
-            "referencia"
+            "referencia",
+            "observacion"
         ],
         where,
         include: [

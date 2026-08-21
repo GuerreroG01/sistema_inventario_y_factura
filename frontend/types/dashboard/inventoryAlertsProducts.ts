@@ -2,7 +2,8 @@ import type { Product } from "../product";
 
 export type StockAlertProduct = Pick<
     Product,
-    "barcode" | "name" | "category" | "price" | "stock"
+    | "barcode" | "name" | "category" | "price" | "stock" | "hasPromotion" | "promotionPrice"
+    | "promotionStart" | "promotionEnd"
 >;
 
 

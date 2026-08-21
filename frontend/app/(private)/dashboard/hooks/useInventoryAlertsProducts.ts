@@ -39,7 +39,7 @@ export const useInventoryAlertsProducts =
             setLoading(false);
         }
     },[]);
-
+    
     const clearProducts = useCallback(()=>{
         setProducts(initialData);
     },[]);
