@@ -8,9 +8,9 @@ import User from "./User.js";
 import License from './License.js';
 import Customer from "./Customers.js";
 import CustomerMarketing from "./CustomerMarketing.js";
-import Employee from "./Worksheet/Employee/Employee.js"
-import EmployeeEmployment from "./Worksheet/Employee/EmployeeEmployment.js"
-import EmployeeSalaryHistory from "./Worksheet/Employee/EmployeeSalaryHistory.js"
+//import Employee from "./Worksheet/Employee/Employee.js"
+//import EmployeeEmployment from "./Worksheet/Employee/EmployeeEmployment.js"
+//import EmployeeSalaryHistory from "./Worksheet/Employee/EmployeeSalaryHistory.js"
 import ProductUnit from "./ProductsUnits.js";
 
 Business.hasMany(User,{
