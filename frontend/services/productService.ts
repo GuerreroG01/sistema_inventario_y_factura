@@ -1,5 +1,6 @@
 import api from "./api";
-import { Product, StockAlerts } from "@/types/product";
+import { Product, StockAlerts, ProductsResponse, CreateProduct, UpdateProduct } from "@/types/product";
+import type { InventoryAlertsProductsResponse } from "@/types/dashboard/inventoryAlertsProducts";
 
 export async function getProducts(
   page: number = 1,
@@ -14,40 +15,39 @@ export async function getProducts(
   } = {}
 ) {
   try {
-    const { data } = await api.get<{
-      total: number;
-      page: number;
-      totalPages: number;
-      products: Product[];
-    }>("/products/", {
+    const { data } = await api.get<ProductsResponse>("/products/", {
       params: {
         page,
         ...Object.fromEntries(
           Object.entries(filters).filter(
-            ([_, v]) => v !== "" && v !== undefined && v !== null
+            ([_, v]) =>
+              v !== "" &&
+              v !== undefined &&
+              v !== null
           )
         )
       }
     });
     return data;
-    
   } catch (error: any) {
     throw new Error(
       error?.response?.data?.error ||
       error?.message ||
       "Error al obtener productos"
     );
-}}
+  }
+}
 
-export async function createProduct(product: Omit<Product, "id">): Promise<Product> {
+export async function createProduct(product: CreateProduct): Promise<Product> {
   try {
-    const { data } = await api.post<Product>("/products/", product);
+    const { data } = await api.post<Product>(
+      "/products/",
+      product
+    );
     return data;
   } catch (error: any) {
     const message =
-      error?.response?.data?.message ||
-      error.message ||
-      "Error al crear producto";
+      error?.response?.data?.message || error?.message || "Error al crear producto";
     throw new Error(message);
   }
 }
@@ -67,19 +67,25 @@ export async function getProduct(id: number): Promise<Product> {
 
 export async function updateProduct(
   id: number,
-  product: Partial<Omit<Product, "id">>
+  product: UpdateProduct
 ): Promise<{ ok: true; data: Product } | { ok: false; message: string }> {
   try {
-    const { data } = await api.put<Product>(`/products/${id}`, product);
+    const { data } = await api.put<Product>(
+      `/products/${id}`,
+      product
+    );
 
-    return { ok: true, data};
+    return {
+      ok: true,
+      data
+    };
   } catch (error: any) {
     return {
       ok: false,
       message:
         error?.response?.data?.message ||
-        error.message ||
-        "Error al actualizar producto",
+        error?.message ||
+        "Error al actualizar producto"
     };
   }
 }
@@ -158,20 +164,18 @@ export async function autocompleteProducts(query: {
   }
 }
 export async function getStockAlerts(): Promise<StockAlerts> {
-  try {
-    const { data } = await api.get<{
-      success: boolean;
-      data: StockAlerts;
-    }>("/products/getStockAlerts");
+    try {
+        const { data } = await api.get<InventoryAlertsProductsResponse>(
+            "/products/getStockAlerts"
+        );
 
-    return data.data;
+        return data.data;
+    } catch (error: any) {
+        const message =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Error al obtener alertas de stock";
 
-  } catch (error: any) {
-    const message =
-      error?.response?.data?.message ||
-      error.message ||
-      "Error al obtener alertas de stock";
-
-    throw new Error(message);
-  }
+        throw new Error(message);
+    }
 }

@@ -6,12 +6,19 @@ import StockReasonModal from "@/components/StockReasonModal";
 import ProductForm from "../../components/ProductForm";
 import { useProductForm } from "../../hooks/useProductForm";
 
-export default function EditProductPage(){
+export default function EditProductPage() {
     const router = useRouter();
     const params = useParams();
     const productId = Number(params.id);
-    const { formData, updateField, submit, isSubmitting, submitWithStockReason } = useProductForm({ productId });
-    const [showStockReasonModal, setShowStockReasonModal] = useState(false);
+
+    const {
+        formData, updateField, updateUnitField, addUnit, removeUnit, restoreUnit, submit,
+        submitWithStockReason, isSubmitting, loadingProduct,
+    } = useProductForm({ productId });
+
+    const [showStockReasonModal, setShowStockReasonModal] =
+        useState(false);
+
     const handleSubmit = async (
         e: React.FormEvent<HTMLFormElement>
     ) => {
@@ -29,10 +36,16 @@ export default function EditProductPage(){
             return;
         }
 
-        console.error(result.message);
+        if ("message" in result) {
+            console.error(result.message);
+        }
     };
-    const handleStockReasonConfirm = async (reason: string) => {
-        const result = await submitWithStockReason(reason);
+
+    const handleStockReasonConfirm = async (
+        reason: string
+    ) => {
+        const result =
+            await submitWithStockReason(reason);
 
         if (result.success) {
             setShowStockReasonModal(false);
@@ -42,21 +55,35 @@ export default function EditProductPage(){
 
         console.error(result.message);
     };
+
+    if (loadingProduct) {
+        return (
+            <div className="min-h-screen bg-slate-50 p-6">
+                Cargando producto...
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-slate-50 p-6">
             <ProductForm
                 formData={formData}
                 updateField={updateField}
+                updateUnitField={updateUnitField}
+                addUnit={addUnit}
+                removeUnit={removeUnit}
+                restoreUnit={restoreUnit}
                 onSubmit={handleSubmit}
-                onCancel={()=>
-                    router.back()
-                }
+                onCancel={() => router.back()}
                 isSubmitting={isSubmitting}
-                isEditMode
+                isEditMode={true}
             />
+
             <StockReasonModal
                 open={showStockReasonModal}
-                onClose={() => setShowStockReasonModal(false)}
+                onClose={() =>
+                    setShowStockReasonModal(false)
+                }
                 onConfirm={handleStockReasonConfirm}
             />
         </div>

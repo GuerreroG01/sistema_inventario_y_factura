@@ -1,114 +1,58 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 
-const Product = sequelize.define("Products", {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-    },
-
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-
-    barcode: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        unique: true,
-    },
-
-    category: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
-
-    type_item: {
-        type: DataTypes.ENUM("Producto", "Servicio"),
-        defaultValue: "Producto",
-    },
-
-    unit: {
-        type: DataTypes.STRING,
-        defaultValue: "unit",
-    },
-
-    price: {
-        type: DataTypes.DECIMAL(10,2),
-        allowNull: false,
-    },
-
-    hasPromotion: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-    },
-    
-    promotionPrice: {
-        type: DataTypes.DECIMAL(10,2),
-        allowNull: true,
-    },
-
-    promotionStart: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-
-    promotionEnd: {
-        type: DataTypes.DATE,
-        allowNull: true,
-    },
-
-    cost: {
-        type: DataTypes.DECIMAL(10, 2), // Este valor de costo servirá solo para en el frontend
-        allowNull: true, // ver el margen de ganancia en base al costo y precio del producto.
-    }, // Lo mejor es que los costos sean manejados desde la tabla de egresos.
-
-    //A
-
-    stock: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-    },
-
-    entryDate: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-
-    expirationDate: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-    },
-
-    active: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-    },
-
-    created_by: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-    },
-
-    updated_by: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-    },
-    business_id:{
-        type:DataTypes.INTEGER,
-        allowNull:false,
-        references:{
-            model:"Business",
-            key:"id"
+const Product = sequelize.define( "Products",
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
         },
-        onUpdate:"CASCADE",
-        onDelete:"RESTRICT"
+
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+
+        category: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+
+        type_item: {
+            type: DataTypes.ENUM("Producto", "Servicio"),
+            defaultValue: "Producto",
+        },
+
+        active: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true,
+        },
+
+        created_by: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+
+        updated_by: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+
+        business_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: "Business",
+                key: "id",
+            },
+            onUpdate: "CASCADE",
+            onDelete: "RESTRICT",
+        },
+    },
+    {
+        tableName: "Products",
     }
-},
-{
-    tableName:"Products"
-});
+);
 
 export default Product;

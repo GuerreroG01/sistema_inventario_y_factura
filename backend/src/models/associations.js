@@ -8,6 +8,10 @@ import User from "./User.js";
 import License from './License.js';
 import Customer from "./Customers.js";
 import CustomerMarketing from "./CustomerMarketing.js";
+import Employee from "./Worksheet/Employee/Employee.js"
+import EmployeeEmployment from "./Worksheet/Employee/EmployeeEmployment.js"
+import EmployeeSalaryHistory from "./Worksheet/Employee/EmployeeSalaryHistory.js"
+import ProductUnit from "./ProductsUnits.js";
 
 Business.hasMany(User,{
     foreignKey:"business_id",
@@ -60,24 +64,24 @@ SaleDetail.belongsTo(Sales,{
     as:"sale"
 });
 
-Product.hasMany(InventoryMov,{
-    foreignKey:"product_id",
-    as:"movements"
+ProductUnit.hasMany(InventoryMov, {
+    foreignKey: "product_unit_id",
+    as: "movements"
 });
 
-InventoryMov.belongsTo(Product,{
-    foreignKey:"product_id",
-    as:"product"
+InventoryMov.belongsTo(ProductUnit, {
+    foreignKey: "product_unit_id",
+    as: "productUnit"
 });
 
-Product.hasMany(SaleDetail,{
-    foreignKey:"product_id",
-    as:"details"
+ProductUnit.hasMany(SaleDetail, {
+    foreignKey: "product_unit_id",
+    as: "saleDetails"
 });
 
-SaleDetail.belongsTo(Product,{
-    foreignKey:"product_id",
-    as:"product"
+SaleDetail.belongsTo(ProductUnit, {
+    foreignKey: "product_unit_id",
+    as: "productUnit"
 });
 
 Sales.hasMany(InventoryMov,{
@@ -140,4 +144,44 @@ Business.hasMany(CustomerMarketing,{
 CustomerMarketing.belongsTo(Business,{
     foreignKey:"business_id",
     as:"business"
+});
+
+Business.hasMany(Employee, {
+    foreignKey: "business_id",
+    as: "employees"
+});
+
+Employee.belongsTo(Business, {
+    foreignKey: "business_id",
+    as: "business"
+});
+
+Employee.hasMany(EmployeeEmployment, {
+    foreignKey: "employee_id",
+    as: "employments"
+});
+
+EmployeeEmployment.belongsTo(Employee, {
+    foreignKey: "employee_id",
+    as: "employee"
+});
+
+Employee.hasMany(EmployeeSalaryHistory, {
+    foreignKey: "employee_id",
+    as: "salaryHistory"
+});
+
+EmployeeSalaryHistory.belongsTo(Employee, {
+    foreignKey: "employee_id",
+    as: "employee"
+});
+
+Product.hasMany(ProductUnit, {
+    foreignKey: "product_id",
+    as: "units"
+});
+
+ProductUnit.belongsTo(Product, {
+    foreignKey: "product_id",
+    as: "product"
 });

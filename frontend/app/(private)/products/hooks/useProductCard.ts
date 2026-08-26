@@ -57,7 +57,10 @@ export function useProductCard() {
         setLoading(true);
 
         try {
-            const data = await getProducts(pageToFetch, appliedFilters);
+            const data = await getProducts(
+                pageToFetch,
+                appliedFilters
+            );
 
             setProducts(data.products || []);
             setTotalPages(data.totalPages || 1);
@@ -77,7 +80,11 @@ export function useProductCard() {
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setPage(newPage);
-            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
         }
     };
 
@@ -122,6 +129,7 @@ export function useProductCard() {
             setIsDeleting(false);
         }
     };
+
     const fetchCategories = async () => {
         try {
             const data = await getCategories();
@@ -130,28 +138,36 @@ export function useProductCard() {
             console.error("Error fetching categories:", err);
         }
     };
+
     const isPromotionActive = (product: Product) => {
         const now = new Date();
 
-        const promotionStart = product.promotionStart
-            ? new Date(product.promotionStart)
-            : null;
-        
-        const promotionEnd = product.promotionEnd
-            ? new Date(product.promotionEnd)
-            : null;
+        return product.units?.some(unit => {
+            if (unit.hasPromotion !== true || unit.promotionPrice == null) {
+                return false;
+            }
 
-        const promotionEndExclusive = promotionEnd
-            ? new Date(promotionEnd.getTime() + 24 * 60 * 60 * 1000)
-            : null;
+            const promotionStart = unit.promotionStart
+                ? new Date(unit.promotionStart)
+                : null;
 
-        return (
-            product.hasPromotion === true &&
-            product.promotionPrice != null &&
-            (!promotionStart || promotionStart <= now) &&
-            (!promotionEndExclusive || now < promotionEndExclusive)
-        );
+            const promotionEnd = unit.promotionEnd
+                ? new Date(unit.promotionEnd)
+                : null;
+
+            const promotionEndExclusive = promotionEnd
+                ? new Date(
+                    promotionEnd.getTime() + 24 * 60 * 60 * 1000
+                )
+                : null;
+
+            return (
+                (!promotionStart || promotionStart <= now) &&
+                (!promotionEndExclusive || now < promotionEndExclusive)
+            );
+        }) ?? false;
     };
+
     useEffect(() => {
         fetchCategories();
     }, []);

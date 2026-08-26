@@ -1,52 +1,68 @@
 import Product from "../models/Products.js";
+import ProductUnit from "../models/ProductsUnits.js";
 import { Op } from "sequelize";
 import { cacheService, CacheTTL, CacheKeys } from "./cache/index.js";
 
 export const getCriticalStockProducts = async (business_id) => {
-
     return await cacheService.remember(
-        CacheKeys.PRODUCTSALERTS,
+        `${CacheKeys.PRODUCTSALERTS}:${business_id}`,
         async () => {
             const attributes = [
+                "id",
+                "product_id",
+                "unit",
                 "barcode",
-                "name",
-                "category",
                 "price",
                 "stock",
                 "hasPromotion",
                 "promotionPrice",
+                "promotionQuantity",
                 "promotionStart",
                 "promotionEnd"
             ];
-            const exhausted = await Product.findAll({
-                attributes,
+
+            const productInclude = {
+                model: Product,
+                as: "product",
                 where: {
                     business_id,
                     active: true,
-                    type_item: "Producto",
+                    type_item: "Producto"
+                },
+                attributes: [
+                    "id",
+                    "name",
+                    "category"
+                ]
+            };
+
+            const exhausted = await ProductUnit.findAll({
+                attributes,
+                where: {
+                    active: true,
                     stock: 0
-                }
+                },
+                include: [productInclude],
+                order: [["stock", "ASC"]]
             });
 
-            const critical = await Product.findAll({
+            const critical = await ProductUnit.findAll({
                 attributes,
                 where: {
-                    business_id,
                     active: true,
-                    type_item: "Producto",
                     stock: {
-                        [Op.between]: [1, 5]
+                        [Op.between]: [1, 10]
                     }
-                }
+                },
+                include: [productInclude],
+                order: [["stock", "ASC"]]
             });
 
             return {
-                exhausted,
-                critical
+                exhausted: exhausted.map(item => item.toJSON()),
+                critical: critical.map(item => item.toJSON())
             };
-
         },
-        CacheTTL.ONE_HOUR,
-        business_id 
+        CacheTTL.ONE_HOUR
     );
 };

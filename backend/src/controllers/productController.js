@@ -1,30 +1,23 @@
 import Product from "../models/Products.js";
-import { ValidationError, UniqueConstraintError, fn, col, literal, Op, where } from "sequelize";
+import ProductUnit from "../models/ProductsUnits.js";
+import { ValidationError, UniqueConstraintError, fn, col, Op } from "sequelize";
 import { normalizeDate } from "../utils/formatters.js"
 import { invalidateCategoryCache, clearCategoryCache, getCategoryCache, setCategoryCache  } from "../utils/categoryCache.js";
-import InventoryMovService from "../services/Inventory_MovService.js";
 import { cacheService, CacheKeys } from "../services/cache/index.js";
 import { getCriticalStockProducts } from "../services/ProductService.js";
-
-const generateBarcode = async (business_id) => {
-    let barcode;
-    let exists = true;
-
-    while (exists) {
-        barcode = Math.floor(1000000000000 + Math.random() * 9000000000000).toString();
-        const product = await Product.findOne({ where: { barcode, business_id } });
-        exists = !!product;
-    }
-
-    return barcode;
-};
+import { 
+    create, findByProduct, update, resetStockForService, deactivateByProduct,
+    getTotalStock, getLowStock
+} from "../services/ProductsUnitsService.js";
+import sequelize from "../config/database.js";
 
 export const createProduct = async (req, res) => {
     try {
-        let { 
-            name, barcode, category, type_item, unit, price, hasPromotion, promotionPrice, promotionStart, promotionEnd, 
-            cost, stock, entryDate, expirationDate, active
+        const {
+            name, category, type_item, units, active
         } = req.body;
+
+        const business_id = req.user.business_id;
 
         if (!name || name.trim() === "") {
             return res.status(400).json({
@@ -33,91 +26,147 @@ export const createProduct = async (req, res) => {
             });
         }
 
-        if (price === undefined || isNaN(price)) {
+        if (!Array.isArray(units) || units.length === 0) {
             return res.status(400).json({
                 error: "validation_error",
-                message: "El campo 'price' es obligatorio y debe ser un número."
-            });
-        }
-        if (Boolean(hasPromotion) && promotionPrice && Number(promotionPrice) >= Number(price)) {
-            return res.status(400).json({
-                error: "validation_error",
-                message: "El precio de promoción debe ser menor al precio normal."
-            });
-        }
-        if (Boolean(hasPromotion) && promotionStart && promotionEnd && new Date(promotionStart) > new Date(promotionEnd)) {
-            return res.status(400).json({
-                error: "validation_error",
-                message: "La fecha de inicio de promoción debe ser anterior a la fecha de fin."
+                message: "El producto debe tener al menos una unidad."
             });
         }
 
-        if (!barcode || barcode.trim() === "") {
-            barcode = await generateBarcode(req.user.business_id);
+        const newType = type_item ?? "Producto";
+
+        for (const [index, unitData] of units.entries()) {
+
+            if (!unitData.unit || unitData.unit.trim() === "") {
+                return res.status(400).json({
+                    error: "validation_error",
+                    message: `La unidad #${index + 1} es obligatoria.`
+                });
+            }
+
+            if (
+                unitData.price === undefined ||
+                isNaN(unitData.price)
+            ) {
+                return res.status(400).json({
+                    error: "validation_error",
+                    message: `El precio de la unidad #${index + 1} es obligatorio y debe ser un número.`
+                });
+            }
+
+            if (
+                Boolean(unitData.hasPromotion) &&
+                unitData.promotionPrice !== undefined &&
+                unitData.promotionPrice !== null &&
+                Number(unitData.promotionPrice) >= Number(unitData.price)
+            ) {
+                return res.status(400).json({
+                    error: "validation_error",
+                    message: `El precio de promoción de la unidad #${index + 1} debe ser menor al precio normal.`
+                });
+            }
+
+            if (
+                Boolean(unitData.hasPromotion) &&
+                unitData.promotionStart &&
+                unitData.promotionEnd &&
+                new Date(unitData.promotionStart) >
+                    new Date(unitData.promotionEnd)
+            ) {
+                return res.status(400).json({
+                    error: "validation_error",
+                    message: `La fecha de inicio de promoción de la unidad #${index + 1} debe ser anterior a la fecha de fin.`
+                });
+            }
         }
 
         const product = await Product.create({
             name,
-            barcode,
             category,
-            type_item: type_item ?? "Producto",
-            unit,
-            price,
-            hasPromotion,
-            promotionPrice,
-            promotionStart: normalizeDate(promotionStart),
-            promotionEnd: normalizeDate(promotionEnd),
-            cost,
-            stock: type_item === "Servicio" ? 0 : stock,
-            entryDate: normalizeDate(entryDate),
-            expirationDate: normalizeDate(expirationDate),
-            active,
+            type_item: newType,
+            active: active ?? true,
             created_by: req.user.id,
             updated_by: req.user.id,
-            business_id: req.user.business_id
+            business_id
         });
 
-        if (type_item === "Producto" && stock && Number(stock) > 0 ) {
-            await InventoryMovService.create({
-                product_id: product.id,
-                tipo: "entrada",
-                cantidad: stock,
-                observacion: null,
-                business_id: req.user.business_id
-            });
+        const productUnits = [];
+        for (const unitData of units) {
+
+            const productUnit =
+                await create({
+                    product_id: product.id,
+                    business_id,
+                    unit: unitData.unit,
+                    barcode: unitData.barcode,
+                    price: unitData.price,
+                    cost: unitData.cost,
+                    hasPromotion: unitData.hasPromotion,
+                    promotionPrice: unitData.promotionPrice,
+                    promotionQuantity: unitData.promotionQuantity,
+                    promotionStart: normalizeDate(unitData.promotionStart),
+                    promotionEnd:normalizeDate(unitData.promotionEnd),
+                    stock:
+                        newType === "Servicio"
+                            ? 0
+                            : (unitData.stock ?? 0),
+                    entryDate: normalizeDate(unitData.entryDate),
+                    expirationDate: normalizeDate(unitData.expirationDate),
+                    active: unitData.active ?? true
+                });
+            productUnits.push(productUnit);
         }
 
-        invalidateCategoryCache(req.user.business_id,category);
-        cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
-        cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
-        cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
-        cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
-        cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
-        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
+        invalidateCategoryCache(business_id, category);
+        cacheService.del(CacheKeys.DASHBOARDCARDS, business_id);
+        cacheService.del(CacheKeys.PROFITABILITY, business_id);
+        cacheService.del(CacheKeys.RANKINGMETRICS, business_id);
+        cacheService.del(CacheKeys.INVENTORYALERTS, business_id);
+        cacheService.del(CacheKeys.PRODUCTSALERTS, business_id);
+        cacheService.delOtherByPrefix(
+            CacheKeys.EXPIRINGPRODUCTS,
+            business_id
+        );
+
         await cacheService.del(
             `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${category}`,
-            req.user.business_id
+            business_id
         );
-        return res.status(201).json(product);
+
+        return res.status(201).json({
+            ...product.toJSON(),
+            productUnits
+        });
 
     } catch (error) {
+
+        console.error(
+            "createProduct error:",
+            error
+        );
+
         if (error instanceof ValidationError) {
             return res.status(400).json({
                 error: "validation_error",
-                message: error.errors.map(err => err.message)
+                message: error.errors.map(
+                    err => err.message
+                )
             });
         }
 
         if (error instanceof UniqueConstraintError) {
             return res.status(400).json({
                 error: "unique_constraint_error",
-                message: error.errors.map(err => err.message)
+                message: error.errors.map(
+                    err => err.message
+                )
             });
         }
 
         return res.status(500).json({
             error: "create_product_error",
-            message: "Ocurrió un error inesperado al crear el producto."
+            message:
+                "Ocurrió un error inesperado al crear el producto."
         });
     }
 };
@@ -128,17 +177,20 @@ export const getProducts = async (req, res) => {
         const limit = 12;
         const offset = (page - 1) * limit;
 
-        const { name, barcode, category, active, priceMin, priceMax, hasPromotion } = req.query;
-        const where = {business_id: req.user.business_id};
+        const {
+            name, barcode, category, active, priceMin, priceMax, hasPromotion
+        } = req.query;
+
+        const business_id = req.user.business_id;
+
+        const where = {
+            business_id
+        };
 
         if (name) {
             where.name = {
                 [Op.iLike]: `%${name}%`
             };
-        }
-
-        if (barcode) {
-            where.barcode = barcode;
         }
 
         if (category) {
@@ -149,37 +201,58 @@ export const getProducts = async (req, res) => {
             where.active = active === "true";
         }
 
+        const productUnitWhere = {};
+
+        if (barcode) {
+            productUnitWhere.barcode = barcode;
+        }
+
         if (priceMin || priceMax) {
-            where.price = {};
+            productUnitWhere.price = {};
+
             if (priceMin) {
-                where.price[Op.gte] = parseFloat(priceMin);
+                productUnitWhere.price[Op.gte] =
+                    parseFloat(priceMin);
             }
+
             if (priceMax) {
-                where.price[Op.lte] = parseFloat(priceMax);
+                productUnitWhere.price[Op.lte] =
+                    parseFloat(priceMax);
             }
         }
-        if (hasPromotion === "true") {
-            where.hasPromotion = true;
 
-            where[Op.and] = [
+        if (hasPromotion === "true") {
+            productUnitWhere.hasPromotion = true;
+
+            productUnitWhere[Op.and] = [
                 {
                     [Op.or]: [
                         { promotionStart: null },
-                        { promotionStart: { [Op.lte]: new Date() } }
+                        {
+                            promotionStart: {
+                                [Op.lte]: new Date()
+                            }
+                        }
                     ]
                 },
                 {
                     [Op.or]: [
                         { promotionEnd: null },
-                        { promotionEnd: { [Op.gte]: new Date() } }
+                        {
+                            promotionEnd: {
+                                [Op.gte]: new Date()
+                            }
+                        }
                     ]
                 }
             ];
         }
 
         if (hasPromotion === "false") {
-            where[Op.or] = [
-                { hasPromotion: false },
+            productUnitWhere[Op.or] = [
+                {
+                    hasPromotion: false
+                },
                 {
                     hasPromotion: true,
                     promotionEnd: {
@@ -191,10 +264,26 @@ export const getProducts = async (req, res) => {
 
         const { count, rows: products } = await Product.findAndCountAll({
             where,
+            include: [
+            {
+                model: ProductUnit,
+                as: "units",
+                attributes: [
+                    "id", "product_id", "unit", "barcode", "price",
+                    "cost", "stock", "hasPromotion", "promotionPrice",
+                    "promotionQuantity", "promotionStart", "promotionEnd",
+                    "entryDate", "expirationDate", "active"
+                ],
+                where: productUnitWhere,
+                required: true
+            }
+        ],
             order: [["id", "DESC"]],
             limit,
-            offset
+            offset,
+            distinct: true
         });
+
         return res.json({
             total: count,
             page,
@@ -204,6 +293,7 @@ export const getProducts = async (req, res) => {
 
     } catch (error) {
         console.error("getProducts error:", error);
+
         return res.status(500).json({
             error: "internal_error",
             message: error.message
@@ -214,11 +304,12 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
     try {
         const { id } = req.params;
+        const business_id = req.user.business_id;
 
         const product = await Product.findOne({
-            where:{
+            where: {
                 id,
-                business_id:req.user.business_id
+                business_id
             }
         });
 
@@ -229,10 +320,19 @@ export const getProductById = async (req, res) => {
             });
         }
 
-        return res.json(product);
+        const units = await findByProduct(
+            product.id,
+            business_id
+        );
+
+        return res.json({
+            ...product.toJSON(),
+            units
+        });
 
     } catch (error) {
         console.error("getProductById error:", error);
+
         return res.status(500).json({
             error: "internal_error",
             message: "Ocurrió un error al obtener el producto"
@@ -243,17 +343,16 @@ export const getProductById = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { 
-            name, barcode, category, type_item, unit, price, hasPromotion, promotionPrice, promotionStart, promotionEnd,
-            cost, stock, entryDate, expirationDate, active, stockObservation 
+        const business_id = req.user.business_id;
+
+        const {
+            name, category, type_item, active, units
         } = req.body;
 
         const product = await Product.findOne({
-            where:{
-                id,
-                business_id:req.user.business_id
-            }
+            where: { id, business_id }
         });
+
         if (!product) {
             return res.status(404).json({
                 error: "not_found",
@@ -261,115 +360,201 @@ export const updateProduct = async (req, res) => {
             });
         }
 
+        if ( name !== undefined && name.trim() === "" ) {
+            return res.status(400).json({
+                error: "validation_error",
+                message:  "El campo 'name' no puede estar vacío."
+            });
+        }
+
+        if ( units !== undefined && !Array.isArray(units) ) {
+            return res.status(400).json({
+                error: "validation_error",
+                message: "El campo 'units' debe ser un arreglo."
+            });
+        }
+
         const newType = type_item ?? product.type_item;
-
-        if (name !== undefined && name.trim() === "") {
-            return res.status(400).json({
-                error: "validation_error",
-                message: "El campo 'name' no puede estar vacío."
-            });
-        }
-
-        if (price !== undefined && isNaN(price)) {
-            return res.status(400).json({
-                error: "validation_error",
-                message: "El campo 'price' debe ser un número válido."
-            });
-        }
         const oldType = product.type_item;
-        const oldStock = product.stock;
         const oldCategory = product.category;
 
+        const result = await sequelize.transaction(
+            async (transaction) => {
 
-        if (oldType === "Producto" && newType === "Servicio") {
-            if (oldStock > 0) {
-                await InventoryMovService.create({
-                    product_id: product.id,
-                    tipo: "ajuste",
-                    cantidad: -oldStock,
-                    observacion: "Cambio de producto a servicio",
-                    business_id: req.user.business_id
-                });
+                await product.update(
+                    {
+                        name: name ?? product.name,
+                        category: category ??  product.category,
+                        type_item: newType,
+                        active: active ?? product.active,
+                        updated_by: req.user.id
+                    },
+                    {
+                        transaction
+                    }
+                );
+
+                const updatedUnits = [];
+
+                if (Array.isArray(units)) {
+                    for (const productUnit of units) {
+                        if ( productUnit.product_unit_id === undefined || productUnit.product_unit_id === null ) {
+                            const newUnit = await create({
+                                product_id: product.id,
+                                unit: productUnit.unit,
+                                barcode: productUnit.barcode,
+                                price: productUnit.price,
+                                cost: productUnit.cost,
+                                stock: productUnit.stock,
+                                hasPromotion: productUnit.hasPromotion,
+                                promotionPrice: productUnit.promotionPrice,
+                                promotionQuantity: productUnit.promotionQuantity,
+                                promotionStart: productUnit.promotionStart,
+                                promotionEnd: productUnit.promotionEnd,
+                                entryDate: productUnit.entryDate,
+                                expirationDate: productUnit.expirationDate,
+                                active: productUnit.active,
+                                business_id,
+                                transaction
+                            });
+                            updatedUnits.push(newUnit);
+                            continue;
+                        }
+                        const currentUnit = await ProductUnit.findOne({
+                            where: {
+                                id: productUnit.product_unit_id,
+                                product_id: product.id
+                            },
+                            transaction,
+                            lock: transaction.LOCK.UPDATE
+                        });
+
+                        if (!currentUnit) {
+                            throw new Error("PRODUCT_UNIT_NOT_FOUND");
+                        }
+
+                        const oldStock = Number(currentUnit.stock ?? 0);
+                        const oldPromotionQuantity =
+                            Number(currentUnit.promotionQuantity ?? 0);
+
+                        const newPromotionQuantity =
+                            Number(productUnit.promotionQuantity ?? 0);
+                        const promotionDifference =
+                            newPromotionQuantity - oldPromotionQuantity;
+                        const newStock =
+                            oldStock - promotionDifference;
+
+                        if (newStock < 0) {
+                            throw new Error("INSUFFICIENT_STOCK_FOR_PROMOTION");
+                        }
+                        const updatedUnit = await update(
+                            productUnit.product_unit_id,
+                            business_id,
+                            {
+                                unit: productUnit.unit,
+                                barcode: productUnit.barcode,
+                                price: productUnit.price,
+                                cost: productUnit.cost,
+                                stock: newStock,
+                                stockChangeSource: "promotion",
+                                stockObservation: productUnit.stockObservation,
+                                hasPromotion: productUnit.hasPromotion,
+                                promotionPrice: productUnit.promotionPrice,
+                                promotionQuantity: newPromotionQuantity,
+                                promotionStart: productUnit.promotionStart,
+                                promotionEnd: productUnit.promotionEnd,
+                                entryDate: productUnit.entryDate,
+                                expirationDate: productUnit.expirationDate,
+                                active: productUnit.active
+                            },
+                            transaction
+                        );
+
+                        if (!updatedUnit) {
+                            throw new Error(
+                                "PRODUCT_UNIT_NOT_FOUND"
+                            );
+                        }
+                        updatedUnits.push( updatedUnit );
+                    }
+                }
+
+                if ( oldType !== newType && newType === "Servicio" ) {
+                    await resetStockForService(
+                        product.id,
+                        business_id,
+                        transaction
+                    );
+                }
+
+                return { updatedUnits };
             }
+        );
 
+        if ( category !== undefined && oldCategory !== category ) {
+            invalidateCategoryCache(
+                business_id,
+                oldCategory
+            );
+
+            invalidateCategoryCache(business_id,category);
         }
-        if (
-            newType === "Producto" &&
-            stock !== undefined &&
-            Number(stock) !== Number(oldStock)
-        ) {
+        cacheService.del(CacheKeys.DASHBOARDCARDS,business_id);
+        cacheService.del(CacheKeys.PROFITABILITY,business_id);
+        cacheService.del(CacheKeys.RANKINGMETRICS,business_id);
+        cacheService.del(CacheKeys.INVENTORYALERTS,business_id);
+        cacheService.del(CacheKeys.PRODUCTSALERTS,business_id);
+        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,business_id);
 
-            const diff = Number(stock) - Number(oldStock);
+        await cacheService.del(
+            `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${
+                category ?? oldCategory
+            }`,
+            business_id
+        );
 
-            if (diff < 0 && (!stockObservation || stockObservation.trim() === "")) {
-                return res.status(400).json({
-                    error: "validation_error",
-                    message: "Debe ingresar una razón cuando se reduce el inventario."
-                });
-            }
-
-            await InventoryMovService.create({
-                product_id: product.id,
-                tipo: "ajuste",
-                cantidad: diff,
-                observacion: diff < 0
-                    ? stockObservation
-                    : "Aumento manual de stock",
-                business_id: req.user.business_id
+        const finalUnits =
+            await ProductUnit.findAll({
+                where: {
+                    product_id: product.id
+                }
             });
-        }
-        await product.update({
-            name: name ?? product.name,
-            barcode: barcode ?? product.barcode,
-            category: category ?? product.category,
-            type_item: newType,
-            unit: unit ?? product.unit,
-            price: price ?? product.price,
-            hasPromotion: hasPromotion ?? product.hasPromotion,
-            promotionPrice: promotionPrice ?? product.promotionPrice,
-            promotionStart: normalizeDate(promotionStart) ?? product.promotionStart,
-            promotionEnd: normalizeDate(promotionEnd) ?? product.promotionEnd,
-            cost: cost ?? product.cost,
-            stock: newType === "Servicio" ? 0 : (stock ?? product.stock),
-            entryDate: normalizeDate(entryDate) ?? product.entryDate,
-            expirationDate: normalizeDate(expirationDate) ?? product.expirationDate,
-            active: active ?? product.active,
-            updated_by: req.user.id
+
+        return res.json({
+            ...product.toJSON(),
+            units: finalUnits
         });
 
-        if (category !== undefined && oldCategory !== product.category) {
-            invalidateCategoryCache(
-                req.user.business_id,
-                category
-            );
-        }
-        cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
-        cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
-        cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
-        cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
-        cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
-        cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
-        await cacheService.del(
-            `${CacheKeys.MARKETING_PRODUCTS_CATEGORY}:${category}`,
-            req.user.business_id
-        );
-        return res.json(product);
-
     } catch (error) {
-        if (error instanceof ValidationError) {
+        if ( error.message === "PRODUCT_UNIT_NOT_FOUND" ) {
+            return res.status(404).json({
+                error: "product_unit_not_found",
+                message: "No se encontró la unidad de medida."
+            });
+        }
+
+        if ( error.code === "STOCK_REDUCTION_REASON_REQUIRED" ) {
             return res.status(400).json({
                 error: "validation_error",
-                message: error.errors.map(err => err.message)
+                message: error.message
             });
         }
 
-        if (error instanceof UniqueConstraintError) {
+        if ( error instanceof ValidationError ) {
+            return res.status(400).json({
+                error: "validation_error",
+                message: error.errors.map( err => err.message )
+            });
+        }
+
+        if ( error instanceof UniqueConstraintError) {
             return res.status(400).json({
                 error: "unique_constraint_error",
-                message: error.errors.map(err => err.message)
+                message: error.errors.map( err => err.message )
             });
         }
 
+        console.error("updateProduct error:",error);
         return res.status(500).json({
             error: "update_product_error",
             message: "Ocurrió un error inesperado al actualizar el producto."
@@ -380,10 +565,12 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
+        const business_id = req.user.business_id;
+
         const product = await Product.findOne({
-            where:{
+            where: {
                 id,
-                business_id:req.user.business_id
+                business_id
             }
         });
 
@@ -398,6 +585,11 @@ export const deleteProduct = async (req, res) => {
             active: false,
             updated_by: req.user.id
         });
+
+        await deactivateByProduct(
+            product.id,
+            business_id
+        );
 
         cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
         cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
@@ -426,16 +618,21 @@ export const deleteProduct = async (req, res) => {
 };
 export const getProductStats = async (req, res) => {
     const business_id = req.user.business_id;
+
     try {
-        const totalProducts = await Product.count({where:{business_id}});
-        const totalStock = await Product.sum('stock',{
-            where:{
+        const totalProducts = await Product.count({
+            where: { business_id }
+        });
+
+        const activeProducts = await Product.count({
+            where: {
                 business_id,
-                type_item:"Producto"
+                active: true
             }
         });
-        const activeProducts = await Product.count({ where: { business_id, active: true } });
-        const lowStock = await Product.count({ where: { business_id, type_item:"Producto", stock: { [Op.between]: [1, 5] } } });
+
+        const totalStock = await getTotalStock(business_id);
+        const lowStock = await getLowStock(business_id);
 
         return res.json({
             totalProducts,
@@ -446,6 +643,7 @@ export const getProductStats = async (req, res) => {
 
     } catch (error) {
         console.error("getProductStats error:", error);
+
         return res.status(500).json({
             error: "internal_error",
             message: "Ocurrió un error al obtener las estadísticas de productos."
@@ -506,17 +704,39 @@ export const getProductsAutocomplete = async (req, res) => {
             return res.json([]);
         }
 
+        const business_id = req.user.business_id;
+
         const where = {
             active: true,
-            business_id:req.user.business_id
+            business_id
         };
 
         if (barcode) {
-            where.barcode = barcode;
-
             const products = await Product.findAll({
                 where,
-                attributes: ["id", "name", "barcode", "price", "hasPromotion", "promotionPrice", "promotionStart", "promotionEnd", "stock", "category", "type_item"],
+                attributes: [
+                    "id",
+                    "name",
+                    "category",
+                    "type_item"
+                ],
+                include: [
+                    {
+                        model: ProductUnit,
+                        as: "units",
+                        attributes: [
+                            "id", "product_id", "unit", "barcode", "price", 
+                            "cost", "stock", "hasPromotion", "promotionPrice",
+                            "promotionQuantity", "promotionStart", "promotionEnd", "entryDate",
+                            "expirationDate", "active"
+                        ],
+                        where: {
+                            barcode,
+                            active: true
+                        },
+                        required: true
+                    }
+                ],
                 limit: 10
             });
 
@@ -530,16 +750,40 @@ export const getProductsAutocomplete = async (req, res) => {
 
             const products = await Product.findAll({
                 where,
-                attributes: ["id", "name", "barcode", "price", "hasPromotion", "promotionPrice", "promotionStart", "promotionEnd", "stock", "category", "type_item"],
+                attributes: [
+                    "id", "name", "category", "type_item"
+                ],
+                include: [
+                    {
+                        model: ProductUnit,
+                        as: "units",
+                        attributes: [
+                            "id", "product_id", "unit", "barcode","price",
+                            "cost", "stock", "hasPromotion", "promotionPrice",
+                            "promotionQuantity", "promotionStart", "promotionEnd",
+                            "entryDate", "expirationDate", "active"
+                        ],
+                        where: {
+                            active: true
+                        },
+                        required: false
+                    }
+                ],
                 limit: 10,
                 order: [["name", "ASC"]]
             });
 
             return res.json(products);
         }
+
         return res.json([]);
+
     } catch (error) {
-        console.error("getProductsAutocomplete error:", error);
+        console.error(
+            "getProductsAutocomplete error:",
+            error
+        );
+
         return res.status(500).json({
             error: "internal_error",
             message: error.message
