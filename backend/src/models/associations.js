@@ -146,12 +146,13 @@ CustomerMarketing.belongsTo(Business,{
     as:"business"
 });
 
+/*
 Business.hasMany(Employee, {
     foreignKey: "business_id",
     as: "employees"
 });
 
-/*Employee.belongsTo(Business, {
+Employee.belongsTo(Business, {
     foreignKey: "business_id",
     as: "business"
 });
