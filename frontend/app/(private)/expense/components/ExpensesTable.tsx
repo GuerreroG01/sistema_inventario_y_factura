@@ -40,7 +40,7 @@ export default function ExpensesTable({ expenses, page, pagination, onPageChange
                         <tr className="text-left text-sm text-gray-600">
                             <th className="px-6 py-4">Descripción</th>
                             <th className="px-6 py-4">Categoría</th>
-                            <th className="px-6 py-4">Fecha</th>
+                            <th className="hidden px-6 py-4 md:table-cell">Fecha</th>
                             <th className="px-6 py-4 text-right">Monto</th>
                             <th className="px-6 py-4 text-center">Acciones</th>
                         </tr>
@@ -60,11 +60,14 @@ export default function ExpensesTable({ expenses, page, pagination, onPageChange
                                         {exp.category}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-gray-600">
+                                <td className="hidden px-6 py-4 text-gray-600 md:table-cell">
                                     {exp.date.split("-").reverse().join("/")}
                                 </td>
                                 <td className="px-6 py-4 text-right font-mono text-rose-600">
-                                    C${Number(exp.amount).toFixed(2)}
+                                    C${Number(exp.amount).toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}
                                 </td>
 
                                 <td className="px-6 py-4">

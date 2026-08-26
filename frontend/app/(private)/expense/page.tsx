@@ -30,7 +30,7 @@ export default function ExpensesPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-2">
 
             <ExpenseMetricCard
                 label="Total Gastos"

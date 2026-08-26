@@ -20,7 +20,7 @@ export default function ExpenseHeader({
     });
 
     return (
-        <section className="relative rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 md:p-10 shadow-sm">
+        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 shadow-sm md:p-10">
 
             <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-violet-100/60 blur-3xl pointer-events-none" />
 
@@ -28,7 +28,6 @@ export default function ExpenseHeader({
 
             <div className="space-y-8">
 
-                {/* HEADER */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
                     <div>
@@ -58,8 +57,6 @@ export default function ExpenseHeader({
 
                 </div>
 
-
-                {/* TOTAL */}
                 <div className="border-t border-slate-200 pt-6">
 
                     <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
