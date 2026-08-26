@@ -1,10 +1,7 @@
 "use client";
 
 import {
-    X,
-    AlertTriangle,
-    PackageX,
-    Package
+    X, AlertTriangle, PackageX, Package,
 } from "lucide-react";
 
 import type { StockAlertProduct } from "@/types/dashboard/inventoryAlertsProducts";
@@ -21,28 +18,28 @@ interface InventoryAlertsModalProps {
 export default function InventoryAlertsModal({
     open, type, products, loading, onClose
 }: InventoryAlertsModalProps) {
-
     if (!open) return null;
     const isCritical = type === "critical";
     const config = isCritical
         ? {
-            title: "Productos con Stock Crítico",
-            subtitle: "Productos con pocas unidades disponibles.",
-            badge: "Stock Bajo",
-            icon: AlertTriangle,
-            iconBg: "bg-orange-500",
-            badgeBg: "bg-orange-50 text-orange-700",
-            summaryBg: "bg-orange-50/50 border-orange-100",
-        }
+              title: "Productos con Stock Crítico",
+              subtitle: "Productos con pocas unidades disponibles.",
+              badge: "Stock Bajo",
+              icon: AlertTriangle,
+              iconBg: "bg-orange-500",
+              badgeBg: "bg-orange-50 text-orange-700",
+              summaryBg: "bg-orange-50/50 border-orange-100",
+          }
         : {
-            title: "Productos Agotados",
-            subtitle: "Productos sin existencia actualmente.",
-            badge: "Sin Existencias",
-            icon: PackageX,
-            iconBg: "bg-red-500",
-            badgeBg: "bg-red-50 text-red-700",
-            summaryBg: "bg-red-50/50 border-red-100",
-        };
+              title: "Productos Agotados",
+              subtitle: "Productos sin existencia actualmente.",
+              badge: "Sin Existencias",
+              icon: PackageX,
+              iconBg: "bg-red-500",
+              badgeBg: "bg-red-50 text-red-700",
+              summaryBg: "bg-red-50/50 border-red-100",
+          };
+
     const Icon = config.icon;
 
     return (
@@ -67,7 +64,21 @@ export default function InventoryAlertsModal({
                     flex-col
                 "
             >
-                <div className="flex items-start justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-slate-50 flex-shrink-0">
+                <div
+                    className="
+                        flex
+                        items-start
+                        justify-between
+                        p-6
+                        border-b
+                        border-slate-100
+                        bg-gradient-to-r
+                        from-slate-50
+                        via-white
+                        to-slate-50
+                        flex-shrink-0
+                    "
+                >
                     <div className="flex items-center gap-4">
                         <div
                             className={`
@@ -110,9 +121,10 @@ export default function InventoryAlertsModal({
                             </p>
                         </div>
                     </div>
-
                     <button
+                        type="button"
                         onClick={onClose}
+                        aria-label="Cerrar"
                         className="
                             rounded-xl
                             p-2
@@ -124,7 +136,6 @@ export default function InventoryAlertsModal({
                     >
                         <X className="w-5 h-5" />
                     </button>
-
                 </div>
                 <div className="flex-1 overflow-y-auto p-6 bg-white">
                     <div
@@ -186,17 +197,27 @@ export default function InventoryAlertsModal({
                         <div className="space-y-4">
                             {products.map((product) => (
                                 <StockAlertItem
-                                    key={product.barcode}
+                                    key={product.id}
                                     product={product}
                                     type={type}
                                 />
                             ))}
                         </div>
                     )}
-
                 </div>
-                <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 p-5 flex-shrink-0">
+                <div
+                    className="
+                        flex
+                        justify-end
+                        border-t
+                        border-slate-100
+                        bg-slate-50/70
+                        p-5
+                        flex-shrink-0
+                    "
+                >
                     <button
+                        type="button"
                         onClick={onClose}
                         className="
                             w-full

@@ -1,9 +1,5 @@
 import Link from "next/link";
-import {
-  Plus,
-  FileText,
-  BarChart3,
-} from "lucide-react";
+import { FileText, } from "lucide-react";
 
 import DashboardMetricsCards from "./dashboard/Components/DashboardMetricsCards";
 import ProfitabilityMetrics from "./dashboard/Components/ProfibilityMetrics/ProfitabilityMetrics";

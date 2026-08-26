@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getExpiringProductsMetrics } from "../../../../services/dashboardService"
-import type { DashboardError, ExpiringProductsData } from "../../../../types/dashboard/expiringProductsMetrics"
+import { getExpiringProductsMetrics } from "../../../../services/dashboardService";
+import type { DashboardError, ExpiringProductsData } from "../../../../types/dashboard/expiringProductsMetrics";
 
 const initialData: ExpiringProductsData = {
     products: [],
@@ -27,19 +27,17 @@ export function useExpiringProductsMetrics() {
         try {
             setLoading(true);
             setError(null);
-            
-            const response = await getExpiringProductsMetrics(page, limit);
-            
+            const response = await getExpiringProductsMetrics( page, limit );
+            console.log("[useExpiringProductsMetrics]:", response);
+
             setData(response.data);
             setWarnings(response.warnings);
             setErrors(response.errors);
             if (!response.success) {
-                setError(
-                    "No fue posible obtener los productos próximos a vencer."
-                );
+                setError( "No fue posible obtener los productos próximos a vencer." );
             }
-        } catch (error:any) {
-            setError(error.message);
+        } catch (error: any) {
+            setError( error.message || "Error obteniendo productos próximos a vencer" );
             setData(initialData);
         } finally {
             setLoading(false);
@@ -51,6 +49,6 @@ export function useExpiringProductsMetrics() {
     }, [fetchMetrics]);
 
     return {
-        data, loading, error, warnings, errors, page, setPage, reload: fetchMetrics,
+        data, loading, error, warnings, errors, page, setPage, reload: fetchMetrics
     };
 }

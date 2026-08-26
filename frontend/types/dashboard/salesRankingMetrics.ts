@@ -1,8 +1,15 @@
+export interface SalesRankingProductUnit {
+    productUnitId: number;
+    unit: string;
+    unidadesVendidas: number;
+}
+
 export interface SalesRankingProduct {
     posicion: number;
     producto: string;
     unidadesVendidas: number;
     ingresos: number;
+    unidades: SalesRankingProductUnit[];
 }
 
 

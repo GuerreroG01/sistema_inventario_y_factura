@@ -19,11 +19,11 @@ const SaleDetails = sequelize.define("SaleDetails", {
         onDelete: "CASCADE",
     },
 
-    product_id: {
+    product_unit_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: "Products",//Cambio aqui para render
+            model: "ProductsUnits",
             key: "id",
         },
         onUpdate: "CASCADE",
@@ -54,15 +54,15 @@ const SaleDetails = sequelize.define("SaleDetails", {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    business_id:{
-        type:DataTypes.INTEGER,
-        allowNull:false,
-        references:{
-            model:"Business",
-            key:"id"
+    business_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: "Business",
+            key: "id",
         },
-        onUpdate:"CASCADE",
-        onDelete:"RESTRICT"
+        onUpdate: "CASCADE",
+        onDelete: "RESTRICT",
     }
 }, {
     tableName:"SaleDetails",

@@ -18,3 +18,21 @@
     --foreground: #ededed;
   }
 }
+.units-detail-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 400ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 250ms ease;
+}
+
+.units-detail-wrapper--open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.units-detail-content {
+  min-height: 0;
+  overflow: hidden;
+}

@@ -2,6 +2,7 @@ import { Op, QueryTypes } from "sequelize";
 import db from "../config/database.js";
 import Sales from "../models/Sales.js";
 import Product from "../models/Products.js";
+import ProductUnit from "../models/ProductsUnits.js";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
 import { getMonthDateRange} from "../utils/getMonthDateRange.js"
 
@@ -44,7 +45,6 @@ export const getDashboardMetrics = async (businessId) => {
                                 [Op.gte]: startOfDay,
                                 [Op.lt]: endOfDay,
                             },
-
                             status: {
                                 [Op.in]: ["COMPLETED", "PAID"],
                             },
@@ -58,7 +58,6 @@ export const getDashboardMetrics = async (businessId) => {
                                 [Op.gte]: startOfMonth,
                                 [Op.lt]: startOfNextMonth,
                             },
-
                             status: {
                                 [Op.in]: ["COMPLETED", "PAID"],
                             },
@@ -69,17 +68,11 @@ export const getDashboardMetrics = async (businessId) => {
                     response.ventasMes = Number(ventasMes ?? 0);
 
                     if (ventasHoy === null && ventasMes === null) {
-                        warnings.push("No se encontraron registros de ventas");
+                        warnings.push( "No se encontraron registros de ventas" );
                     }
                 } catch (error) {
-                    console.error(
-                        "[getDashboardMetrics] Error ventas",
-                        error
-                    );
-                    errors.push({
-                        module: "ventas",
-                        message: error.message,
-                    });
+                    console.error( "[getDashboardMetrics] Error ventas", error );
+                    errors.push({ module: "ventas", message: error.message });
                 }
                 try {
                     response.productosActivos = await Product.count({
@@ -88,28 +81,35 @@ export const getDashboardMetrics = async (businessId) => {
                             active: true,
                         },
                     });
+
                     if (response.productosActivos === 0) {
-                        warnings.push("No existen productos activos");
+                        warnings.push( "No existen productos activos" );
                     }
                 } catch (error) {
-                    console.error(
-                        "[getDashboardMetrics] Error productos activos",
-                        error
-                    );
-                    errors.push({
-                        module: "productosActivos",
-                        message: error.message,
-                    });
+                    console.error( "[getDashboardMetrics] Error productos activos", error );
+                    errors.push({ module: "productosActivos", message: error.message });
                 }
                 try {
-                    response.stockBajo = await Product.count({
+                    response.stockBajo = await ProductUnit.count({
                         where: {
-                            business_id: businessId,
-                            active: true,
                             stock: {
                                 [Op.lte]: 5,
                             },
                         },
+
+                        include: [
+                            {
+                                model: Product,
+                                as: "product",
+                                attributes: [],
+                                required: true,
+
+                                where: {
+                                    business_id: businessId,
+                                    active: true,
+                                },
+                            },
+                        ],
                     });
 
                 } catch (error) {
@@ -129,17 +129,23 @@ export const getDashboardMetrics = async (businessId) => {
                         SELECT
                             COALESCE(
                                 SUM(
-                                    (sd.precio_unitario - p.cost)
-                                    * sd.cantidad
+                                    (
+                                        sd.precio_unitario
+                                        - COALESCE(pu.cost, 0)
+                                    ) * sd.cantidad
                                 ),
                                 0
                             ) AS ganancia
+
                         FROM "SaleDetails" sd
+                        INNER JOIN "ProductsUnits" pu
+                            ON pu.id = sd.product_unit_id
                         INNER JOIN "Products" p
-                            ON p.id = sd.product_id
+                            ON p.id = pu.product_id
                         INNER JOIN "Sales" s
                             ON s.id = sd.sale_id
                         WHERE s.business_id = :businessId
+                        AND p.business_id = :businessId
                         AND s.status IN ('PAID', 'COMPLETED')
                         AND s."paidAt" >= :startOfMonth
                         AND s."paidAt" < :startOfNextMonth
@@ -150,19 +156,16 @@ export const getDashboardMetrics = async (businessId) => {
                                 startOfMonth,
                                 startOfNextMonth,
                             },
+
                             type: QueryTypes.SELECT,
                         }
                     );
-
-                    response.ganancia = Number(
-                        result?.[0]?.ganancia ?? 0
-                    );
+                    response.ganancia = Number( result?.[0]?.ganancia ?? 0 );
 
                     if (response.ganancia === 0) {
-                        warnings.push(
-                            "No se encontraron datos para calcular la ganancia"
-                        );
+                        warnings.push( "No se encontraron datos para calcular la ganancia" );
                     }
+
                 } catch (error) {
                     console.error(
                         "[getDashboardMetrics] Error ganancia",
@@ -182,10 +185,7 @@ export const getDashboardMetrics = async (businessId) => {
                     errors,
                 };
             } catch (error) {
-                console.error(
-                    "[getDashboardMetrics]: Error general",
-                    error
-                );
+                console.error( "[getDashboardMetrics]: Error general", error );
 
                 return {
                     success: false,
@@ -436,43 +436,100 @@ export const getSalesRankingMetrics = async (businessId) => {
                 const productos = await db.query(
                     `
                     SELECT
+                        p.id AS "productId",
                         p.name AS producto,
-
                         COALESCE(SUM(sd.cantidad), 0) AS "unidadesVendidas",
                         COALESCE(SUM(sd.subtotal), 0) AS ingresos
-
                     FROM "SaleDetails" sd
+                    INNER JOIN "ProductsUnits" pu
+                        ON pu.id = sd.product_unit_id
                     INNER JOIN "Products" p
-                        ON p.id = sd.product_id
+                        ON p.id = pu.product_id
                     INNER JOIN "Sales" s
                         ON s.id = sd.sale_id
-                    WHERE s.business_id = :businessId 
-                    AND s.status = 'COMPLETED'
+                    WHERE s.business_id = :businessId
+                      AND s.status = 'COMPLETED'
                     GROUP BY p.id, p.name
                     ORDER BY "unidadesVendidas" DESC
                     LIMIT 5
                     `,
-                    { 
+                    {
                         replacements: {
-                            businessId
+                            businessId,
                         },
-                        type: QueryTypes.SELECT 
+                        type: QueryTypes.SELECT,
                     }
                 );
-
-                response.topProductos = productos.map((item, index) => ({
-                    posicion: index + 1,
-                    producto: item.producto,
-                    unidadesVendidas: Number(item.unidadesVendidas),
-                    ingresos: Number(Number(item.ingresos).toFixed(2)),
-                }));
+                if (productos.length > 0) {
+                    const productIds = productos.map(
+                        (item) => item.productId
+                    );
+                    const unidades = await db.query(
+                        `
+                        SELECT
+                            p.id AS "productId",
+                            pu.id AS "productUnitId",
+                            pu.unit AS unit,
+                            COALESCE(SUM(sd.cantidad), 0) AS "unidadesVendidas"
+                        FROM "SaleDetails" sd
+                        INNER JOIN "ProductsUnits" pu
+                            ON pu.id = sd.product_unit_id
+                        INNER JOIN "Products" p
+                            ON p.id = pu.product_id
+                        INNER JOIN "Sales" s
+                            ON s.id = sd.sale_id
+                        WHERE s.business_id = :businessId
+                          AND s.status = 'COMPLETED'
+                          AND p.id IN (:productIds)
+                        GROUP BY
+                            p.id,
+                            pu.id,
+                            pu.unit
+                        HAVING SUM(sd.cantidad) > 0
+                        ORDER BY
+                            p.id,
+                            "unidadesVendidas" DESC
+                        `,
+                        {
+                            replacements: {
+                                businessId,
+                                productIds,
+                            },
+                            type: QueryTypes.SELECT,
+                        }
+                    );
+                    const unidadesPorProducto = {};
+                    for (const item of unidades) {
+                        if (!unidadesPorProducto[item.productId]) {
+                            unidadesPorProducto[item.productId] = [];
+                        }
+                        unidadesPorProducto[item.productId].push({
+                            productUnitId: item.productUnitId,
+                            unit: item.unit,
+                            unidadesVendidas: Number(
+                                item.unidadesVendidas
+                            ),
+                        });
+                    }
+                    response.topProductos = productos.map((item, index) => ({
+                        posicion: index + 1,
+                        producto: item.producto,
+                        unidadesVendidas: Number(
+                            item.unidadesVendidas
+                        ),
+                        ingresos: Number(
+                            Number(item.ingresos).toFixed(2)
+                        ),
+                        unidades:
+                            unidadesPorProducto[item.productId] || [],
+                    }));
+                }
             } catch (error) {
                 errors.push({
                     module: "topProductos",
                     message: error.message,
                 });
             }
-
             try {
                 const categorias = await db.query(
                     `
@@ -480,28 +537,32 @@ export const getSalesRankingMetrics = async (businessId) => {
                         COALESCE(p.category, 'Sin categoría') AS categoria,
                         COALESCE(SUM(sd.subtotal), 0) AS ventas
                     FROM "SaleDetails" sd
+                    INNER JOIN "ProductsUnits" pu
+                        ON pu.id = sd.product_unit_id
                     INNER JOIN "Products" p
-                        ON p.id = sd.product_id
+                        ON p.id = pu.product_id
                     INNER JOIN "Sales" s
                         ON s.id = sd.sale_id
-                    WHERE s.business_id = :businessId 
-                    AND s.status = 'COMPLETED'
+                    WHERE s.business_id = :businessId
+                      AND s.status = 'COMPLETED'
                     GROUP BY p.category
                     ORDER BY ventas DESC
                     LIMIT 5
                     `,
-                    { 
+                    {
                         replacements: {
-                            businessId
+                            businessId,
                         },
-                        type: QueryTypes.SELECT 
+                        type: QueryTypes.SELECT,
                     }
                 );
 
                 response.topCategorias = categorias.map((item, index) => ({
                     posicion: index + 1,
                     categoria: item.categoria,
-                    ventas: Number(Number(item.ventas).toFixed(2)),
+                    ventas: Number(
+                        Number(item.ventas).toFixed(2)
+                    ),
                 }));
             } catch (error) {
                 errors.push({
@@ -525,9 +586,8 @@ export const getSalesRankingMetrics = async (businessId) => {
                 warnings,
                 errors,
             };
-
         } catch (error) {
-            console.error("[getSalesRankingMetrics] Error ranking ventas", error);
+            console.error( "[getSalesRankingMetrics] Error ranking ventas",error );
 
             return {
                 success: false,
@@ -541,188 +601,265 @@ export const getSalesRankingMetrics = async (businessId) => {
                 ],
             };
         }
-
     }, CacheTTL.ONE_HOUR, businessId);
 };
 export const getInventoryAlertsMetrics = async (businessId) => {
     const key = CacheKeys.INVENTORYALERTS;
 
-    return cacheService.remember(key, async () => {
-        const warnings = [];
-        const errors = [];
+    return cacheService.remember(
+        key,
+        async () => {
+            const warnings = [];
+            const errors = [];
 
-        const response = {
-            stockCritico: 0,
-            agotados: 0,
-        };
+            const response = {
+                stockCritico: 0,
+                agotados: 0,
+            };
 
-        try {
             try {
-                response.stockCritico = await Product.count({
+                try {
+                    response.stockCritico = await ProductUnit.count({
+                        include: [
+                            {
+                                model: Product,
+                                as: "product",
+                                required: true,
+                                where: {
+                                    business_id: businessId,
+                                    active: true,
+                                    type_item: "Producto",
+                                },
+                            },
+                        ],
+                        where: {
+                            active: true,
+                            stock: {
+                                [Op.gt]: 0,
+                                [Op.lte]: 10,
+                            },
+                        },
+                    });
+                } catch (error) {
+                    errors.push({
+                        module: "stockCritico",
+                        message: error.message,
+                    });
+                }
+                try {
+                    response.agotados = await ProductUnit.count({
+                        include: [
+                            {
+                                model: Product,
+                                as: "product",
+                                required: true,
+                                where: {
+                                    business_id: businessId,
+                                    active: true,
+                                    type_item: "Producto",
+                                },
+                            },
+                        ],
+                        where: {
+                            active: true,
+                            stock: 0,
+                        },
+                    });
+                } catch (error) {
+                    errors.push({
+                        module: "agotados",
+                        message: error.message,
+                    });
+                }
+                if ( response.stockCritico === 0 && response.agotados === 0 ) {
+                    warnings.push( "No existen alertas de inventario" );
+                }
+
+                return {
+                    success: errors.length === 0,
+                    data: response,
+                    warnings,
+                    errors,
+                };
+
+            } catch (error) {
+                console.error("[getInventoryAlertsMetrics] Error alertas inventario",error);
+
+                return {
+                    success: false,
+                    data: response,
+                    warnings,
+                    errors: [
+                        {
+                            module: "inventario",
+                            message: error.message,
+                        },
+                    ],
+                };
+            }
+
+        },
+        CacheTTL.ONE_HOUR, businessId
+    );
+};
+
+export const getExpiringProductsMetrics = async (
+    businessId,
+    page = 1,
+    limit = 10
+) => {
+    const key = `${CacheKeys.EXPIRINGPRODUCTS}:${businessId}:${page}:${limit}`;
+    return cacheService.remember(
+        key,
+        async () => {
+            const warnings = [];
+            const errors = [];
+
+            const response = {
+                products: [],
+                pagination: {
+                    page,
+                    limit,
+                    total: 0,
+                    totalPages: 0,
+                },
+            };
+
+            try {
+                const products = await ProductUnit.findAll({
                     where: {
-                        business_id:businessId,
                         active: true,
-                        type_item: "Producto",
                         stock: {
-                            [Op.gt]: 0,
-                            [Op.lte]: 5,
+                            [Op.ne]: 0,
+                        },
+                        expirationDate: {
+                            [Op.lte]: db.literal(
+                                "CURRENT_DATE + INTERVAL '30 days'"
+                            ),
+                            [Op.gte]: db.literal("CURRENT_DATE"),
                         },
                     },
+
+                    attributes: [
+                        "id",
+                        "product_id",
+                        "unit",
+                        "stock",
+                        "expirationDate",
+                    ],
+
+                    include: [
+                        {
+                            model: Product,
+                            as: "product",
+                            attributes: [
+                                "id",
+                                "name",
+                                "category",
+                            ],
+                            where: {
+                                business_id: businessId,
+                                active: true,
+                                type_item: "Producto",
+                            },
+                            required: true,
+                        },
+                    ],
+
+                    order: [["expirationDate", "ASC"]],
                 });
+
+                const groupedProducts = new Map();
+
+                for (const productUnit of products) {
+                    const productId = productUnit.product_id;
+
+                    if (!groupedProducts.has(productId)) {
+                        groupedProducts.set(productId, {
+                            id: productUnit.product?.id,
+                            product_id: productId,
+                            nombre: productUnit.product?.name,
+                            categoria:
+                                productUnit.product?.category ??
+                                "Sin categoría",
+                            fechaVencimiento:
+                                productUnit.expirationDate,
+                            unidades: [],
+                        });
+                    }
+
+                    const groupedProduct =
+                        groupedProducts.get(productId);
+
+                    groupedProduct.unidades.push({
+                        id: productUnit.id,
+                        unidad: productUnit.unit,
+                        stock: productUnit.stock,
+                        fechaVencimiento:
+                            productUnit.expirationDate,
+                    });
+
+                    if ( new Date(productUnit.expirationDate) < new Date(groupedProduct.fechaVencimiento) ) {
+                        groupedProduct.fechaVencimiento = productUnit.expirationDate;
+                    }
+                }
+
+                const groupedArray = Array.from(
+                    groupedProducts.values()
+                );
+
+                groupedArray.sort(
+                    (a, b) =>
+                        new Date(a.fechaVencimiento) -
+                        new Date(b.fechaVencimiento)
+                );
+                const total = groupedArray.length;
+                const offset = (page - 1) * limit;
+                const paginatedProducts = groupedArray.slice(
+                    offset,
+                    offset + limit
+                );
+                response.pagination.total = total;
+                response.pagination.totalPages = Math.ceil(
+                    total / limit
+                );
+                response.products = paginatedProducts;
+
+                if (paginatedProducts.length === 0) {
+                    warnings.push(
+                        "No existen productos próximos a vencer"
+                    );
+                }
+
+                return {
+                    success: true,
+                    data: response,
+                    warnings,
+                    errors,
+                };
             } catch (error) {
-                errors.push({
-                    module: "stockCritico",
-                    message: error.message,
-                });
+                console.error( "[getExpiringProductsMetrics] Error:", error );
+                console.error(
+                    "[getExpiringProductsMetrics] Error completo:",
+                    error?.original ||
+                        error?.parent ||
+                        error
+                );
+
+                return {
+                    success: false,
+                    data: response,
+                    warnings,
+                    errors: [
+                        {
+                            module: "productosVencimiento",
+                            message: error.message,
+                        },
+                    ],
+                };
             }
-
-            try {
-                response.agotados = await Product.count({
-                    where: {
-                        business_id:businessId,
-                        active: true,
-                        type_item: "Producto",
-                        stock: 0,
-                    },
-                });
-            } catch (error) {
-                errors.push({
-                    module: "agotados",
-                    message: error.message,
-                });
-            }
-
-            if (
-                response.stockCritico === 0 &&
-                response.agotados === 0
-            ) {
-                warnings.push("No existen alertas de inventario");
-            }
-
-            return {
-                success: errors.length === 0,
-                data: response,
-                warnings,
-                errors,
-            };
-
-        } catch (error) {
-            console.error("[getInventoryAlertsMetrics] Error alertas inventario", error);
-
-            return {
-                success: false,
-                data: response,
-                warnings,
-                errors: [
-                    {
-                        module: "inventario",
-                        message: error.message,
-                    },
-                ],
-            };
-        }
-
-    }, CacheTTL.ONE_HOUR, businessId);
-};
-export const getExpiringProductsMetrics = async (businessId, page = 1, limit = 10) => {
-    const key = `${CacheKeys.EXPIRINGPRODUCTS}:${page}:${limit}`;
-
-    return cacheService.remember(key, async () => {
-        const warnings = [];
-        const errors = [];
-
-        const response = {
-            products: [],
-            pagination: {
-                page,
-                limit,
-                total: 0,
-                totalPages: 0,
-            },
-        };
-
-        try {
-            const offset = (page - 1) * limit;
-
-            const total = await Product.count({
-                where: {
-                    business_id: businessId,
-                    active: true,
-                    type_item:"Producto",
-                    expirationDate: {
-                        [Op.lte]: db.literal("CURRENT_DATE + INTERVAL '30 days'"),
-                        [Op.gte]: db.literal("CURRENT_DATE"),
-                    },
-                    stock: {
-                        [Op.ne]: 0,
-                    },
-                },
-            });
-
-            response.pagination.total = total;
-            response.pagination.totalPages = Math.ceil(total / limit);
-
-            const products = await Product.findAll({
-                where: {
-                    business_id: businessId,
-                    active: true,
-                    type_item:"Producto",
-                    expirationDate: {
-                        [Op.lte]: db.literal("CURRENT_DATE + INTERVAL '30 days'"),
-                        [Op.gte]: db.literal("CURRENT_DATE"),
-                    },
-                    stock: {
-                        [Op.ne]: 0,
-                    },
-                },
-                attributes: [
-                    "id",
-                    "name",
-                    "barcode",
-                    "category",
-                    "stock",
-                    "expirationDate",
-                ],
-                order: [["expirationDate", "ASC"]],
-                limit,
-                offset,
-            });
-
-            response.products = products.map(product => ({
-                id: product.id,
-                nombre: product.name,
-                codigo: product.barcode,
-                categoria: product.category,
-                stock: product.stock,
-                fechaVencimiento: product.expirationDate,
-            }));
-
-            if (products.length === 0) {
-                warnings.push("No existen productos próximos a vencer");
-            }
-
-            return {
-                success: errors.length === 0,
-                data: response,
-                warnings,
-                errors,
-            };
-
-        } catch (error) {
-            console.error("[getExpiringProductsMetrics] Error productos próximos a vencer", error);
-
-            return {
-                success: false,
-                data: response,
-                warnings,
-                errors: [
-                    {
-                        module: "productosVencimiento",
-                        message: error.message,
-                    },
-                ],
-            };
-        }
-
-    }, CacheTTL.ONE_HOUR, businessId);
+        },
+        CacheTTL.ONE_HOUR,
+        businessId
+    );
 };

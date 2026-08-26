@@ -1,10 +1,17 @@
-export interface ExpiringProduct {
+export interface ExpiringProductUnit {
     id: number;
-    nombre: string;
-    codigo: string | null;
-    categoria: string | null;
+    unidad: string;
     stock: number;
     fechaVencimiento: string;
+}
+
+export interface ExpiringProduct {
+    id: number;
+    product_id: number;
+    nombre: string;
+    categoria: string | null;
+    fechaVencimiento: string;
+    unidades: ExpiringProductUnit[];
 }
 
 export interface Pagination {
