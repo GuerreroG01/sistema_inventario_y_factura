@@ -151,7 +151,7 @@ Business.hasMany(Employee, {
     as: "employees"
 });
 
-Employee.belongsTo(Business, {
+/*Employee.belongsTo(Business, {
     foreignKey: "business_id",
     as: "business"
 });
@@ -174,7 +174,7 @@ Employee.hasMany(EmployeeSalaryHistory, {
 EmployeeSalaryHistory.belongsTo(Employee, {
     foreignKey: "employee_id",
     as: "employee"
-});
+});*/
 
 Product.hasMany(ProductUnit, {
     foreignKey: "product_id",
