@@ -1,21 +1,22 @@
 "use client";
+
 import { useCreateSale } from "../hooks/useCretateSale";
 import ModalSuccess from "./ModalSuccess";
 import { BanknoteArrowUp as Transference, Receipt as Cash, Wallet as Credit, CreditCard as Card } from "lucide-react";
-
+import ProductSelector from "./ProductSelector";
+import SaleItems from "./SaleItems";
 
 export default function CreateSaleForm() {
     const { category,  setCategory, setClientId,  items,
-        searchProduct, productResults, searchLoading, setSearchProduct, addProductDirect,
+        searchProduct, productResults, searchLoading, setSearchProduct, addProductUnit,
         removeItem, updateItemQuantity, now, total, loading, submit, successOpen, setSuccessOpen,
-        searchCustomer, setSearchCustomer, customerResults, setCustomerResults, searchLoadingCus,
-        selectCustomer, selectedCustomer, setSelectedCustomer, payment_type, setPaymentType, isPromotionActive
+        searchCustomer, setSearchCustomer, customerResults, searchLoadingCus,
+        selectCustomer, selectedCustomer, setSelectedCustomer, payment_type, setPaymentType, isPromotionActive,
     } = useCreateSale();
-
     return (
-    <div className="min-h-screen bg-slate-100 p-6 flex justify-center">
+    <div className="min-h-screen bg-slate-100 p-2 flex justify-center">
         <div className="
-            w-full max-w-6xl
+            w-full max-w-8xl
             bg-white
             rounded-3xl
             shadow-2xl
@@ -164,206 +165,25 @@ export default function CreateSaleForm() {
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        <h2 className="text-sm font-semibold text-slate-700">
-                            Agregar productos
-                        </h2>
-
-                        <div className="relative">
-                            <input
-                                value={searchProduct}
-                                onChange={e => setSearchProduct(e.target.value)}
-                                placeholder="Buscar producto..."
-                                className="input-premium w-full pr-10"
-                            />
-
-                            {searchLoading && (
-                                <div className="
-                                    absolute 
-                                    right-3 
-                                    top-1/2 
-                                    -translate-y-1/2
-                                ">
-                                    <div className="
-                                        h-4 
-                                        w-4 
-                                        animate-spin 
-                                        rounded-full 
-                                        border-2 
-                                        border-slate-300 
-                                        border-t-indigo-600
-                                    " />
-                                </div>
-                            )}
-
-                            {productResults.length > 0 && (
-                                <div className="
-                                    absolute z-30 w-full mt-2
-                                    bg-white border border-slate-200
-                                    rounded-2xl shadow-xl
-                                    overflow-hidden
-                                ">
-                                    {productResults.map(p => (
-                                        <div
-                                            key={p.id}
-                                            onClick={() => addProductDirect(p)}
-                                            className="
-                                                px-4 py-2
-                                                cursor-pointer
-                                                hover:bg-indigo-50
-                                                transition
-                                                border-b last:border-none
-                                            "
-                                        >
-                                            <p className="text-sm font-semibold text-slate-900">
-                                                {p.name}
-                                            </p>
-
-                                            <p className="text-xs text-slate-500">
-                                                {isPromotionActive(p) ? (
-                                                    <>
-                                                        <span className="font-bold text-emerald-600">
-                                                            C${Number(p.promotionPrice).toFixed(2)}
-                                                        </span>
-
-                                                        <span className="ml-1 text-slate-400 line-through">
-                                                            C${Number(p.price).toFixed(2)}
-                                                        </span>
-
-                                                        <span className="ml-2 font-semibold text-emerald-600">
-                                                            Promoción
-                                                        </span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span>
-                                                            C${Number(p.price).toFixed(2)}
-                                                        </span>
-                                                    </>
-                                                )}
-
-                                                {" · Stock "}
-                                                {p.stock}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="md:col-span-2 space-y-6">
-
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">
-                            {items.length} productos
-                        </span>
-                    </div>
-
-                    <div className="
-                        space-y-3
-                        max-h-[420px]
-                        overflow-y-auto
-                        pr-2
-                    ">
-                        {items.length === 0 && (
-                            <div className="
-                                border border-dashed
-                                rounded-2xl
-                                bg-white
-                                py-5
-                                text-center
-                                text-slate-400
-                                text-sm
-                            ">
-                                Aún no hay productos en la venta
-                            </div>
-                        )}
-
-                        {items.map((i, index) => (
-                            <div
-                                key={index}
-                                className="
-                                    flex items-center justify-between
-                                    bg-white
-                                    border border-slate-200
-                                    rounded-2xl
-                                    px-4 py-3
-                                    shadow-sm
-                                    hover:shadow-md
-                                    transition
-                                "
-                            >
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-900">
-                                        {i.descripcion}
-                                    </p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={i.cantidad}
-                                            onChange={(e) =>
-                                                updateItemQuantity(
-                                                    i.product_id,
-                                                    Number(e.target.value)
-                                                )
-                                            }
-                                            className="
-                                                w-16
-                                                border
-                                                border-slate-300
-                                                rounded-lg
-                                                px-2
-                                                py-1
-                                                text-xs
-                                            "
-                                        />
-                                        <span className="text-xs text-slate-500">
-                                            × C${i.precio_unitario}
-                                        </span>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => removeItem(index)}
-                                    className="
-                                        text-xs font-medium
-                                        text-red-500 hover:text-red-600
-                                    "
-                                >
-                                    Eliminar
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="
-                        flex items-center justify-end
-                        pt-6 border-t border-slate-200
-                    ">
-                        <button
-                            onClick={submit}
-                            disabled={loading}
-                            className="
-                                bg-gradient-to-r from-indigo-600 to-indigo-700
-                                hover:from-indigo-700 hover:to-indigo-800
-                                text-white
-                                px-6 py-3
-                                rounded-2xl
-                                font-semibold
-                                shadow-lg
-                                transition
-                            "
-                        >
-                            {loading ? "Procesando..." : "Vender"}
-                        </button>
-                    </div>
-                    <ModalSuccess
-                        open={successOpen}
-                        onClose={() => setSuccessOpen(false)}
+                    <ProductSelector
+                        searchProduct={searchProduct}
+                        setSearchProduct={setSearchProduct}
+                        productResults={productResults}
+                        searchLoading={searchLoading}
+                        isPromotionActive={isPromotionActive}
+                        onSelectUnit={addProductUnit}
                     />
                 </div>
+
+                <SaleItems
+                    items={items}
+                    updateItemQuantity={updateItemQuantity}
+                    removeItem={removeItem}
+                    submit={submit}
+                    loading={loading}
+                    successOpen={successOpen}
+                    setSuccessOpen={setSuccessOpen}
+                />
             </div>
         </div>
     </div>

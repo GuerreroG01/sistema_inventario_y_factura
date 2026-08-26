@@ -15,7 +15,7 @@ export interface Sale {
 export interface SaleDetail {
     id?: number;
     sale_id?: number;
-    product_id: number;
+    product_unit_id: number;
     descripcion?: string | null;
     cantidad: number;
     precio_unitario: number;
@@ -24,7 +24,7 @@ export interface SaleDetail {
 }
 
 export interface CreateSaleItem {
-    product_id: number;
+    product_unit_id: number;
     descripcion?: string;
     cantidad: number;
     precio_unitario: number;

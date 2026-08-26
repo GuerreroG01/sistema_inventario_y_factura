@@ -11,6 +11,7 @@ import { cacheService, CacheKeys } from "../services/cache/index.js";
 import Customer from "../models/Customers.js";
 import { updateCustomer } from "../services/CustomerService.js";
 import { resetCustomerMarketingAfterPurchase } from "../services/MarketingService.js";
+import ProductUnit from "../models/ProductsUnits.js";
 
 export const getSales = async (req, res) => {
     try {
@@ -98,13 +99,41 @@ export const getSaleById = async (req, res) => {
     }
 };
 
+const isPromotionActive = (productUnit) => {
+    const now = new Date();
+
+    const promotionStart = productUnit.promotionStart
+        ? new Date(productUnit.promotionStart)
+        : null;
+
+    const promotionEnd = productUnit.promotionEnd
+        ? new Date(productUnit.promotionEnd)
+        : null;
+
+    if (promotionEnd) {
+        promotionEnd.setUTCDate(
+            promotionEnd.getUTCDate() + 1
+        );
+    }
+
+    return (
+        productUnit.hasPromotion === true &&
+        productUnit.promotionPrice != null &&
+        Number(productUnit.promotionQuantity || 0) > 0 &&
+        (!promotionStart || promotionStart <= now) &&
+        (!promotionEnd || now < promotionEnd)
+    );
+};
+
 export const createSale = async (req, res) => {
     const t = await sequelize.transaction();
 
     try {
-        let { fecha, category, client_id, payment_type, items } = req.body;
+        const { fecha, category, client_id, payment_type, items } = req.body;
 
         if (!fecha) {
+            await t.rollback();
+
             return res.status(400).json({
                 error: "validation_error",
                 message: "El campo 'fecha' es obligatorio."
@@ -112,126 +141,292 @@ export const createSale = async (req, res) => {
         }
 
         if (!Array.isArray(items) || items.length === 0) {
+            await t.rollback();
+
             return res.status(400).json({
                 error: "validation_error",
                 message: "Debes enviar al menos un item en la venta."
             });
         }
 
-        const sale = await Sales.create({
-            fecha: normalizeDate(fecha),
-            total: 0,
-            category,
-            client_id,
-            payment_type,
-            created_by: req.user.id,
-            updated_by: req.user.id,
-            business_id: req.user.business_id
-        }, { transaction: t });
-
+        const sale = await Sales.create(
+            {
+                fecha: normalizeDate(fecha),
+                total: 0,
+                category,
+                client_id,
+                payment_type,
+                created_by: req.user.id,
+                updated_by: req.user.id,
+                business_id: req.user.business_id
+            },
+            {
+                transaction: t
+            }
+        );
 
         let total = 0;
-
         const details = [];
 
         for (const item of items) {
 
-            const product = await Product.findOne({
+            const productUnit = await ProductUnit.findOne({
                 where: {
-                    id: item.product_id,
-                    business_id: req.user.business_id
+                    id: item.product_unit_id
                 },
+                include: [
+                    {
+                        model: Product,
+                        as: "product",
+                        attributes: [
+                            "id",
+                            "name",
+                            "type_item"
+                        ],
+                        where: {
+                            business_id: req.user.business_id
+                        }
+                    }
+                ],
                 transaction: t
             });
 
-            if (!product) {
-                throw new Error(`Producto no encontrado: ${item.product_id}`);
+            if (!productUnit) {
+                throw new Error(
+                    `Unidad de producto no encontrada: ${item.product_unit_id}`
+                );
             }
 
-            const subtotal = item.cantidad * item.precio_unitario;
-            total += subtotal;
+            const product = productUnit.product;
             const isService = product.type_item === "Servicio";
-            if (!isService) {
-                if (product.stock < item.cantidad) {
-                    throw new Error(`Stock insuficiente para el producto ${product.name}`);
+            const quantity = Number(item.cantidad);
+
+            if (!Number.isFinite(quantity) || quantity <= 0) {
+                throw new Error(
+                    `Cantidad inválida para ${product.name}: ${item.cantidad}`
+                );
+            }
+            if (isService) {
+                const servicePrice = Number(productUnit.price);
+                if ( !Number.isFinite(servicePrice) || servicePrice < 0 ) {
+                    throw new Error(
+                        `Precio inválido para el servicio ${product.name}`
+                    );
                 }
 
-                await product.update({
-                    stock: product.stock - item.cantidad
-                }, { transaction: t });
+                const subtotal = quantity * servicePrice;
+                total += subtotal;
 
-                await InventoryMovService.create({
-                    product_id: product.id,
-                    tipo: "salida",
-                    cantidad: item.cantidad,
-                    referencia: sale.id,
-                    observacion: null,
+                details.push({
+                    sale_id: sale.id,
+                    product_unit_id: productUnit.id,
+                    descripcion:
+                        item.descripcion ||
+                        `${product.name} - ${productUnit.unit}`,
+                    cantidad: quantity,
+                    precio_unitario: servicePrice,
+                    subtotal,
+                    tipo_item: product.type_item,
                     business_id: req.user.business_id
-                }, t);
+                });
+
+                continue;
             }
+
+            const stock = Number(productUnit.stock);
+            const promotionQuantity = Number( productUnit.promotionQuantity || 0 );
+
+            if ( !Number.isFinite(stock) || stock < 0 ) {
+                throw new Error(
+                    `Stock inválido para ${product.name} - ${productUnit.unit}`
+                );
+            }
+
+            if ( !Number.isFinite(promotionQuantity) || promotionQuantity < 0 ) {
+                throw new Error(
+                    `Stock promocional inválido para ${product.name} - ${productUnit.unit}`
+                );
+            }
+
+            const promotionActive =
+                isPromotionActive(productUnit);
+
+            const availablePromotionStock =
+                promotionActive
+                    ? promotionQuantity
+                    : 0;
+
+            const totalAvailableStock = availablePromotionStock + stock;
+
+            if (totalAvailableStock < quantity) {
+                throw new Error(
+                    `Stock insuficiente para ${product.name} - ${productUnit.unit}. ` +
+                    `Disponible: ${totalAvailableStock}, solicitado: ${quantity}`
+                );
+            }
+            const normalPrice = Number(productUnit.price);
+
+            if ( !Number.isFinite(normalPrice) || normalPrice < 0 ) {
+                throw new Error(
+                    `Precio normal inválido para ${product.name} - ${productUnit.unit}`
+                );
+            }
+
+            let promotionQuantityUsed = 0;
+            if ( promotionActive && availablePromotionStock > 0 ) {
+                promotionQuantityUsed =
+                    Math.min(
+                        quantity,
+                        availablePromotionStock
+                    );
+            }
+
+            const normalQuantity = quantity - promotionQuantityUsed;
+            let promotionPrice = 0;
+
+            if (promotionQuantityUsed > 0) {
+                promotionPrice = Number(productUnit.promotionPrice);
+                if ( !Number.isFinite(promotionPrice) || promotionPrice < 0 ) {
+                    throw new Error(
+                        `El producto ${product.name} tiene una promoción activa ` +
+                        `pero no tiene un precio promocional válido.`
+                    );
+                }
+            }
+
+            const promotionSubtotal = promotionQuantityUsed * promotionPrice;
+            const normalSubtotal = normalQuantity * normalPrice;
+            const subtotal = promotionSubtotal + normalSubtotal;
+
+            const precioUnitarioReal =
+                quantity > 0
+                    ? subtotal / quantity
+                    : 0;
+
+            if (normalQuantity > 0) {
+                await productUnit.update(
+                    {
+                        stock: stock - normalQuantity
+                    },
+                    {
+                        transaction: t
+                    }
+                );
+            }
+
+            if (promotionQuantityUsed > 0) {
+                await productUnit.update(
+                    {
+                        promotionQuantity: promotionQuantity - promotionQuantityUsed
+                    },
+                    {
+                        transaction: t
+                    }
+                );
+            }
+            await InventoryMovService.create(
+                {
+                    product_unit_id:
+                        productUnit.id,
+                    tipo: "salida",
+                    cantidad: quantity,
+                    referencia: sale.id,
+                    observacion:
+                        promotionQuantityUsed > 0
+                            ? normalQuantity > 0
+                                ? "Venta con promoción"
+                                : "Venta con promoción"
+                            : "Venta",
+
+                    business_id: req.user.business_id
+                },
+                t
+            );
+
+            total += subtotal;
 
             details.push({
                 sale_id: sale.id,
-                product_id: item.product_id,
-                descripcion: item.descripcion || null,
-                cantidad: item.cantidad,
-                precio_unitario: item.precio_unitario,
+                product_unit_id:
+                    productUnit.id,
+                descripcion:
+                    item.descripcion ||
+                    `${product.name} - ${productUnit.unit}`,
+                cantidad: quantity,
+                precio_unitario: precioUnitarioReal,
                 subtotal,
-                tipo_item: item.tipo_item,
+                tipo_item: product.type_item,
                 business_id: req.user.business_id
             });
         }
-
-        await SaleDetail.bulkCreate(details, { transaction: t });
-
-        await sale.update({ total }, { transaction: t });
-        if (payment_type === "CREDIT" && client_id) {
-            const customer = await Customer.findOne({
-                where: {
-                    id: client_id,
-                    business_id: req.user.business_id
-                },
+        await SaleDetail.bulkCreate(
+            details,
+            {
                 transaction: t
-            });
-            if (!customer) {
-                throw new Error("Cliente no encontrado");
             }
+        );
+
+        await sale.update(
+            {
+                total
+            },
+            {
+                transaction: t
+            }
+        );
+        if ( payment_type === "CREDIT" && client_id ) {
+
+            const customer =
+                await Customer.findOne({
+                    where: {
+                        id: client_id,
+                        business_id:
+                            req.user.business_id
+                    },
+                    transaction: t
+                });
+
+            if (!customer) {
+                throw new Error(
+                    "Cliente no encontrado"
+                );
+            }
+
             const newBalance = Number(customer.balance) + Number(total);
-            if (
-                customer.credit_limit > 0 &&
-                newBalance > Number(customer.credit_limit)
-            ) {
+            if ( customer.credit_limit > 0 && newBalance > Number(customer.credit_limit)) {
                 throw new Error(
                     "El cliente supera su límite de crédito"
                 );
             }
 
-            await customer.update({
-                balance: newBalance
-            }, {
-                transaction: t
-            });
+            await customer.update(
+                {
+                    balance: newBalance
+                },
+                {
+                    transaction: t
+                }
+            );
         }
         await t.commit();
+
         cacheService.del(CacheKeys.DASHBOARDCARDS,req.user.business_id);
         cacheService.del(CacheKeys.PROFITABILITY,req.user.business_id);
         cacheService.del(CacheKeys.RANKINGMETRICS,req.user.business_id);
         cacheService.del(CacheKeys.INVENTORYALERTS,req.user.business_id);
         cacheService.del(CacheKeys.PRODUCTSALERTS,req.user.business_id);
         cacheService.delOtherByPrefix(CacheKeys.EXPIRINGPRODUCTS,req.user.business_id);
+
         return res.status(201).json({
             message: "Venta creada correctamente",
             sale,
             total
         });
-        
 
     } catch (error) {
         await t.rollback();
-
-        console.error("CREATE SALE ERROR FULL:", error);
+        console.error( "CREATE SALE ERROR FULL:",error);
         console.error("STACK:", error?.stack);
-
         return res.status(500).json({
             error: "create_sale_error",
             message: error.message,
@@ -421,43 +616,79 @@ export const updateSaleStatus = async (req, res) => {
             });
 
             for (const item of details) {
-                const product = await Product.findOne({
+                const productUnit = await ProductUnit.findOne({
                     where: {
-                        id: item.product_id,
-                        business_id: req.user.business_id
+                        id: item.product_unit_id
                     },
+                    include: [
+                        {
+                            model: Product,
+                            as: "product",
+                            attributes: ["id", "name", "type_item"],
+                            where: {
+                                business_id: req.user.business_id
+                            }
+                        }
+                    ],
                     transaction: t
                 });
 
-                if (!product) {
+                if (!productUnit) {
                     throw new Error(
-                        `Producto no encontrado: ${item.product_id}`
+                        `Unidad de producto no encontrada: ${item.product_unit_id}`
                     );
                 }
 
-                if (product.type_item === "Producto") {
-                    await product.update(
-                        {
-                            stock:
-                                Number(product.stock) +
-                                Number(item.cantidad)
-                        },
-                        {
-                            transaction: t
-                        }
+                const product = productUnit.product;
+
+                if (product.type_item !== "Servicio") {
+
+                    const quantity = Number(item.cantidad);
+
+                    const salePrice = Number(item.precio_unitario);
+                    const promotionPrice = Number(
+                        productUnit.promotionPrice
                     );
 
-                    await InventoryMovService.create(
-                        {
-                            product_id: item.product_id,
-                            tipo: "entrada",
-                            cantidad: item.cantidad,
-                            referencia: sale.id,
-                            observacion: "Cancelación de venta",
-                            business_id: req.user.business_id
-                        },
-                        t
-                    );
+                    const wasPromotion =
+                        productUnit.hasPromotion === true &&
+                        promotionPrice === salePrice;
+
+                    if (wasPromotion) {
+                        await productUnit.update(
+                            {
+                                promotionQuantity:
+                                    Number(productUnit.promotionQuantity || 0) +
+                                    quantity
+                            },
+                            {
+                                transaction: t
+                            }
+                        );
+
+                    } else {
+                        await productUnit.update(
+                            {
+                                stock:
+                                    Number(productUnit.stock) +
+                                    quantity
+                            },
+                            {
+                                transaction: t
+                            }
+                        );
+                    }
+
+                    await InventoryMovService.create({
+                        product_unit_id: productUnit.id,
+                        tipo: "entrada",
+                        cantidad: quantity,
+                        referencia: sale.id,
+                        observacion: wasPromotion
+                            ? "Cancelación de venta promocional"
+                            : "Cancelación de venta",
+                        business_id: req.user.business_id
+                    }, t);
                 }
             }
         }
@@ -475,37 +706,111 @@ export const updateSaleStatus = async (req, res) => {
             });
 
             for (const item of details) {
-                const product = await Product.findOne({
+                const productUnit = await ProductUnit.findOne({
                     where: {
-                        id: item.product_id,
-                        business_id: req.user.business_id
+                        id: item.product_unit_id
                     },
+                    include: [
+                        {
+                            model: Product,
+                            as: "product",
+                            attributes: ["id", "name", "type_item"],
+                            where: {
+                                business_id: req.user.business_id
+                            }
+                        }
+                    ],
                     transaction: t
                 });
 
-                if (!product) {
+                if (!productUnit) {
                     throw new Error(
-                        `Producto no encontrado: ${item.product_id}`
+                        `Unidad de producto no encontrada: ${item.product_unit_id}`
                     );
                 }
 
-                if (product.type_item === "Producto") {
-                    await product.update(
-                        {
-                            stock:
-                                Number(product.stock) -
-                                Number(item.cantidad)
-                        },
-                        {
-                            transaction: t
+                const product = productUnit.product;
+
+                if (product.type_item !== "Servicio") {
+
+                    const cantidadVenta = Number(item.cantidad);
+                    let cantidadRestante = cantidadVenta;
+
+                    const now = new Date();
+
+                    const promotionStart = productUnit.promotionStart
+                        ? new Date(productUnit.promotionStart)
+                        : null;
+
+                    const promotionEnd = productUnit.promotionEnd
+                        ? new Date(productUnit.promotionEnd)
+                        : null;
+
+                    if (promotionEnd) {
+                        promotionEnd.setUTCDate(
+                            promotionEnd.getUTCDate() + 1
+                        );
+                    }
+
+                    const promotionActive =
+                        productUnit.hasPromotion === true &&
+                        productUnit.promotionPrice != null &&
+                        Number(productUnit.promotionQuantity) > 0 &&
+                        (!promotionStart || promotionStart <= now) &&
+                        (!promotionEnd || now < promotionEnd);
+
+                    if (promotionActive) {
+
+                        const promotionAvailable =
+                            Number(productUnit.promotionQuantity);
+
+                        const fromPromotion = Math.min(
+                            cantidadRestante,
+                            promotionAvailable
+                        );
+
+                        if (fromPromotion > 0) {
+                            await productUnit.update(
+                                {
+                                    promotionQuantity:
+                                        promotionAvailable - fromPromotion
+                                },
+                                {
+                                    transaction: t
+                                }
+                            );
+
+                            cantidadRestante -= fromPromotion;
                         }
-                    );
+                    }
+
+                    if (cantidadRestante > 0) {
+
+                        const currentStock =
+                            Number(productUnit.stock);
+
+                        if (currentStock < cantidadRestante) {
+                            throw new Error(
+                                `Stock insuficiente para ${product.name} - ${productUnit.unit}`
+                            );
+                        }
+
+                        await productUnit.update(
+                            {
+                                stock:
+                                    currentStock - cantidadRestante
+                            },
+                            {
+                                transaction: t
+                            }
+                        );
+                    }
 
                     await InventoryMovService.create(
                         {
-                            product_id: item.product_id,
+                            product_unit_id: productUnit.id,
                             tipo: "salida",
-                            cantidad: item.cantidad,
+                            cantidad: cantidadVenta,
                             referencia: sale.id,
                             observacion:
                                 "Reactivación de venta cancelada",
@@ -586,3 +891,7 @@ export const updateSaleStatus = async (req, res) => {
 };
 
 export default { getSales, getSaleById, createSale, getCategories, updateSaleStatus };
+
+/*Aparentemente ya esta todo correcto pero hay que seguir haciendo pruebas y también ver si en la venta respeta el limite
+de stock con los nuevos cambios y ver si también respeta el limite de stock de la cantidad en promoción donde si pasa el limite
+ya deberia pasar al precio normal el producto adicional.*/

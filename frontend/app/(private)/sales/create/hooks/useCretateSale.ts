@@ -5,21 +5,26 @@ import { createSale } from "@/services/salesService";
 import { autocompleteProducts } from "@/services/productService";
 import { getCustomerAutocomplete } from "@/services/customerService";
 import { CustomerAutocomplete } from "@/types/Customer";
+import { Product, ProductUnit } from "@/types/product";
 
 export type SaleItem = {
-    product_id: number;
+    product_unit_id: number;
     descripcion: string;
     cantidad: number;
     precio_unitario: number;
     tipo_item: string;
+    stock_disponible: number;
+    es_promocion: boolean;
 };
 
 const emptyItem: SaleItem = {
-    product_id: 0,
+    product_unit_id: 0,
     descripcion: "",
     cantidad: 1,
     precio_unitario: 0,
-    tipo_item: ""
+    tipo_item: "",
+    stock_disponible: 0,
+    es_promocion: false
 };
 
 export function useCreateSale() {
@@ -34,7 +39,7 @@ export function useCreateSale() {
     const [item, setItem] = useState<SaleItem>(emptyItem);
 
     const [searchProduct, setSearchProduct] = useState("");
-    const [productResults, setProductResults] = useState<any[]>([]);
+    const [productResults, setProductResults] = useState<Product[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const [customerResults, setCustomerResults] = useState<CustomerAutocomplete[]>([]);
     const [searchLoadingCus, setSearchLoadingCus] = useState(false);
@@ -56,15 +61,15 @@ export function useCreateSale() {
         );
     }, []);
     
-    const isPromotionActive = (product: any) => {
+    const isPromotionActive = (productUnit: ProductUnit) => {
         const now = new Date();
 
-        const promotionStart = product.promotionStart
-            ? new Date(product.promotionStart)
+        const promotionStart = productUnit.promotionStart
+            ? new Date(productUnit.promotionStart)
             : null;
 
-        const promotionEnd = product.promotionEnd
-            ? new Date(product.promotionEnd)
+        const promotionEnd = productUnit.promotionEnd
+            ? new Date(productUnit.promotionEnd)
             : null;
 
         if (promotionEnd) {
@@ -72,23 +77,20 @@ export function useCreateSale() {
         }
 
         return (
-            product.hasPromotion === true &&
-            product.promotionPrice != null &&
+            productUnit.hasPromotion === true &&
+            productUnit.promotionPrice != null &&
             (!promotionStart || promotionStart <= now) &&
             (!promotionEnd || now < promotionEnd)
         );
     };
 
     const searchProducts = async (value: string) => {
-
         try {
             const data = await autocompleteProducts({
                 name: value
             });
-            console.log("Datos obtenidos del producto", data);
 
             setProductResults(data);
-
         } catch (error) {
             console.error("Error autocomplete:", error);
         } finally {
@@ -169,21 +171,75 @@ export function useCreateSale() {
 
     }, [searchCustomer, selectedCustomer]);
 
-    const addProductDirect = (product: any) => {
-        const promotionActive = isPromotionActive(product);
-
-        const salePrice = promotionActive
-            ? Number(product.promotionPrice)
-            : Number(product.price);
+    const addProductUnit = (
+        product: Product,
+        productUnit: ProductUnit
+    ) => {
+        const promotionActive = isPromotionActive(productUnit);
 
         setItems(prev => {
-            const existingItem = prev.find(
-                item => item.product_id === product.id
+            // Primero intentamos consumir promoción
+            if (
+                promotionActive &&
+                Number(productUnit.promotionQuantity ?? 0) > 0
+            ) {
+                const promotionStock = Number(
+                    productUnit.promotionQuantity ?? 0
+                );
+
+                const existingPromotion = prev.find(
+                    item =>
+                        item.product_unit_id === productUnit.id &&
+                        item.es_promocion
+                );
+
+                if (existingPromotion) {
+                    if ( existingPromotion.cantidad >= promotionStock ) {
+                    } else {
+                        return prev.map(item =>
+                            item.product_unit_id === productUnit.id &&
+                            item.es_promocion
+                                ? {
+                                    ...item,
+                                    cantidad: item.cantidad + 1
+                                }
+                                : item
+                        );
+                    }
+                } else {
+                    return [
+                        ...prev,
+                        {
+                            product_unit_id: productUnit.id,
+                            descripcion: `${product.name} - ${productUnit.unit}`,
+                            cantidad: 1,
+                            precio_unitario: Number(
+                                productUnit.promotionPrice
+                            ),
+                            tipo_item: product.type_item,
+                            stock_disponible: promotionStock,
+                            es_promocion: true
+                        }
+                    ];
+                }
+            }
+
+            const normalStock = Number(productUnit.stock);
+
+            const existingNormal = prev.find(
+                item =>
+                    item.product_unit_id === productUnit.id &&
+                    !item.es_promocion
             );
 
-            if (existingItem) {
+            if (existingNormal) {
+                if (existingNormal.cantidad >= normalStock) {
+                    return prev;
+                }
+
                 return prev.map(item =>
-                    item.product_id === product.id
+                    item.product_unit_id === productUnit.id &&
+                    !item.es_promocion
                         ? {
                             ...item,
                             cantidad: item.cantidad + 1
@@ -192,14 +248,20 @@ export function useCreateSale() {
                 );
             }
 
+            if (normalStock <= 0) {
+                return prev;
+            }
+
             return [
                 ...prev,
                 {
-                    product_id: product.id,
-                    descripcion: product.name,
+                    product_unit_id: productUnit.id,
+                    descripcion: `${product.name} - ${productUnit.unit}`,
                     cantidad: 1,
-                    precio_unitario: salePrice,
-                    tipo_item: product.category || "",
+                    precio_unitario: Number(productUnit.price),
+                    tipo_item: product.type_item,
+                    stock_disponible: normalStock,
+                    es_promocion: false
                 }
             ];
         });
@@ -207,9 +269,8 @@ export function useCreateSale() {
         setSearchProduct("");
         setProductResults([]);
     };
-
     const addItem = () => {
-        if (!item.product_id) {
+        if (!item.product_unit_id) {
             setMessage("Selecciona un producto");
             return;
         }
@@ -228,21 +289,31 @@ export function useCreateSale() {
     };
 
     const updateItemQuantity = (
-        productId: number,
-        cantidad: number
+        productUnitId: number,
+        cantidad: number,
+        esPromocion: boolean
     ) => {
         setItems(prev =>
-            prev.map(item =>
-                item.product_id === productId
-                    ? {
-                        ...item,
-                        cantidad: cantidad > 0 ? cantidad : 1
-                    }
-                    : item
-            )
+            prev.map(item => {
+                if (
+                    item.product_unit_id !== productUnitId ||
+                    item.es_promocion !== esPromocion
+                ) {
+                    return item;
+                }
+
+                const nuevaCantidad = Math.min(
+                    Math.max(1, cantidad),
+                    item.stock_disponible
+                );
+
+                return {
+                    ...item,
+                    cantidad: nuevaCantidad
+                };
+            })
         );
     };
-
     const updateItem = (field: keyof SaleItem, value: string | number) => {
         setItem(prev => ({
             ...prev,
@@ -286,7 +357,7 @@ export function useCreateSale() {
     return {
         fecha, category, client_id, setCategory, setClientId, items, setItems, item, setItem,
         searchProduct, setSearchProduct, productResults, setProductResults, searchLoading,
-        addProductDirect, addItem, removeItem, updateItemQuantity, updateItem, now,
+        addProductUnit, addItem, removeItem, updateItemQuantity, updateItem, now,
         total, loading, message, submit, successOpen, setSuccessOpen, searchCustomer,
         setSearchCustomer, customerResults, setCustomerResults, searchLoadingCus, selectCustomer,
         selectedCustomer, setSelectedCustomer, payment_type, setPaymentType, isPromotionActive
