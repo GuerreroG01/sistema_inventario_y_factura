@@ -6,7 +6,7 @@ import Sales from "../models/Sales.js";
 class InventoryMovService {
 
     static async create({
-        product_id,
+        product_unit_id,
         tipo,
         cantidad,
         referencia = null,
@@ -15,7 +15,7 @@ class InventoryMovService {
     }, transaction = null) {
 
         const movement = await InventoryMov.create({
-            product_id,
+            product_unit_id,
             tipo,
             cantidad,
             referencia,
@@ -32,7 +32,8 @@ class InventoryMovService {
         page = 1,
         limit = 10,
         startDate,
-        endDate
+        endDate,
+        business_id
     }) {
 
         const offset = (page - 1) * limit;
@@ -60,8 +61,14 @@ class InventoryMovService {
             order: [["fecha", "DESC"]],
             include: [
                 {
-                    model: Product,
-                    as: "product"
+                    model: ProductUnit,
+                    as: "productUnit",
+                    include: [
+                        {
+                            model: Product,
+                            as: "product"
+                        }
+                    ]
                 },
                 {
                     model: Sales,
@@ -81,34 +88,46 @@ class InventoryMovService {
         };
     }
     static async updateStockOnly({
-        product_id,
+        product_unit_id,
         quantity,
         business_id
     }, transaction = null) {
 
-        const product = await Product.findOne({
+        const productUnit = await ProductUnit.findOne({
             where: {
-                id: product_id,
-                business_id
+                id: product_unit_id
             },
+            include: [
+                {
+                    model: Product,
+                    as: "product",
+                    where: {
+                        business_id
+                    }
+                }
+            ],
             transaction
         });
 
-        if (!product) {
-            throw new Error(`Producto no encontrado: ${product_id}`);
+        if (!productUnit) {
+            throw new Error(
+                `Unidad de producto no encontrada: ${product_unit_id}`
+            );
         }
 
-        const newStock = Number(product.stock) + Number(quantity);
+        const newStock = Number(productUnit.stock) + Number(quantity);
 
         if (newStock < 0) {
-            throw new Error(`Stock insuficiente para producto ${product_id}`);
+            throw new Error(
+                `Stock insuficiente para unidad de producto ${product_unit_id}`
+            );
         }
 
-        await product.update({
+        await productUnit.update({
             stock: newStock
         }, { transaction });
 
-        return product;
+        return productUnit;
     }
 }
 

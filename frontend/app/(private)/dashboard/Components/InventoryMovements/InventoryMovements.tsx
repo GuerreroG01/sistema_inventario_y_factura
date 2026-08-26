@@ -103,7 +103,15 @@ export default function InventoryMovements() {
                                 className="border-t border-gray-100 hover:bg-gray-50 transition"
                             >
                                 <td className="px-6 py-4 font-medium text-gray-800">
-                                    {movement.product.name}
+                                    <div className="flex items-center gap-2">
+                                        <span>
+                                            {movement.productUnit.product.name}
+                                        </span>
+
+                                        <span className="px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
+                                            {movement.productUnit.unit}
+                                        </span>
+                                    </div>
                                 </td>
                                 <td className="px-6 py-4">
                                     <span

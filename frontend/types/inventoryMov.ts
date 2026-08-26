@@ -5,9 +5,15 @@ export interface InventoryMovement {
     fecha: string;
     referencia: number | null;
     observacion: string | null;
-    product: {
+    product_unit_id: number;
+    productUnit: {
         id: number;
-        name: string;
+        product_id: number;
+        unit: string;
+        product: {
+            id: number;
+            name: string;
+        };
     };
 }
 

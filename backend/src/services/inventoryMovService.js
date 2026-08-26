@@ -1,32 +1,34 @@
 import Inventory_mov from "../models/Inventory_mov.js";
+import ProductUnit from "../models/ProductsUnits.js";
 import Product from "../models/Products.js";
 import { Op } from "sequelize";
 
 export const getInventoryMovements = async ({
-    page = 1, limit = 10, product, tipo, startDate, endDate, referencia, cantidadMin,
-    cantidadMax } = {}, businessId) => {
+    page = 1, limit = 10, product, tipo, startDate, endDate, referencia, cantidadMin, cantidadMax
+} = {}, businessId) => {
 
     page = Number(page);
     limit = Number(limit);
     const offset = (page - 1) * limit;
-    const where = {business_id: businessId};
-    const productWhere = {business_id: businessId};
 
+    const where = {
+        business_id: businessId
+    };
     if (tipo) {
         where.tipo = tipo;
     }
     if (referencia) {
         where.referencia = referencia;
     }
-    if (cantidadMin || cantidadMax) {
+    if (cantidadMin !== undefined || cantidadMax !== undefined) {
 
         where.cantidad = {};
 
-        if (cantidadMin) {
+        if (cantidadMin !== undefined) {
             where.cantidad[Op.gte] = Number(cantidadMin);
         }
 
-        if (cantidadMax) {
+        if (cantidadMax !== undefined) {
             where.cantidad[Op.lte] = Number(cantidadMax);
         }
     }
@@ -44,12 +46,13 @@ export const getInventoryMovements = async ({
             );
         }
     }
+    const productWhere = {
+        business_id: businessId
+    };
     if (product) {
-
         productWhere.name = {
             [Op.iLike]: `%${product}%`
         };
-
     }
     const { count, rows } = await Inventory_mov.findAndCountAll({
         attributes: [
@@ -58,24 +61,41 @@ export const getInventoryMovements = async ({
             "cantidad",
             "fecha",
             "referencia",
-            "observacion"
+            "observacion",
+            "product_unit_id"
         ],
+
         where,
+
         include: [
             {
-                model: Product,
-                as: "product",
+                model: ProductUnit,
+                as: "productUnit",
                 attributes: [
                     "id",
-                    "name"
+                    "product_id",
+                    "unit"
                 ],
-                where: Object.keys(productWhere).length
-                    ? productWhere
-                    : undefined
+                required: true,
+
+                include: [
+                    {
+                        model: Product,
+                        as: "product",
+                        attributes: [
+                            "id",
+                            "name"
+                        ],
+                        where: productWhere,
+                        required: true
+                    }
+                ]
             }
         ],
+
         limit,
         offset,
+
         order: [
             ["fecha", "DESC"]
         ],
@@ -89,9 +109,7 @@ export const getInventoryMovements = async ({
             total: count,
             page,
             limit,
-            totalPages: Math.ceil(
-                count / limit
-            )
+            totalPages: Math.ceil(count / limit)
         }
     };
 };
