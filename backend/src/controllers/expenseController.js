@@ -2,10 +2,12 @@ import { createExpense, getAllExpenses, getExpenseById, updateExpense, deleteExp
 
 export const create = async (req, res) => {
     try {
+        const { id ,business_id, branch_id } = req.user;
         const expense = await createExpense(
             req.body,
-            req.user?.id,
-            req.user.business_id
+            id,
+            business_id,
+            branch_id
         );
 
         return res.status(201).json({
@@ -22,13 +24,15 @@ export const create = async (req, res) => {
 
 export const getAll = async (req, res) => {
     try {
-
+        const { business_id, branch_id, rol } = req.user;
         const filters = {
             page: req.query.page,
             category: req.query.category,
             from: req.query.from,
             to: req.query.to,
-            businessId: req.user.business_id
+            businessId: business_id,
+            branchId: branch_id,
+            rol
         };
 
         const { data, pagination } = await getAllExpenses(filters);
@@ -40,7 +44,15 @@ export const getAll = async (req, res) => {
         });
 
     } catch (error) {
+        if (error.message === "branch_required") {
+            return res.status(400).json({
+                error: "branch_required",
+                message: "El usuario no tiene una sucursal asociada."
+            });
+        }
+
         return res.status(500).json({
+            error: "internal_error",
             message: error.message
         });
     }
@@ -48,9 +60,10 @@ export const getAll = async (req, res) => {
 
 export const getById = async (req, res) => {
     try {
+        const { business_id, branch_id, rol } = req.user;
         const { id } = req.params;
 
-        const expense = await getExpenseById(id,req.user.business_id);
+        const expense = await getExpenseById(id, business_id, branch_id, rol);
 
         return res.status(200).json({
             message: "Egreso encontrado",
@@ -66,13 +79,16 @@ export const getById = async (req, res) => {
 
 export const update = async (req, res) => {
     try {
+        const { business_id, branch_id, rol } = req.user;
         const { id } = req.params;
 
         const updated = await updateExpense(
             id,
             req.body,
             req.user?.id,
-            req.user.business_id
+            business_id,
+            branch_id,
+            rol
         );
 
         return res.status(200).json({
@@ -89,9 +105,10 @@ export const update = async (req, res) => {
 
 export const deleteValue = async (req, res) => {
     try {
+        const { business_id, branch_id, rol } = req.user;
         const { id } = req.params;
 
-        const result = await deleteExpense(id,req.user.business_id);
+        const result = await deleteExpense(id, business_id, branch_id, rol);
 
         return res.status(200).json(result);
 
@@ -116,7 +133,8 @@ export const getCategories = async (req, res) => {
 };
 export const getCurrentMonthTotal = async (req, res) => {
     try {
-        const total = await getCurrentMonthTotalExpenses(req.user.business_id);
+        const { business_id, branch_id, rol } = req.user;
+        const total = await getCurrentMonthTotalExpenses(business_id, branch_id, rol);
 
         return res.status(200).json({
             message: "Total de egresos del mes actual",

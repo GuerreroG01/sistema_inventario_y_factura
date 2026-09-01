@@ -1,5 +1,6 @@
 import { Expense } from "@/types/Expense";
 import { Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
 
 interface Props {
     expenses: Expense[];
@@ -20,6 +21,8 @@ export default function ExpensesTable({ expenses, page, pagination, onPageChange
     const pages = pagination
         ? Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
         : [];
+    const { user } = useAuth();
+    const showBranch = user?.Rol === "superAdmin" || user?.Rol === "admin";
     return (
         <div className="rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden">
 
@@ -40,6 +43,11 @@ export default function ExpensesTable({ expenses, page, pagination, onPageChange
                         <tr className="text-left text-sm text-gray-600">
                             <th className="px-6 py-4">Descripción</th>
                             <th className="px-6 py-4">Categoría</th>
+                            {showBranch && (
+                                <th className="px-6 py-4">
+                                    Sucursal
+                                </th>
+                            )}
                             <th className="hidden px-6 py-4 md:table-cell">Fecha</th>
                             <th className="px-6 py-4 text-right">Monto</th>
                             <th className="px-6 py-4 text-center">Acciones</th>
@@ -60,6 +68,19 @@ export default function ExpensesTable({ expenses, page, pagination, onPageChange
                                         {exp.category}
                                     </span>
                                 </td>
+                                {showBranch && (
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-gray-800">
+                                                {exp.branch.name}
+                                            </span>
+
+                                            <span className="text-xs text-gray-400">
+                                                ID: {exp.branch.id}
+                                            </span>
+                                        </div>
+                                    </td>
+                                )}
                                 <td className="hidden px-6 py-4 text-gray-600 md:table-cell">
                                     {exp.date.split("-").reverse().join("/")}
                                 </td>
