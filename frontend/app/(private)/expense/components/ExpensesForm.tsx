@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { X, FileText, Tag, DollarSign, Calendar, CreditCard, Loader2 } from "lucide-react";
-import { Expense } from "@/types/Expense";
+import { Expense, CreateExpense } from "@/types/Expense";
 
 interface Props {
     initialData?: Expense | null;
-    onSubmit: (data: Omit<Expense, "id">) => void;
+    onSubmit: (data: CreateExpense) => Promise<void>;
     onClose: () => void;
 }
 

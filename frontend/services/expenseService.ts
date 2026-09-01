@@ -1,5 +1,5 @@
 import api from "./api";
-import { Expense, CurrentMonthTotal } from "../types/Expense";
+import { Expense, CurrentMonthTotal, CreateExpense } from "../types/Expense";
 
 export async function getExpenses(
   page: number = 1,
@@ -52,7 +52,7 @@ export async function getExpenseById(id: number): Promise<Expense> {
 }
 
 export async function createExpense(
-  expense: Omit<Expense, "id">
+    expense: CreateExpense
 ): Promise<Expense> {
   try {
     const { data } = await api.post<Expense>("/expenses/", expense);
@@ -65,10 +65,13 @@ export async function createExpense(
 }
 export async function updateExpense(
   id: number,
-  expense: Partial<Omit<Expense, "id">>
+  expense: Partial<CreateExpense>
 ): Promise<{ ok: true; data: Expense } | { ok: false; message: string }> {
   try {
-    const { data } = await api.put<Expense>(`/expenses/${id}`, expense);
+    const { data } = await api.put<Expense>(
+      `/expenses/${id}`,
+      expense
+    );
 
     return { ok: true, data };
   } catch (error: any) {

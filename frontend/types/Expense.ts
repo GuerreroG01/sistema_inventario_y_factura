@@ -9,7 +9,7 @@ export type Expense = {
     payment_method?: string;
     business_id: number;
     branch_id: number;
-    branch: {
+    branch?: {
         id: number;
         name: string;
     };
@@ -20,6 +20,13 @@ export type Expense = {
     createdAt?: string;
     updatedAt?: string;
 };
+export type CreateExpense = {
+    description: string;
+    amount: number;
+    category: string;
+    date: string;
+    payment_method: string;
+}
 export type CurrentMonthTotal = {
     month: number;
     year: number;
