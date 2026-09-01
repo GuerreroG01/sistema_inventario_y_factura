@@ -1,17 +1,16 @@
 import Sales from "../models/Sales.js";
 import sequelize from "../config/database.js";
-import { ValidationError, UniqueConstraintError, Op } from "sequelize";
+import { Op } from "sequelize";
 import { normalizeDate } from "../utils/formatters.js";
-import { clearCategoryCache } from "../utils/categoryCache.js";
-import { getSaleStatuses, clearStatusCache } from "../utils/salesStatusCache.js";
+import { clearStatusCache } from "../utils/salesStatusCache.js";
 import SaleDetail from "../models/SaleDetails.js";
 import InventoryMovService from "../services/Inventory_MovService.js";
 import Product from "../models/Products.js";
 import { cacheService, CacheKeys } from "../services/cache/index.js";
 import Customer from "../models/Customers.js";
-import { updateCustomer } from "../services/CustomerService.js";
 import { resetCustomerMarketingAfterPurchase } from "../services/MarketingService.js";
 import ProductUnit from "../models/ProductsUnits.js";
+import Branch from "../models/Branch.js";
 
 export const getSales = async (req, res) => {
     try {
@@ -20,13 +19,37 @@ export const getSales = async (req, res) => {
         const offset = (page - 1) * limit;
 
         const { fechaMin, fechaMax, status } = req.query;
-        const where = {business_id: req.user.business_id};
+
+        const { business_id, branch_id, rol } = req.user;
+        if (!business_id) {
+            return res.status(400).json({
+                error: "business_required",
+                message: "El usuario no tiene un negocio asociado."
+            });
+        }
+
+        const where = {
+            business_id
+        };
+
+        if (rol !== "admin" && rol !== "superAdmin") {
+            if (!branch_id) {
+                return res.status(400).json({
+                    error: "branch_required",
+                    message: "El usuario no tiene una sucursal asociada."
+                });
+            }
+
+            where.branch_id = branch_id;
+        }
 
         if (fechaMin || fechaMax) {
             where.fecha = {};
+
             if (fechaMin) {
                 where.fecha[Op.gte] = normalizeDate(fechaMin);
             }
+
             if (fechaMax) {
                 where.fecha[Op.lte] = normalizeDate(fechaMax);
             }
@@ -52,6 +75,7 @@ export const getSales = async (req, res) => {
 
     } catch (error) {
         console.error("getSales error:", error);
+
         return res.status(500).json({
             error: "internal_error",
             message: error.message
@@ -62,12 +86,34 @@ export const getSales = async (req, res) => {
 export const getSaleById = async (req, res) => {
     try {
         const { id } = req.params;
-        const business_id = req.user.business_id;
+        const { business_id, branch_id, rol } = req.user;
+
+        if (!business_id) {
+            return res.status(400).json({
+                error: "business_required",
+                message: "El usuario no tiene un negocio asociado."
+            });
+        }
+
+        const where = {
+            id,
+            business_id
+        };
+
+        const rolesWithFullBusinessAccess = ["admin", "superAdmin"];
+
+        if (!rolesWithFullBusinessAccess.includes(rol)) {
+            if (!branch_id) {
+                return res.status(400).json({
+                    error: "branch_required",
+                    message: "El usuario no tiene una sucursal asociada."
+                });
+            }
+
+            where.branch_id = branch_id;
+        }
         const sale = await Sales.findOne({
-            where: {
-                id,
-                business_id
-            },
+            where,
             include: [
                 {
                     model: SaleDetail,
@@ -77,6 +123,11 @@ export const getSaleById = async (req, res) => {
                     model: Customer,
                     as: "customer",
                     attributes: ["id", "name", "identification"]
+                },
+                {
+                    model: Branch,
+                    as: "branch",
+                    attributes: ["name"]
                 }
             ]
         });
@@ -158,7 +209,8 @@ export const createSale = async (req, res) => {
                 payment_type,
                 created_by: req.user.id,
                 updated_by: req.user.id,
-                business_id: req.user.business_id
+                business_id: req.user.business_id,
+                branch_id: req.user.branch_id
             },
             {
                 transaction: t
@@ -227,7 +279,8 @@ export const createSale = async (req, res) => {
                     precio_unitario: servicePrice,
                     subtotal,
                     tipo_item: product.type_item,
-                    business_id: req.user.business_id
+                    business_id: req.user.business_id,
+                    branch_id: req.user.branch_id
                 });
 
                 continue;
@@ -338,7 +391,8 @@ export const createSale = async (req, res) => {
                                 : "Venta con promoción"
                             : "Venta",
 
-                    business_id: req.user.business_id
+                    business_id: req.user.business_id,
+                    branch_id: req.user.branch_id
                 },
                 t
             );
@@ -356,7 +410,8 @@ export const createSale = async (req, res) => {
                 precio_unitario: precioUnitarioReal,
                 subtotal,
                 tipo_item: product.type_item,
-                business_id: req.user.business_id
+                business_id: req.user.business_id,
+                branch_id: req.user.branch_id
             });
         }
         await SaleDetail.bulkCreate(
@@ -891,7 +946,3 @@ export const updateSaleStatus = async (req, res) => {
 };
 
 export default { getSales, getSaleById, createSale, getCategories, updateSaleStatus };
-
-/*Aparentemente ya esta todo correcto pero hay que seguir haciendo pruebas y también ver si en la venta respeta el limite
-de stock con los nuevos cambios y ver si también respeta el limite de stock de la cantidad en promoción donde si pasa el limite
-ya deberia pasar al precio normal el producto adicional.*/

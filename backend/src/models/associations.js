@@ -12,6 +12,7 @@ import CustomerMarketing from "./CustomerMarketing.js";
 //import EmployeeEmployment from "./Worksheet/Employee/EmployeeEmployment.js"
 //import EmployeeSalaryHistory from "./Worksheet/Employee/EmployeeSalaryHistory.js"
 import ProductUnit from "./ProductsUnits.js";
+import Branch from "./Branch.js";
 
 Business.hasMany(User,{
     foreignKey:"business_id",
@@ -21,6 +22,16 @@ Business.hasMany(User,{
 User.belongsTo(Business,{
     foreignKey:"business_id",
     as:"business"
+});
+
+Branch.hasMany(User, {
+    foreignKey: "branch_id",
+    as: "users"
+});
+
+User.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
 });
 
 Business.hasMany(Product,{
@@ -54,6 +65,16 @@ Expense.belongsTo(Business,{
     as:"business"
 });
 
+Branch.hasMany(Expense, {
+    foreignKey: "branch_id",
+    as: "expenses"
+});
+
+Expense.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
+});
+
 Sales.hasMany(SaleDetail,{
     foreignKey:"sale_id",
     as:"details"
@@ -64,6 +85,16 @@ SaleDetail.belongsTo(Sales,{
     as:"sale"
 });
 
+Branch.hasMany(SaleDetail, {
+    foreignKey: "branch_id",
+    as: "saleDetails"
+});
+
+SaleDetail.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
+});
+
 ProductUnit.hasMany(InventoryMov, {
     foreignKey: "product_unit_id",
     as: "movements"
@@ -72,6 +103,16 @@ ProductUnit.hasMany(InventoryMov, {
 InventoryMov.belongsTo(ProductUnit, {
     foreignKey: "product_unit_id",
     as: "productUnit"
+});
+
+Branch.hasMany(InventoryMov, {
+    foreignKey: "branch_id",
+    as: "inventoryMovements"
+});
+
+InventoryMov.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
 });
 
 ProductUnit.hasMany(SaleDetail, {
@@ -118,6 +159,17 @@ Sales.belongsTo(Customer,{
     foreignKey:"client_id",
     as:"customer"
 });
+
+Branch.hasMany(Sales, {
+    foreignKey: "branch_id",
+    as: "sales"
+});
+
+Sales.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
+});
+
 
 Customer.hasMany(Sales,{
     foreignKey:"client_id",
@@ -186,3 +238,25 @@ ProductUnit.belongsTo(Product, {
     foreignKey: "product_id",
     as: "product"
 });
+
+Branch.hasMany(ProductUnit, {
+    foreignKey: "branch_id",
+    as: "productUnits"
+});
+
+ProductUnit.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
+});
+
+
+Business.hasMany(Branch, {
+    foreignKey: "business_id",
+    as: "branches"
+});
+
+Branch.belongsTo(Business, {
+    foreignKey: "business_id",
+    as: "business"
+});
+

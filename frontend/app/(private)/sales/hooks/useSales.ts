@@ -51,7 +51,6 @@ export function useSales() {
                 fechaMin: startDate,
                 fechaMax: endDate
             });
-
             setSales(data.sales);
             setTotalPages(data.totalPages);
             setTotalSales(data.total);
@@ -76,7 +75,6 @@ export function useSales() {
             setLoading(true);
 
             const sale = await getSale(id);
-            console.log("Información de la venta:",sale);
             const user = await getUsernameById(sale.created_by);
             setUsername(user);
             setSelected(sale);

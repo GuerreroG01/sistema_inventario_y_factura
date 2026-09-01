@@ -1,18 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useCreateSale } from "../hooks/useCretateSale";
-import ModalSuccess from "./ModalSuccess";
 import { BanknoteArrowUp as Transference, Receipt as Cash, Wallet as Credit, CreditCard as Card } from "lucide-react";
 import ProductSelector from "./ProductSelector";
 import SaleItems from "./SaleItems";
+import ModalError from "@/components/ModalError";
 
 export default function CreateSaleForm() {
+    const [errorOpen, setErrorOpen] = useState(false);
     const { category,  setCategory, setClientId,  items,
         searchProduct, productResults, searchLoading, setSearchProduct, addProductUnit,
-        removeItem, updateItemQuantity, now, total, loading, submit, successOpen, setSuccessOpen,
+        removeItem, updateItemQuantity, now, total, loading, message, submit, successOpen, setSuccessOpen,
         searchCustomer, setSearchCustomer, customerResults, searchLoadingCus,
         selectCustomer, selectedCustomer, setSelectedCustomer, payment_type, setPaymentType, isPromotionActive,
     } = useCreateSale();
+    useEffect(() => {
+        if (message) {
+            setErrorOpen(true);
+        }
+    }, [message]);
+
     return (
     <div className="min-h-screen bg-slate-100 p-2 flex justify-center">
         <div className="
@@ -186,6 +194,11 @@ export default function CreateSaleForm() {
                 />
             </div>
         </div>
+        <ModalError
+            open={errorOpen}
+            message={message}
+            onClose={() => setErrorOpen(false)}
+        />
     </div>
 );
 }

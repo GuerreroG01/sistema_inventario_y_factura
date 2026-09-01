@@ -347,8 +347,12 @@ export function useCreateSale() {
             setItems([]);
             setItem(emptyItem);
 
-        } catch (error: any) {
-            setMessage(error.message || "Error al crear venta");
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setMessage(error.message);
+            } else {
+                setMessage("Error al crear venta");
+            }
         } finally {
             setLoading(false);
         }

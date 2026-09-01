@@ -33,10 +33,10 @@ export default function SalesRightPanel({
                                     </span>
                                     <h2 className="text-2xl font-extrabold text-slate-800 mt-3 tracking-tight">
                                         Venta #{selected.id}
+                                        <span className="text-base font-medium text-slate-500 ml-3">
+                                            • {selected.branch?.name}
+                                        </span>
                                     </h2>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Revisión y desglose oficial de la transacción en el sistema.
-                                    </p>
                                 </div>
                                 <div className="relative inline-block text-left">
                                     <Listbox value={selected.status} onChange={handleStatusChange}>
