@@ -100,21 +100,51 @@ module.exports = {
         ];
 
         for (const table of tablesWithBranch) {
-            const columns = await queryInterface.describeTable(table);
-            if (!columns.branch_id) {
-                console.log(
-                    `[MIGRATION] Agregando branch_id a ${table}...`
+
+            console.log(
+                `[MIGRATION] Asignando sucursales en ${table}...`
+            );
+            if (
+                table === 'Expenses' ||
+                table === 'Inventory_mov' ||
+                table === 'Sales' || table === 'SaleDetails'
+            ) {
+
+                await queryInterface.sequelize.query(
+                    `
+                    UPDATE "${table}" t
+                    SET branch_id = (
+                        SELECT b.id
+                        FROM "Branches" b
+                        WHERE b.business_id = t.business_id
+                        AND b.type = 'MAIN'
+                        LIMIT 1
+                    )
+                    WHERE t.branch_id IS NULL
+                    `
                 );
 
-                await queryInterface.addColumn(table, 'branch_id', {
-                    type: Sequelize.INTEGER,
-                    allowNull: true
-                });
+                continue;
+            }
 
-            } else {
-                console.log(
-                    `[MIGRATION] ${table}.branch_id ya existe. Se omite.`
+            if (table === 'ProductsUnits') {
+
+                await queryInterface.sequelize.query(
+                    `
+                    UPDATE "ProductsUnits" pu
+                    SET branch_id = (
+                        SELECT b.id
+                        FROM "Branches" b
+                        INNER JOIN "Products" p
+                            ON p.business_id = b.business_id
+                        WHERE p.id = pu.product_id
+                        AND b.type = 'MAIN'
+                        LIMIT 1
+                    )
+                    WHERE pu.branch_id IS NULL
+                    `
                 );
+                continue;
             }
         }
 
