@@ -73,12 +73,11 @@ export default function ExpensesPage() {
                         <ExpenseForm
                             initialData={selectedExpense}
                             onClose={() => setIsOpen(false)}
-                            onSubmit={(data) => {
-
+                            onSubmit={async (data) => {
                                 if (selectedExpense) {
-                                    editExpense(selectedExpense.id, data);
+                                    await editExpense(selectedExpense.id, data);
                                 } else {
-                                    addExpense(data);
+                                    await addExpense(data);
                                 }
 
                                 setIsOpen(false);

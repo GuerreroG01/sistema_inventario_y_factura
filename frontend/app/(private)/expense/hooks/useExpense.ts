@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getExpenses, createExpense, updateExpense, deleteExpense, getExpenseCategories, getCurrentMonthTotal } from "@/services/expenseService";
-import { Expense } from "@/types/Expense"
+import { Expense, CreateExpense } from "@/types/Expense"
 
 type Filters = {
     category?: string;
@@ -94,7 +94,7 @@ export function useExpenses(initialPage: number = 1, initialFilters: Filters = {
         fetchCurrentMonthTotal();
     }, []);
 
-    const addExpense = async (expense: Omit<Expense, "id">) => {
+    const addExpense = async (expense: CreateExpense) => {
         try {
             await createExpense(expense);
             await fetchExpenses();
