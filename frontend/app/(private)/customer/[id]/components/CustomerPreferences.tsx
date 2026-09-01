@@ -9,7 +9,8 @@ interface CustomerPreferencesProps {
     data: CustomerPreferencesType;
 }
 
-export default function CustomerPreferences({data}: CustomerPreferencesProps) {
+export default function CustomerPreferences({ data }: CustomerPreferencesProps) {
+const creditBehavior = data.creditBehavior;
     return (
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-6 text-lg font-bold text-slate-900">
@@ -41,17 +42,15 @@ export default function CustomerPreferences({data}: CustomerPreferencesProps) {
                 />
                 <CreditBox
                     title="Cantidad promedio por producto"
-                    value={
-                        `${data.averageQuantity} unidades`
-                    }
+                    value={`${data.averageQuantity} unidades`}
                 />
             </div>
 
-            {data.creditBehavior && (
+            {creditBehavior && (
                 <div className="mt-6 rounded-2xl bg-slate-50 p-5">
                     <div className="mb-4 flex items-center gap-3">
                         <div className="rounded-xl bg-blue-100 p-3 text-blue-600">
-                            <CreditCard className="h-5 w-5"/>
+                            <CreditCard className="h-5 w-5" />
                         </div>
 
                         <div>
@@ -59,32 +58,56 @@ export default function CustomerPreferences({data}: CustomerPreferencesProps) {
                                 Comportamiento de pago
                             </h3>
                             <p className="text-sm text-slate-500">
-                                Evaluación del cliente al pagar sus compras a crédito
+                                Historial y situación actual de las compras a crédito
                             </p>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <CreditBox
                             title="Compras a crédito"
-                            value={
-                                `${data.creditBehavior.creditPurchases} compras`
-                            }
+                            value={`${creditBehavior.creditPurchases} compras`}
+                        />
+                        <CreditBox
+                            title="Créditos pagados"
+                            value={`${creditBehavior.paidCredits} créditos`}
+                        />
+                        <CreditBox
+                            title="Créditos pendientes"
+                            value={`${creditBehavior.pendingCredits} créditos`}
                         />
                         <CreditBox
                             title="Tiempo promedio de pago"
                             value={
-                                data.creditBehavior.averagePaymentDays === 0
-                                    ? "El mismo día"
-                                    : `${data.creditBehavior.averagePaymentDays} días`
+                                creditBehavior.averagePaymentDays === null
+                                    ? "Sin historial"
+                                    : creditBehavior.averagePaymentDays === 0
+                                        ? "El mismo día"
+                                        : `${creditBehavior.averagePaymentDays} días`
+                            }
+                        />
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <CreditBox
+                            title="Historial de pago"
+                            value={
+                                creditBehavior.historicalBehavior ??
+                                "Sin historial suficiente"
                             }
                         />
                         <CreditBox
-                            title="Evaluación"
+                            title="Situación actual"
                             value={
-                                data.creditBehavior.description
+                                creditBehavior.currentStatus
                             }
                         />
+                    </div>
+                    <div className="mt-4 rounded-xl bg-white p-4"> <p className="text-sm font-semibold text-slate-700"> Evaluación </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                            {creditBehavior.description ??
+                                "No hay suficiente información para evaluar el comportamiento de crédito."
+                            }
+                        </p>
                     </div>
                 </div>
             )}

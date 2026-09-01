@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import Customer from "../models/Customers.js";
-import CustomerMarketing from "../models/CustomerMarketing.js";
+import ProductUnit from "../models/ProductsUnits.js";
 import Sales from "../models/Sales.js";
 import SaleDetails from "../models/SaleDetails.js";
 import Product from "../models/Products.js";
@@ -423,17 +423,27 @@ export const getCustomerPreferences = async (id, businessId) => {
             {
                 model: SaleDetails,
                 as: "details",
-                attributes: [
-                    "cantidad",
-                    "product_id"
-                ],
+                attributes: [ "cantidad", "product_unit_id" ],
                 include: [
                     {
-                        model: Product,
-                        as: "product",
+                        model: ProductUnit,
+                        as: "productUnit",
+
                         attributes: [
-                            "category",
-                            "name"
+                            "id",
+                            "product_id"
+                        ],
+
+                        include: [
+                            {
+                                model: Product,
+                                as: "product",
+
+                                attributes: [
+                                    "category",
+                                    "name"
+                                ]
+                            }
                         ]
                     }
                 ]
@@ -452,15 +462,14 @@ export const getCustomerPreferences = async (id, businessId) => {
     }
 
     const categoryCounter = {};
-
     const quantityCounter = {};
 
     sales.forEach((sale) => {
-        sale.details.forEach((detail)=>{
-            const category = detail.product?.category;
-            if(category){
-                categoryCounter[category] =
-                    (categoryCounter[category] || 0) + detail.cantidad;
+        sale.details.forEach((detail) => {
+            const category =
+                detail.productUnit?.product?.category;
+            if (category) {
+                categoryCounter[category] = (categoryCounter[category] || 0) + Number(detail.cantidad); 
             }
 
             quantityCounter[detail.cantidad] =
@@ -472,35 +481,42 @@ export const getCustomerPreferences = async (id, businessId) => {
 
     const mostPurchasedCategory =
         Object.entries(categoryCounter)
-        .sort((a,b)=>b[1]-a[1])[0]?.[0] ?? null;
+            .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
     const mostRepeatedQuantity =
         Object.entries(quantityCounter)
-        .sort((a,b)=>b[1]-a[1])[0]?.[0] ?? null;
+            .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
 
     const totalQuantities =
         Object.entries(quantityCounter)
-        .reduce(
-            (acc,[quantity, repetitions]) =>
-                acc + (Number(quantity) * repetitions),
-            0
-        );
+            .reduce(
+                (acc, [quantity, repetitions]) =>
+                    acc +
+                    (Number(quantity) * repetitions),
+                0
+            );
 
     const totalItems =
         sales.reduce(
-            (acc,sale)=>acc + sale.details.length,
+            (acc, sale) =>
+                acc + sale.details.length,
             0
         );
 
     const averageQuantity =
         totalItems
-        ? Number(totalQuantities / totalItems).toFixed(2)
-        : 0;
+            ? Number(
+                totalQuantities / totalItems
+            ).toFixed(2)
+            : 0;
 
     const paymentCounter = {};
 
-    sales.forEach((sale)=>{
+    sales.forEach((sale) => {
+        if (!sale.payment_type) {
+            return;
+        }
 
         paymentCounter[sale.payment_type] =
             (paymentCounter[sale.payment_type] || 0) + 1;
@@ -509,7 +525,7 @@ export const getCustomerPreferences = async (id, businessId) => {
 
     const favoritePaymentType =
         Object.entries(paymentCounter)
-        .sort((a,b)=>b[1]-a[1])[0]?.[0] ?? null;
+            .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
 
     const creditSales = sales.filter(
@@ -520,51 +536,134 @@ export const getCustomerPreferences = async (id, businessId) => {
     let creditBehavior = null;
 
 
-    if(creditSales.length){
-
-        const paymentTimes = creditSales.map((sale)=>{
-
-            const created =
-                new Date(sale.createdAt);
-
-            const updated =
-                new Date(sale.updatedAt);
-
-
-            return Math.floor(
-                (updated - created)
-                /
-                (1000 * 60 * 60 * 24)
+    if (creditSales.length) {
+        const paidCreditSales =
+            creditSales.filter(
+                sale => sale.status !== "PENDING"
             );
 
-        });
+        const pendingCreditSales =
+            creditSales.filter(
+                sale => sale.status === "PENDING"
+            );
 
+        const paymentTimes =
+            paidCreditSales.map((sale) => {
+                const created =
+                    new Date(sale.createdAt);
+                const updated =
+                    new Date(sale.updatedAt);
+                const days =
+                    Math.floor(
+                        (updated - created) /
+                        (1000 * 60 * 60 * 24)
+                    );
+                return Math.max(days, 0);
+            });
 
         const averagePaymentDays =
-            paymentTimes.reduce(
-                (a,b)=>a+b,
-                0
-            )
-            /
-            paymentTimes.length;
+            paymentTimes.length
+                ? paymentTimes.reduce(
+                    (a, b) => a + b,
+                    0
+                ) / paymentTimes.length
+                : null;
 
+        let historicalBehavior = null;
 
-        creditBehavior = {
-            creditPurchases: creditSales.length,
-            averagePaymentDays:
-                Number(averagePaymentDays.toFixed(1)),
-            description:
+        if (averagePaymentDays !== null) {
+            historicalBehavior =
                 averagePaymentDays <= 3
                     ? "Cliente paga rápido"
                     : averagePaymentDays <= 15
                         ? "Cliente paga normalmente"
-                        : "Cliente suele tardar en pagar"
+                        : "Cliente suele tardar en pagar";
+        }
+
+        let currentDebtDays = null;
+        let currentStatus = "Sin deuda pendiente";
+        if (pendingCreditSales.length) {
+            const now = new Date();
+            const pendingDays =
+                pendingCreditSales.map((sale) => {
+                    const created =
+                        new Date(sale.createdAt);
+                    const days =
+                        Math.floor(
+                            (now - created) /
+                            (1000 * 60 * 60 * 24)
+                        );
+                    return Math.max(days, 0);
+                });
+            currentDebtDays =
+                Math.max(...pendingDays);
+
+            if (currentDebtDays <= 3) {
+                currentStatus =
+                    "Tiene una deuda pendiente reciente";
+            } else if (currentDebtDays <= 15) {
+                currentStatus =
+                    "Tiene una deuda pendiente";
+            } else {
+                currentStatus =
+                    "Tiene una deuda pendiente atrasada";
+            }
+        }
+
+        let overallDescription = null;
+        if (pendingCreditSales.length) {
+            if (currentDebtDays === null) {
+                overallDescription =
+                    "Existe una deuda pendiente.";
+            } else if (currentDebtDays === 0) {
+                overallDescription =
+                    "Tiene una deuda pendiente generada hoy.";
+            } else if (currentDebtDays === 1) {
+                overallDescription =
+                    "Tiene una deuda pendiente reciente, generada hace 1 día.";
+            } else if ( averagePaymentDays !== null && currentDebtDays <= averagePaymentDays ) {
+                overallDescription =
+                    `Tiene una deuda pendiente desde hace ${currentDebtDays} días, dentro de su tiempo habitual de pago.`;
+            } else if ( averagePaymentDays !== null && currentDebtDays > averagePaymentDays ) {
+                overallDescription =
+                    `Tiene una deuda pendiente desde hace ${currentDebtDays} días, superando su tiempo promedio habitual de pago.`;
+            } else {
+                overallDescription =
+                    `Tiene una deuda pendiente desde hace ${currentDebtDays} días.`;
+            }
+        } else {
+
+            overallDescription =
+                historicalBehavior ??
+                "No hay suficiente historial para evaluar el comportamiento de pago.";
+        }
+        creditBehavior = {
+            creditPurchases:
+                creditSales.length,
+            paidCredits:
+                paidCreditSales.length,
+            pendingCredits:
+                pendingCreditSales.length,
+            averagePaymentDays:
+                averagePaymentDays !== null
+                    ? Number(
+                        averagePaymentDays.toFixed(1)
+                    )
+                    : null,
+            currentDebtDays,
+            historicalBehavior,
+            currentStatus,
+            description:
+                overallDescription
         };
 
     }
     return {
         mostPurchasedCategory,
-        mostRepeatedQuantity: Number(mostRepeatedQuantity),
+        mostRepeatedQuantity:
+            mostRepeatedQuantity !== null
+                ? Number(mostRepeatedQuantity)
+                : null,
         averageQuantity,
         favoritePaymentType,
         creditBehavior

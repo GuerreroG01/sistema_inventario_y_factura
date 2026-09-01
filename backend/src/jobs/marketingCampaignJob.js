@@ -50,9 +50,8 @@ export const runMarketingCampaignJob = async () => {
         );
     }
 };
-
 cron.schedule(
-    "00 09 * * *",
+    "36 15 * * *",
     async () => {
         const startTime = new Date();
 
