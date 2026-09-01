@@ -99,54 +99,6 @@ module.exports = {
             'SaleDetails'
         ];
 
-        for (const table of tablesWithBranch) {
-
-            console.log(
-                `[MIGRATION] Asignando sucursales en ${table}...`
-            );
-            if (
-                table === 'Expenses' ||
-                table === 'Inventory_mov' ||
-                table === 'Sales' || table === 'SaleDetails'
-            ) {
-
-                await queryInterface.sequelize.query(
-                    `
-                    UPDATE "${table}" t
-                    SET branch_id = (
-                        SELECT b.id
-                        FROM "Branches" b
-                        WHERE b.business_id = t.business_id
-                        AND b.type = 'MAIN'
-                        LIMIT 1
-                    )
-                    WHERE t.branch_id IS NULL
-                    `
-                );
-
-                continue;
-            }
-
-            if (table === 'ProductsUnits') {
-
-                await queryInterface.sequelize.query(
-                    `
-                    UPDATE "ProductsUnits" pu
-                    SET branch_id = (
-                        SELECT b.id
-                        FROM "Branches" b
-                        INNER JOIN "Products" p
-                            ON p.business_id = b.business_id
-                        WHERE p.id = pu.product_id
-                        AND b.type = 'MAIN'
-                        LIMIT 1
-                    )
-                    WHERE pu.branch_id IS NULL
-                    `
-                );
-                continue;
-            }
-        }
 
         const businesses = await queryInterface.sequelize.query(
             `SELECT id, name FROM "Business"`,
@@ -220,24 +172,68 @@ module.exports = {
             }
 
         }
-        for (const table of tablesWithBranch) {            console.log(
+        for (const table of tablesWithBranch) {
+            console.log(
                 `[MIGRATION] Asignando sucursales en ${table}...`
             );
 
-            await queryInterface.sequelize.query(
-                `
-                UPDATE "${table}" t
-                SET branch_id = (
-                    SELECT b.id
-                    FROM "Branches" b
-                    WHERE b.business_id = t.business_id
-                    AND b.type = 'MAIN'
-                    LIMIT 1
-                )
-                WHERE t.branch_id IS NULL
-                `
-            );
+            if (
+                table === 'Expenses' ||
+                table === 'Inventory_mov' ||
+                table === 'Sales' || table === 'SaleDetails'
+            ) {
 
+                await queryInterface.sequelize.query(`
+                    UPDATE "${table}" t
+                    SET branch_id = (
+                        SELECT b.id
+                        FROM "Branches" b
+                        WHERE b.business_id = t.business_id
+                        AND b.type = 'MAIN'
+                        LIMIT 1
+                    )
+                    WHERE t.branch_id IS NULL
+                `);
+
+                continue;
+            }
+            if (table === 'ProductsUnits') {
+
+                await queryInterface.sequelize.query(`
+                    UPDATE "ProductsUnits" pu
+                    SET branch_id = (
+                        SELECT b.id
+                        FROM "Branches" b
+                        INNER JOIN "Products" p
+                            ON p.business_id = b.business_id
+                        WHERE p.id = pu.product_id
+                        AND b.type = 'MAIN'
+                        LIMIT 1
+                    )
+                    WHERE pu.branch_id IS NULL
+                `);
+
+                continue;
+            }
+
+            if (table === 'SaleDetails') {
+
+                await queryInterface.sequelize.query(`
+                    UPDATE "SaleDetails" sd
+                    SET branch_id = (
+                        SELECT b.id
+                        FROM "Branches" b
+                        INNER JOIN "Sales" s
+                            ON s.business_id = b.business_id
+                        WHERE s.id = sd.sale_id
+                        AND b.type = 'MAIN'
+                        LIMIT 1
+                    )
+                    WHERE sd.branch_id IS NULL
+                `);
+
+                continue;
+            }
         }
 
         for (const table of tablesWithBranch) {
