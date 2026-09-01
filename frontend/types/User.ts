@@ -5,6 +5,13 @@ export type Business = {
     createdAt: string;
 }
 
+export type Branch = {
+    id: number;
+    name: string;
+    country: string;
+    city?: string;
+};
+
 export type User = {
     Id: number;
     Usuario: string;
@@ -14,5 +21,8 @@ export type User = {
     Activo: boolean;
     FechaIngreso?: string;
     UltimoAcceso?: string;
+    business_id?: number;
+    branch_id?: number;
     business?: Business;
+    branch?: Branch;
 }

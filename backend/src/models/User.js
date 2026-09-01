@@ -57,8 +57,17 @@ const User = sequelize.define("User", {
             model:"Business",
             key:"id"
         }
+    },
+    branch_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: "Branches",
+            key: "id"
+        },
+        onUpdate: "CASCADE",
+        onDelete: "RESTRICT"
     }
-
 }, {
     tableName: "User",
     timestamps: false,

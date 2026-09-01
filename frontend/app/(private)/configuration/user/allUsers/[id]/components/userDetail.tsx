@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, ShieldCheck, CheckCircle2, XCircle, Mail, Phone, CalendarDays, Building2, Clock } from "lucide-react";
+import { Users, ShieldCheck, CheckCircle2, XCircle, Mail, Phone, CalendarDays, Building2, Clock, MapPin } from "lucide-react";
 import { User } from "@/types/User";
 import { InfoCard } from "./InfoCard";
 
@@ -8,9 +8,10 @@ type Props = {
     user: User;
     userSelected: User;
     onAssignBusiness: () => void;
+    onAssignBranch: () => void;
 };
 
-export default function UserDetail({ user, userSelected, onAssignBusiness }: Props) {
+export default function UserDetail({ user, userSelected, onAssignBusiness, onAssignBranch }: Props) {
     return (
         <section className="relative overflow-hidden rounded-3xl border border-gray-200/80 bg-white p-6 md:p-8 shadow-sm">
             <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-blue-50 blur-3xl"/>
@@ -169,6 +170,61 @@ export default function UserDetail({ user, userSelected, onAssignBusiness }: Pro
                             Cambiar negocio
                         </button>
                     </div>
+                    )}
+                </div>
+                <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-6">
+                    <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+                        <MapPin className="h-5 w-5 text-emerald-600" />
+                        Sucursal asignada
+                    </h2>
+                    {userSelected.branch ? (
+                        <div className="mt-5 grid gap-4 md:grid-cols-3">
+                            <div>
+                                <p className="text-xs text-slate-500">
+                                    Nombre
+                                </p>
+
+                                <p className="font-semibold text-slate-900">
+                                    {userSelected.branch.name}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500">
+                                    Ciudad
+                                </p>
+
+                                <p className="font-semibold text-emerald-600">
+                                    {userSelected.branch.city || "No disponible"}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500">
+                                    País
+                                </p>
+
+                                <p className="font-semibold text-emerald-600">
+                                    {userSelected.branch.country || "No disponible"}
+                                </p>
+                            </div>
+
+                        </div>
+                    ) : (
+                        <p className="mt-4 text-sm text-slate-500">
+                            Este usuario no tiene una sucursal asignada.
+                        </p>
+                    )}
+
+                    {userSelected.business && (
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                onClick={onAssignBranch}
+                                className="rounded-xl border border-emerald-200 bg-white px-5 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50"
+                            >
+                                {userSelected.branch
+                                    ? "Cambiar sucursal"
+                                    : "Asignar sucursal"}
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>

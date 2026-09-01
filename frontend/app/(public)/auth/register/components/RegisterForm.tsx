@@ -1,19 +1,33 @@
 "use client";
 
 import { RegisterRequest, User } from "@/types/Auth";
-import { UserRoundPlus } from 'lucide-react';
+import { UserRoundPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import ModalSuccess from "@/components/ModalSuccess";
 import ModalError from "@/components/ModalError";
 import { useRouter } from "next/navigation";
 
+interface Branch {
+    id: number;
+    name: string;
+}
+
 interface Props {
     data: RegisterRequest;
     loading: boolean;
     error: string | null;
-    user: User | null;
+    userData: User | null;
+    branches: Branch[];
+    branchesLoading: boolean;
+    search: string;
+    showBranches: boolean;
+    onSearchChange: (value: string) => void;
+    onBranchSelect: (branch: Branch) => void;
+
     onChange: (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+        e: React.ChangeEvent<
+            HTMLInputElement | HTMLSelectElement
+        >
     ) => void;
     onSubmit: (
         data: RegisterRequest
@@ -21,7 +35,10 @@ interface Props {
     initialized: boolean | null;
 }
 
-export default function RegisterForm({ data, loading, error, user, onChange, onSubmit, initialized }: Props) {
+export default function RegisterForm({
+    data, loading, error, userData, branches, branchesLoading, search, showBranches,  onSearchChange, onBranchSelect, onChange,
+    onSubmit, initialized
+}: Props) {
     const submit = (
         e: React.FormEvent<HTMLFormElement>
     ) => {
@@ -32,10 +49,10 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
     const [errorOpen, setErrorOpen] = useState(false);
     const router = useRouter();
     useEffect(() => {
-        if (user) {
+        if (userData) {
             setSuccessOpen(true);
         }
-    }, [user]);
+    }, [userData]);
     useEffect(() => {
         if (error) {
             setErrorOpen(true);
@@ -43,34 +60,38 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
     }, [error]);
 
     return (
-        <div className="
-            w-full
-        ">
-            <div className="
-                w-full
-                bg-white
-                rounded-2xl
-                border
-                border-gray-100
-                shadow-sm
-                p-6
-            ">
-                <div className="
-                    flex
-                    items-center
-                    gap-3
-                    mb-6
-                ">
-                    <div className="
+        <div className="w-full">
+            <div
+                className="
+                    w-full
+                    bg-white
+                    rounded-2xl
+                    border
+                    border-gray-100
+                    shadow-sm
+                    p-6
+                "
+            >
+                <div
+                    className="
                         flex
                         items-center
-                        justify-center
-                        w-11
-                        h-11
-                        rounded-xl
-                        bg-blue-50
-                    ">
-                        <UserRoundPlus 
+                        gap-3
+                        mb-6
+                    "
+                >
+                    <div
+                        className="
+                            flex
+                            items-center
+                            justify-center
+                            w-11
+                            h-11
+                            rounded-xl
+                            bg-blue-50
+                        "
+                    >
+                        <UserRoundPlus
                             className="
                                 w-6
                                 h-6
@@ -79,18 +100,23 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
                         />
                     </div>
                     <div>
-                        <h2 className="
-                            text-xl
-                            font-bold
-                            text-gray-900
-                        ">
+                        <h2
+                            className="
+                                text-xl
+                                font-bold
+                                text-gray-900
+                            "
+                        >
                             Crear usuario
                         </h2>
-                        <p className="
-                            text-xs
-                            font-medium
-                            text-gray-500
-                        ">
+
+                        <p
+                            className="
+                                text-xs
+                                font-medium
+                                text-gray-500
+                            "
+                        >
                             Registra un nuevo usuario en el sistema
                         </p>
                     </div>
@@ -98,22 +124,24 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
 
                 <form
                     onSubmit={submit}
-                    className="
-                        space-y-5
-                    "
+                    className="space-y-5"
                 >
-                    <div className="
-                        grid
-                        grid-cols-1
-                        md:grid-cols-2
-                        gap-4
-                    ">
+                    <div
+                        className="
+                            grid
+                            grid-cols-1
+                            md:grid-cols-2
+                            gap-4
+                        "
+                    >
                         <div>
-                            <label className="
-                                text-xs
-                                font-semibold
-                                text-gray-600
-                            ">
+                            <label
+                                className="
+                                    text-xs
+                                    font-semibold
+                                    text-gray-600
+                                "
+                            >
                                 Usuario
                             </label>
                             <input
@@ -143,11 +171,13 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
                             />
                         </div>
                         <div>
-                            <label className="
-                                text-xs
-                                font-semibold
-                                text-gray-600
-                            ">
+                            <label
+                                className="
+                                    text-xs
+                                    font-semibold
+                                    text-gray-600
+                                "
+                            >
                                 Teléfono
                             </label>
                             <input
@@ -178,11 +208,13 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
                         </div>
                     </div>
                     <div>
-                        <label className="
-                            text-xs
-                            font-semibold
-                            text-gray-600
-                        ">
+                        <label
+                            className="
+                                text-xs
+                                font-semibold
+                                text-gray-600
+                            "
+                        >
                             Correo electrónico
                         </label>
                         <input
@@ -213,14 +245,16 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
                         />
                     </div>
                     <div>
-
-                        <label className="
-                            text-xs
-                            font-semibold
-                            text-gray-600
-                        ">
+                        <label
+                            className="
+                                text-xs
+                                font-semibold
+                                text-gray-600
+                            "
+                        >
                             Contraseña
                         </label>
+
                         <input
                             name="Clave"
                             type="password"
@@ -248,6 +282,98 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
                             required
                         />
                     </div>
+                    <div className="relative">
+                        <label
+                            className="
+                                text-xs
+                                font-semibold
+                                text-gray-600
+                            "
+                        >
+                            Sucursal
+                        </label>
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => {
+                                onSearchChange(e.target.value);
+                            }}
+                            placeholder="Buscar sucursal..."
+                            className="
+                                mt-1
+                                w-full
+                                rounded-xl
+                                bg-gray-50
+                                border
+                                border-gray-200
+                                px-4
+                                py-3
+                                text-sm
+                                text-gray-800
+                                outline-none
+                                transition
+                                focus:bg-white
+                                focus:border-blue-400
+                                focus:ring-4
+                                focus:ring-blue-100
+                            "
+                        />
+                        {branchesLoading && search.trim() && (
+                            <div
+                                className="
+                                    absolute
+                                    right-3
+                                    top-9
+                                    text-xs
+                                    text-gray-400
+                                "
+                            >
+                                Buscando...
+                            </div>
+                        )}
+                        {showBranches &&
+                            search.trim() &&
+                            !branchesLoading &&
+                            branches.length > 0 && (
+                                <div
+                                    className="
+                                        absolute
+                                        z-50
+                                        mt-1
+                                        w-full
+                                        overflow-hidden
+                                        rounded-xl
+                                        border
+                                        border-gray-200
+                                        bg-white
+                                        shadow-lg
+                                    "
+                                >
+                                    {branches.map((branch) => (
+                                        <button
+                                            key={branch.id}
+                                            type="button"
+                                            className="
+                                                block
+                                                w-full
+                                                px-4
+                                                py-3
+                                                text-left
+                                                text-sm
+                                                text-gray-700
+                                                transition
+                                                hover:bg-blue-50
+                                            "
+                                            onClick={() => {
+                                                onBranchSelect(branch);
+                                            }}
+                                        >
+                                            {branch.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                    </div>
                     <button
                         type="submit"
                         disabled={loading}
@@ -270,18 +396,16 @@ export default function RegisterForm({ data, loading, error, user, onChange, onS
                             disabled:cursor-not-allowed
                         "
                     >
-                        {
-                            loading
+                        {loading
                             ? "Creando usuario..."
-                            : "Registrar usuario"
-                        }
+                            : "Registrar usuario"}
                     </button>
                 </form>
             </div>
             <ModalSuccess
                 open={successOpen}
                 title="Usuario creado"
-                message={`El usuario "${user?.Usuario}" fue registrado correctamente.`}
+                message={`El usuario "${userData?.Usuario}" fue registrado correctamente.`}
                 onClose={() => {
                     setSuccessOpen(false);
                     if (initialized === false) {

@@ -61,6 +61,17 @@ const Sales = sequelize.define ("Sales",{
         },
         onUpdate:"CASCADE",
         onDelete:"RESTRICT"
+    },
+    // Sucursal donde se realizó la venta
+    branch_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: "Branches",
+            key: "id"
+        },
+        onUpdate: "CASCADE",
+        onDelete: "RESTRICT"
     }
 });
 

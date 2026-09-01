@@ -78,10 +78,15 @@ export type CustomerPreferences = {
     mostPurchasedCategory: string | null;
     mostRepeatedQuantity: number | null;
     averageQuantity: string | number;
-    favoritePaymentType: PaymentType;
+    favoritePaymentType: PaymentType | null;
     creditBehavior: {
         creditPurchases: number;
-        averagePaymentDays: number;
-        description: string;
+        paidCredits: number;
+        pendingCredits: number;
+        averagePaymentDays: number | null;
+        currentDebtDays: number | null;
+        historicalBehavior: string | null;
+        currentStatus: string;
+        description: string | null;
     } | null;
 };

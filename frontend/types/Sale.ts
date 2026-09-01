@@ -1,5 +1,8 @@
 import {Customer} from "../types/Customer"
 
+export interface Branch {
+    name: string;
+}
 export interface Sale {
     id: number;
     fecha: string;
@@ -9,6 +12,7 @@ export interface Sale {
     updatedAt: string;
     created_by: number;
     details?: SaleDetail[];
+    branch?: Branch | null;
     customer?: Customer | null;
     payment_type: "CASH" | "CREDIT" | "CARD" | "TRANSFER" | null;
 }

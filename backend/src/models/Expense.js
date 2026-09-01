@@ -61,6 +61,16 @@ const Expense = sequelize.define("Expenses", {
         },
         onUpdate:"CASCADE",
         onDelete:"RESTRICT"
+    },
+    branch_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: "Branches",
+            key: "id"
+        },
+        onUpdate: "CASCADE",
+        onDelete: "RESTRICT"
     }
 }, {
     tableName: "Expenses",

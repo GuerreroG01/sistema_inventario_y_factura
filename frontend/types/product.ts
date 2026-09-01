@@ -11,9 +11,14 @@ export type Product = {
     createdAt?: string;
     updatedAt?: string;
 };
+export type Branch = {
+    id: number;
+    name: string;
+}
 export type ProductUnit = {
     id: number;
     product_id: number;
+    branch?: Branch | null;
     unit: string;
     barcode?: string;
     price: number;

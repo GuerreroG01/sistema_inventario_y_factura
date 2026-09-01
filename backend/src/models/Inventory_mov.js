@@ -63,6 +63,16 @@ const Inventory_mov = sequelize.define( "Inventory_mov",
             onUpdate: "CASCADE",
             onDelete: "RESTRICT",
         },
+        branch_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: "Branches",
+                key: "id"
+            },
+            onUpdate: "CASCADE",
+            onDelete: "RESTRICT"
+        }
     },
     {
         tableName: "Inventory_mov",

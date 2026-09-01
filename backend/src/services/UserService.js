@@ -1,6 +1,8 @@
 import { Op } from "sequelize";
 import User from "../models/User.js";
 import Business from "../models/Business.js";
+import Branch from "../models/Branch.js";
+import { getMainBranch } from "./BranchService.js";
 
 export const getUsers = async (query, businessId, userRol) => {
     try {
@@ -48,6 +50,8 @@ export const getUsers = async (query, businessId, userRol) => {
                 "Usuario",
                 "Rol",
                 "Activo",
+                "business_id",
+                "branch_id"
             ],
             order: [["Id", "DESC"]],
             limit,
@@ -89,6 +93,16 @@ export const getUserById = async (id, businessId, userRol) => {
                         "status",
                         "createdAt"
                     ]
+                },
+                {
+                    model: Branch,
+                    as: "branch",
+                    attributes: [
+                        "id",
+                        "name",
+                        "country",
+                        "city"
+                    ]
                 }
             ]
         });
@@ -121,15 +135,86 @@ export const updateUserBusiness = async (userId, businessId) => {
                 message: "Negocio no encontrado"
             };
         }
-        user.business_id = businessId
+        const mainBranch = await Branch.findOne({
+            where: {
+                business_id: businessId,
+                type: "MAIN"
+            },
+            attributes: [
+                "id",
+                "name"
+            ]
+        });
+
+        if (!mainBranch) {
+            throw {
+                statusCode: 404,
+                message: "El negocio no tiene una sucursal principal"
+            };
+        }
+
+        user.business_id = businessId;
+        user.branch_id = mainBranch.id;
+
         await user.save();
 
         return {
-            message: "Negocio asignado correctamente",
+            message: "Negocio y sucursal principal asignados correctamente",
             user
         };
     } catch (error) {
         console.error("updateUserBusiness service error:", error);
         throw error;
     }
+};
+
+export const updateUserBranch = async (
+    userId, branchId, targetBusinessId, currentBusinessId, userRol
+) => {
+    if (
+        userRol !== "superAdmin" &&
+        Number(targetBusinessId) !== Number(currentBusinessId)
+    ) {
+        throw {
+            statusCode: 403,
+            message: "No tienes permisos para operar sobre este negocio"
+        };
+    }
+
+    const user = await User.findOne({
+        where: {
+            Id: userId,
+            ...(userRol !== "superAdmin"
+                ? { business_id: currentBusinessId }
+                : {})
+        }
+    });
+
+    if (!user) {
+        throw {
+            statusCode: 404,
+            message: "Usuario no encontrado"
+        };
+    }
+
+    const branch = await Branch.findOne({
+        where: {
+            id: branchId,
+            business_id: targetBusinessId
+        }
+    });
+
+    if (!branch) {
+        throw {
+            statusCode: 404,
+            message: "Sucursal no encontrada"
+        };
+    }
+    user.branch_id = branchId;
+    user.business_id = targetBusinessId;
+    await user.save();
+    return {
+        message: "Sucursal asignada correctamente",
+        user
+    };
 };

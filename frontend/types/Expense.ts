@@ -7,7 +7,16 @@ export type Expense = {
 
     date: string;
     payment_method?: string;
-
+    business_id: number;
+    branch_id: number;
+    branch: {
+        id: number;
+        name: string;
+    };
+    created_by?: number;
+    updated_by?: number;
+    status: string;
+    removal_date?: string | null;
     createdAt?: string;
     updatedAt?: string;
 };

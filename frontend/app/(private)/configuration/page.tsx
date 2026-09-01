@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, Users, KeyRound, ArrowRight, Settings2 } from "lucide-react";
+import { Building2, Users, KeyRound, ArrowRight, Settings2, GitBranch } from "lucide-react";
 import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
 
 const configurationModules = [
@@ -16,6 +16,20 @@ const configurationModules = [
         border: "border-blue-100",
         text: "text-blue-600",
         hover: "hover:border-blue-200 hover:bg-blue-50/30",
+      },
+    },
+    {
+      title: "Sucursales",
+      description:
+        "Administrar las sucursales y puntos de operación de los negocios.",
+      href: "/configuration/branch",
+      icon: GitBranch,
+      allowedRoles: ["admin", "superadmin"],
+      color: {
+        bg: "bg-cyan-50",
+        border: "border-cyan-100",
+        text: "text-cyan-600",
+        hover: "hover:border-cyan-200 hover:bg-cyan-50/30",
       },
     },
     {

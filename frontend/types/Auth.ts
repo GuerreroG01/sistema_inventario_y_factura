@@ -6,6 +6,7 @@ export interface User {
     Rol: string;
     FechaIngreso: string;
     Activo: boolean;
+    branch_id: number;
 }
 
 export interface LoginResponse {
@@ -20,6 +21,7 @@ export interface RegisterRequest {
     Clave: string;
     Email: string;
     Telefono: string;
+    branch_id?: number;
 }
 
 export interface RegisterResponse {

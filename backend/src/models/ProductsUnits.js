@@ -20,6 +20,17 @@ const ProductUnit = sequelize.define("ProductsUnits",
             onDelete: "CASCADE",
         },
 
+        branch_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: "Branches",
+                key: "id",
+            },
+            onUpdate: "CASCADE",
+            onDelete: "RESTRICT",
+        },
+
         unit: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -91,8 +102,13 @@ const ProductUnit = sequelize.define("ProductsUnits",
     },
     {
         tableName: "ProductsUnits",
-        timestamps: false
+        timestamps: false,
+        indexes: [
+            {
+                unique: true,
+                fields: ["product_id", "branch_id", "unit"],
+            },
+        ],
     }
 );
-
 export default ProductUnit;

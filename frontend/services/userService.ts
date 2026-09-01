@@ -1,9 +1,6 @@
 import api from "./api";
 import { User } from "@/types/User";
-/*  Quede aqui, tengo que crear los componentes visuales para ver los usuarios, el perfil de usuario
-y también esta pendiente la logica en el backend para asignar un negocio a un usuario que eso irá 
-en el panel para consultar y administrar usuarios
-*/
+
 export async function getUsers(
   page: number = 1,
   filters: {
@@ -68,6 +65,27 @@ export async function updateUserBusiness(userId: number, businessId: number) {
       error?.response?.data?.message ||
       error.message ||
       "Error al asignar negocio"
+    );
+  }
+}
+
+export async function updateUserBranch( userId: number, businessId: number, branchId: number ) {
+  try {
+    const { data } = await api.patch(
+      `/user/${userId}/branch`,
+      {
+        business_id: businessId,
+        branch_id: branchId
+      }
+    );
+
+    return data;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error.message ||
+      "Error al asignar sucursal"
     );
   }
 }

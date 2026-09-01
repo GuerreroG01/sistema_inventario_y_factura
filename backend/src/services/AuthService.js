@@ -2,9 +2,10 @@ import User from "../models/User.js";
 import Business from "../models/Business.js"
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { getBranchStatus } from "./BranchService.js";
 
 export const registerMethod = async (datosUsuario, currentUser) => {
-    const { Usuario, Clave, Email, Telefono } = datosUsuario;
+    const { Usuario, Clave, Email, Telefono, branch_id } = datosUsuario;
 
     if (!Usuario || !Clave || !Email || !Telefono) {
         throw {
@@ -47,7 +48,8 @@ export const registerMethod = async (datosUsuario, currentUser) => {
         Email,
         Telefono,
         Rol: "Empleado",
-        business_id: currentUser?.business_id ?? 1
+        business_id: currentUser?.business_id ?? 1,
+        branch_id: branch_id ?? currentUser?.branch_id
     });
 
     return {
@@ -57,7 +59,8 @@ export const registerMethod = async (datosUsuario, currentUser) => {
         Telefono: nuevoUsuario.Telefono,
         Rol: nuevoUsuario.Rol,
         FechaIngreso: nuevoUsuario.FechaIngreso,
-        Activo: nuevoUsuario.Activo
+        Activo: nuevoUsuario.Activo,
+        branch_id: nuevoUsuario.branch_id
     };
 };
 
@@ -68,7 +71,6 @@ export const login = async (usuario, clave) => {
             message: "Usuario y contraseña son obligatorios"
         };
     }
-
 
     const user = await User.findOne({
         where: {
@@ -85,6 +87,17 @@ export const login = async (usuario, clave) => {
             }
         ]
     });
+    
+    const branchStatus = await getBranchStatus(
+        user.business_id,
+        user.branch_id
+    );
+
+    if (!branchStatus.active) {
+        throw new Error(
+            "Acceso denegado: tu sucursal está inactiva. Contacta al administrador."
+        );
+    }
     if (!user) {
         throw {
             statusCode: 401,
@@ -119,7 +132,8 @@ export const login = async (usuario, clave) => {
             usuario: user.Usuario,
             rol: user.Rol,
             activo: user.Activo,
-            business_id: user.business_id
+            business_id: user.business_id,
+            branch_id: user.branch_id
         },
         process.env.JWT_SECRET,
         {
@@ -135,6 +149,7 @@ export const login = async (usuario, clave) => {
             Rol: user.Rol,
             Activo: user.Activo,
             Business_id: user.business_id,
+            Branch_id: user.branch_id,
             Business: {
                 Id: user.business.id,
                 Nombre: user.business.name
