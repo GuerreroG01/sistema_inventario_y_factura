@@ -2,8 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { getProduct, createProduct, updateProduct } from "@/services/productService";
 import { Product, CreateProduct, UpdateProduct } from "@/types/product";
 
+type Branch = {
+    id: number;
+    name: string;
+}
 export type ProductUnitForm = {
     id?: number;
+    branch?: Branch | null;
     unit: string;
     barcode: string;
     price: string;
@@ -150,6 +155,12 @@ export function useProductForm({ productId }: Props) {
         units: (product.units ?? []).map(
             (unit) => ({
                 id: unit.id,
+                branch: unit.branch
+                    ? {
+                        id: unit.branch.id,
+                        name: unit.branch.name,
+                    }
+                    : null,
                 unit: unit.unit ?? "",
                 barcode: unit.barcode ?? "",
                 price:

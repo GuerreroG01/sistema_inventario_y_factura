@@ -10,6 +10,7 @@ import {
     getTotalStock, getLowStock
 } from "../services/ProductsUnitsService.js";
 import sequelize from "../config/database.js";
+import Branch from "../models/Branch.js";
 
 export const createProduct = async (req, res) => {
     try {
@@ -177,11 +178,16 @@ export const getProducts = async (req, res) => {
         const limit = 12;
         const offset = (page - 1) * limit;
 
-        const {
-            name, barcode, category, active, priceMin, priceMax, hasPromotion
-        } = req.query;
+        const { name, barcode, category, active, priceMin, priceMax, hasPromotion } = req.query;
 
-        const business_id = req.user.business_id;
+        const { business_id, branch_id, rol } = req.user;
+
+        if (!business_id) {
+            return res.status(400).json({
+                error: "business_required",
+                message: "El usuario no tiene un negocio asociado."
+            });
+        }
 
         const where = {
             business_id
@@ -202,6 +208,16 @@ export const getProducts = async (req, res) => {
         }
 
         const productUnitWhere = {};
+        if (rol !== "admin" && rol !== "superAdmin") {
+            if (!branch_id) {
+                return res.status(400).json({
+                    error: "branch_required",
+                    message: "El usuario no tiene una sucursal asociada."
+                });
+            }
+
+            productUnitWhere.branch_id = branch_id;
+        }
 
         if (barcode) {
             productUnitWhere.barcode = barcode;
@@ -211,13 +227,11 @@ export const getProducts = async (req, res) => {
             productUnitWhere.price = {};
 
             if (priceMin) {
-                productUnitWhere.price[Op.gte] =
-                    parseFloat(priceMin);
+                productUnitWhere.price[Op.gte] = parseFloat(priceMin);
             }
 
             if (priceMax) {
-                productUnitWhere.price[Op.lte] =
-                    parseFloat(priceMax);
+                productUnitWhere.price[Op.lte] = parseFloat(priceMax);
             }
         }
 
@@ -265,19 +279,27 @@ export const getProducts = async (req, res) => {
         const { count, rows: products } = await Product.findAndCountAll({
             where,
             include: [
-            {
-                model: ProductUnit,
-                as: "units",
-                attributes: [
-                    "id", "product_id", "unit", "barcode", "price",
-                    "cost", "stock", "hasPromotion", "promotionPrice",
-                    "promotionQuantity", "promotionStart", "promotionEnd",
-                    "entryDate", "expirationDate", "active"
-                ],
-                where: productUnitWhere,
-                required: true
-            }
-        ],
+                {
+                    model: ProductUnit,
+                    as: "units",
+
+                    attributes: [
+                        "id", "product_id", "branch_id", "unit", "barcode", "price", "cost", "stock",  "hasPromotion",
+                        "promotionPrice", "promotionQuantity", "promotionStart", "promotionEnd", "entryDate", 
+                        "expirationDate", "active"
+                    ],
+                    where: productUnitWhere,
+                    required: false,
+                    include: [
+                        {
+                            model: Branch,
+                            as: "branch",
+                            attributes: ["id", "name"]
+                        }
+                    ]
+                }
+            ],
+
             order: [["id", "DESC"]],
             limit,
             offset,
@@ -304,7 +326,13 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
     try {
         const { id } = req.params;
-        const business_id = req.user.business_id;
+        const { business_id, branch_id, rol } = req.user;
+        if (!business_id) {
+            return res.status(400).json({
+                error: "business_required",
+                message: "El usuario no tiene un negocio asociado."
+            });
+        }
 
         const product = await Product.findOne({
             where: {
@@ -322,7 +350,9 @@ export const getProductById = async (req, res) => {
 
         const units = await findByProduct(
             product.id,
-            business_id
+            business_id,
+            branch_id,
+            rol
         );
 
         return res.json({
@@ -343,7 +373,7 @@ export const getProductById = async (req, res) => {
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const business_id = req.user.business_id;
+        const { business_id, branch_id } = req.user;
 
         const {
             name, category, type_item, active, units
@@ -401,6 +431,7 @@ export const updateProduct = async (req, res) => {
                         if ( productUnit.product_unit_id === undefined || productUnit.product_unit_id === null ) {
                             const newUnit = await create({
                                 product_id: product.id,
+                                branch_id,
                                 unit: productUnit.unit,
                                 barcode: productUnit.barcode,
                                 price: productUnit.price,

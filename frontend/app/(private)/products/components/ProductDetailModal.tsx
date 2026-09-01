@@ -6,6 +6,7 @@ import { X, Package, DollarSign, Layers, Tag, BadgePercent,  Barcode as BarCodeI
     Clock, CheckCircle2, AlertTriangle, TrendingUp, Boxes, Scale
 } from "lucide-react";
 import Barcode from "react-barcode";
+import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -16,7 +17,6 @@ interface ProductDetailModalProps {
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   isOpen, onClose, product,
 }) => {
-    console.log("Datos del producto:", product);
     if (!isOpen || !product) return null;
 
     const units = product.units ?? [];
@@ -29,7 +29,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             return dateString;
         }
     };
-
+    const { user } = useAuth();
+    const showBranchName = user?.Rol === "superAdmin" || user?.Rol === "admin";
     const isService = product.type_item === "Servicio";
     const activeUnits = units.filter((unit) => unit.active);
     const totalStock = activeUnits.reduce(
@@ -326,18 +327,51 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                             <div>
                                 <div className="flex items-center gap-2">
-                                <h5 className="text-base font-black text-slate-900">
-                                    {unit.unit}
-                                </h5>
+                                    <h5 className="text-base font-black text-slate-900">
+                                        {unit.unit}
+                                    </h5>
 
-                                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                                    #{index + 1}
-                                </span>
+                                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                                        #{index + 1}
+                                    </span>
                                 </div>
 
-                                <p className="text-[11px] text-slate-400">
-                                Unidad ID: #{unit.id}
-                                </p>
+                                <div className="mt-1 flex flex-wrap items-center gap-2">
+                                    <p className="text-[11px] text-slate-400">
+                                        Unidad ID: #{unit.id}
+                                    </p>
+
+                                    {showBranchName && unit.branch && (
+                                        <>
+                                            <div className="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                                                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-50 text-indigo-500">
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="1.8"
+                                                        className="h-3 w-3"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M3 21h18M5 21V6a1 1 0 0 1 1-1h5v16M13 21V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v18M8 9h1M8 12h1M8 15h1M15 6h2M15 9h2M15 12h2M15 15h2"
+                                                        />
+                                                    </svg>
+                                                </span>
+
+                                                <span className="text-slate-400">
+                                                    Sucursal
+                                                </span>
+
+                                                <span className="font-semibold text-slate-600">
+                                                    {unit.branch.name}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                             </div>
 
@@ -432,10 +466,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                             <div className="flex items-baseline gap-1">
                                                 <span className="text-2xl font-black text-slate-900">
                                                     {Number(unit.stock || 0)}
-                                                </span>
-
-                                                <span className="text-xs font-medium text-slate-500">
-                                                    {unit.unit}
                                                 </span>
                                             </div>
 

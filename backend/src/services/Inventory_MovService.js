@@ -11,7 +11,8 @@ class InventoryMovService {
         cantidad,
         referencia = null,
         observacion = null,
-        business_id
+        business_id,
+        branch_id
     }, transaction = null) {
 
         const movement = await InventoryMov.create({
@@ -20,7 +21,8 @@ class InventoryMovService {
             cantidad,
             referencia,
             observacion,
-            business_id
+            business_id,
+            branch_id
         }, {
             transaction
         });

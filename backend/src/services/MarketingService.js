@@ -1,9 +1,11 @@
 import { Op, literal } from "sequelize";
 import Customer from "../models/Customers.js";
+import Branch from "../models/Branch.js";
 import CustomerMarketing from "../models/CustomerMarketing.js";
 import Sales from "../models/Sales.js";
 import SaleDetails from "../models/SaleDetails.js";
 import Product from "../models/Products.js";
+import ProductUnit from "../models/ProductsUnits.js";
 import { cacheService, CacheKeys, CacheTTL } from "../services/cache/index.js";
 
 //Obtiene los customers en base al id del negocio.
@@ -297,10 +299,15 @@ export const getCustomerMarketingPreferences = async ( customerId, businessId ) 
                 ],
                 include: [
                     {
-                        model: Product,
-                        as: "product",
-                        attributes: [
-                            "category"
+                        model: ProductUnit,
+                        as: "productUnit",
+                        attributes: [ "id", "product_id" ],
+                        include: [
+                            {
+                                model: Product,
+                                as: "product",
+                                attributes: [ "category" ]
+                            }
                         ]
                     }
                 ]
@@ -328,8 +335,7 @@ export const getCustomerMarketingPreferences = async ( customerId, businessId ) 
                 Number(detail.precio_unitario)
             );
 
-            const category =
-                detail.product?.category;
+            const category = detail.productUnit?.product?.category;
 
             if (category) {
                 categoryCounter[category] =
@@ -364,30 +370,27 @@ export const getCustomerMarketingPreferences = async ( customerId, businessId ) 
 };
 
 export const getProducts = async ({ business_id, category, priceMin, priceMax }) => {
-    const useCache =
-        category &&
-        !priceMin &&
-        !priceMax;
-
+    const useCache = category && !priceMin && !priceMax; 
     const getProductsFromDB = async () => {
-        const where = {
+        const productWhere = {
             business_id,
             active: true
         };
 
         if (category) {
-            where.category = category;
+            productWhere.category = category;
         }
+        const unitWhere = {};
 
         if (priceMin || priceMax) {
-            where.price = {};
+            unitWhere.price = {};
 
             if (priceMin) {
-                where.price[Op.gte] = parseFloat(priceMin);
+                unitWhere.price[Op.gte] = parseFloat(priceMin);
             }
 
             if (priceMax) {
-                where.price[Op.lte] = parseFloat(priceMax);
+                unitWhere.price[Op.lte] = parseFloat(priceMax);
             }
         }
 
@@ -397,9 +400,9 @@ export const getProducts = async ({ business_id, category, priceMin, priceMax })
             order.push([
                 literal(`
                     CASE
-                        WHEN "hasPromotion" = true
-                        AND "promotionEnd" IS NOT NULL
-                        AND "promotionEnd" >= CURRENT_TIMESTAMP
+                        WHEN "units"."hasPromotion" = true
+                        AND "units"."promotionEnd" IS NOT NULL
+                        AND "units"."promotionEnd" >= CURRENT_TIMESTAMP
                         THEN 1
                         ELSE 0
                     END
@@ -410,10 +413,22 @@ export const getProducts = async ({ business_id, category, priceMin, priceMax })
 
         order.push(["id", "DESC"]);
 
-        return await Product.findAll({
-            where,
+        const products = await Product.findAll({
+            where: productWhere,
+            include: [
+                {
+                    model: ProductUnit,
+                    as: "units",
+                    where: unitWhere,
+                    required: true
+                }
+            ],
             order
         });
+
+        return products.map(product =>
+            product.get({ plain: true })
+        );
     };
 
     if (useCache) {
@@ -460,42 +475,101 @@ export const createCustomerMarketingIfNotExists = async (customerId, businessId)
         throw new Error(`Error creando CustomerMarketing: ${error.message}`);
     }
 };
+
+const groupProductsByBranch = async (products) => {
+    const branchIds = [
+        ...new Set(
+            products.flatMap(product =>
+                (product.units || [])
+                    .map(unit => unit.branch_id)
+                    .filter(Boolean)
+            )
+        )
+    ];
+
+    const branches = await Branch.findAll({
+        where: {
+            id: branchIds
+        },
+        attributes: ["id", "name"]
+    });
+
+    const branchMap = new Map(
+        branches.map(branch => [
+            branch.id,
+            branch.name
+        ])
+    );
+
+    const grouped = {};
+
+    for (const product of products) {
+        const now = new Date();
+        for (const unit of product.units || []) {
+            const branchId = unit.branch_id;
+            if (!branchId) {
+                continue;
+            }
+
+            const branchName =
+                branchMap.get(branchId) || `Sucursal ${branchId}`;
+
+            const promotionIsActive =
+                unit.hasPromotion === true &&
+                unit.promotionPrice !== null &&
+                unit.promotionStart !== null &&
+                unit.promotionEnd !== null &&
+                new Date(unit.promotionStart) <= now &&
+                new Date(unit.promotionEnd) >= now;
+
+            if (!grouped[branchId]) {
+                grouped[branchId] = {
+                    branchId,
+                    branchName,
+                    products: []
+                };
+            }
+
+            grouped[branchId].products.push({
+                id: product.id,
+                name: product.name,
+                category: product.category,
+                unit: unit.unit,
+                price: Number(unit.price),
+                promotion: promotionIsActive
+                    ? {
+                        price: Number(unit.promotionPrice),
+                        start: unit.promotionStart,
+                        end: unit.promotionEnd
+                    }
+                    : null
+            });
+        }
+    }
+
+    return Object.values(grouped);
+};
+
 //Metodo que utiliza todos los metodos del servicio para seguir el flujo correcto de la campaña
 export const generateMarketingCampaign = async (businessId) => {
     const customers = await getMarketingCustomers(businessId);
-
     const campaign = [];
 
     for (const customer of customers) {
         const evaluation =
-            await evaluateCustomerMarketingScore(
-                customer.id,
-                businessId
-            );
+            await evaluateCustomerMarketingScore( customer.id, businessId );
 
         if (!evaluation.eligible) {
             continue;
         }
 
-        await createCustomerMarketingIfNotExists(
-            customer.id,
-            businessId
-        );
-
-        const preferences =
-            await getCustomerMarketingPreferences(
-                customer.id,
-                businessId
-            );
+        await createCustomerMarketingIfNotExists( customer.id, businessId );
+        const preferences = await getCustomerMarketingPreferences( customer.id, businessId );
         if (!preferences.preferences) {
             continue;
         }
 
-        const {
-            favoriteCategory,
-            priceRange
-        } = preferences.preferences;
-
+        const { favoriteCategory, priceRange } = preferences.preferences;
         let products = await getProducts({
             business_id: businessId,
             category: favoriteCategory
@@ -508,6 +582,7 @@ export const generateMarketingCampaign = async (businessId) => {
                 priceMax: priceRange.max
             });
         }
+        const productsByBranch = await groupProductsByBranch(products);
 
         campaign.push({
             customerId: customer.id,
@@ -516,31 +591,7 @@ export const generateMarketingCampaign = async (businessId) => {
             score: evaluation.score,
             marketingLevel: evaluation.marketingLevel,
             preferences: preferences.preferences,
-            products: products.map(product => {
-                const now = new Date();
-                const promotionIsActive =
-                    product.hasPromotion === true &&
-                    product.promotionPrice !== null &&
-                    product.promotionStart !== null &&
-                    product.promotionEnd !== null &&
-                    new Date(product.promotionStart) <= now &&
-                    new Date(product.promotionEnd) >= now;
-
-                return {
-                    id: product.id,
-                    name: product.name,
-                    category: product.category,
-                    price: product.price,
-
-                    promotion: promotionIsActive
-                        ? {
-                            price: product.promotionPrice,
-                            start: product.promotionStart,
-                            end: product.promotionEnd
-                        }
-                        : null
-                };
-            })
+            products: productsByBranch
         });
     }
     return campaign;

@@ -11,6 +11,7 @@ import Pagination from "./Pagination";
 import { ConfirmDeleteModal } from "@/components/ConfirmDelete";
 import { ProductDetailModal } from "./ProductDetailModal";
 import ProductFilters from "./ProductFilters";
+import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
 
 type ProductCardProps = {
   product: Product;
@@ -22,7 +23,8 @@ function ProductCard({ product, onDetail, onDelete,}: ProductCardProps) {
   const getActiveUnits = (product: Product): ProductUnit[] => {
     return (product.units ?? []).filter((unit) => unit.active);
   };
-
+  const { user } = useAuth();
+  const showBranchName = user?.Rol === "superAdmin" || user?.Rol === "admin";
   const formatPrice = (price: number | null): string => {
     if (price === null) {
       return "Sin precio";
@@ -128,98 +130,136 @@ function ProductCard({ product, onDetail, onDelete,}: ProductCardProps) {
             </span>
           </div>
 
-          <div className="mt-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <Tag className="h-4 w-4" />
+          {units.length === 0 ? (
+            <div className="mt-6 rounded-xl border border-amber-100 bg-amber-50/70 px-4 py-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                  <Info className="h-4 w-4" />
+                </div>
 
-                <span>
-                  {selectedUnit ? "Precio" : "Precio"}
-                </span>
-              </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-amber-800">
+                    No configurado en esta sucursal
+                  </p>
 
-              <div className="text-right">
-                {isActivePromotion ? (
-                  <div>
-                    <div className="text-lg font-bold text-emerald-700">
-                      {formatPrice(displayPrice)}
-                    </div>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-700">
+                    Este producto existe en el negocio, pero todavía no tiene
+                    una presentación configurada para esta sucursal.
+                  </p>
 
-                    <div className="text-xs font-semibold text-slate-400 line-through">
-                      {formatPrice(Number(selectedUnit?.price))}
-                    </div>
-                  </div>
-                ) : (
-                  <span className="text-lg font-bold text-slate-900">
-                    {formatPrice(
-                      selectedUnit
-                        ? Number(selectedUnit.price)
-                        : null
-                    )}
-                  </span>
-                )}
+                  <Link
+                    href={`/products/form/${product.id}/update`}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-600"
+                  >
+                    Configurar presentación
+
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-3.5 w-3.5"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.21 14.77a.75.75 0 0 1-.02-1.06L10.94 10 7.23 6.29a.75.75 0 1 1 1.06 1.06l4.24 4.24a.75.75 0 0 1 0 1.06l-4.24-4.24a.75.75 0 0 1 .02-1.06Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </Link>
+                </div>
               </div>
             </div>
-
-            {isProduct && (
+          ) : (
+            <div className="mt-6 space-y-4">
+              {/* PRECIO */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Boxes className="h-4 w-4" />
+                  <Tag className="h-4 w-4" />
 
-                  <span>Stock disponible</span>
+                  <span>Precio</span>
                 </div>
 
                 <div className="text-right">
-                  <div
-                    className={`font-bold ${
-                      generalStock === 0 && promotionQuantity === 0
-                        ? "text-red-600"
-                        : generalStock <= 5 && promotionQuantity === 0
-                        ? "text-amber-600"
-                        : "text-green-600"
-                    }`}
-                  >
-                    {generalStock}
-                  </div>
+                  {isActivePromotion ? (
+                    <div>
+                      <div className="text-lg font-bold text-emerald-700">
+                        {formatPrice(displayPrice)}
+                      </div>
 
-                  {isActivePromotion && promotionQuantity > 0 && (
-                    <div className="mt-0.5 text-sm font-bold text-emerald-500">
-                      +{promotionQuantity}
+                      <div className="text-xs font-semibold text-slate-400 line-through">
+                        {formatPrice(Number(selectedUnit?.price))}
+                      </div>
                     </div>
+                  ) : (
+                    <span className="text-lg font-bold text-slate-900">
+                      {formatPrice(
+                        selectedUnit
+                          ? Number(selectedUnit.price)
+                          : null
+                      )}
+                    </span>
                   )}
                 </div>
               </div>
-            )}
 
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Layers3 className="h-4 w-4" />
+              {/* STOCK */}
+              {isProduct && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <Boxes className="h-4 w-4" />
 
-                  <span>{presentationLabel}</span>
+                    <span>Stock disponible</span>
+                  </div>
+
+                  <div className="text-right">
+                    <div
+                      className={`font-bold ${
+                        generalStock === 0 && promotionQuantity === 0
+                          ? "text-red-600"
+                          : generalStock <= 5 && promotionQuantity === 0
+                          ? "text-amber-600"
+                          : "text-green-600"
+                      }`}
+                    >
+                      {generalStock}
+                    </div>
+
+                    {isActivePromotion && promotionQuantity > 0 && (
+                      <div className="mt-0.5 text-sm font-bold text-emerald-500">
+                        +{promotionQuantity}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* PRESENTACIONES */}
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
+                    <Layers3 className="h-4 w-4" />
+
+                    <span>{presentationLabel}</span>
+                  </div>
+
+                  <span className="text-xs font-semibold text-slate-400">
+                    {units.length}
+                  </span>
                 </div>
 
-                <span className="text-xs font-semibold text-slate-400">
-                  {units.length}
-                </span>
-              </div>
-
-              {units.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-400">
-                  {emptyLabel}
-                </div>
-              ) : (
                 <div className="space-y-3">
+                  {/* Presentación seleccionada */}
                   <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 px-4 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-xs font-medium text-slate-400">
-                          {presentationLabel} seleccionada
+                          {showBranchName ? "Sucursal" : `${presentationLabel} seleccionada`}
                         </p>
 
                         <p className="mt-0.5 font-bold text-indigo-700">
-                          {selectedUnit?.unit ||
-                            "Sin descripción"}
+                          {showBranchName
+                            ? selectedUnit?.branch?.name || "Sin sucursal"
+                            : selectedUnit?.unit || "Sin descripción"}
                         </p>
                       </div>
 
@@ -239,6 +279,7 @@ function ProductCard({ product, onDetail, onDelete,}: ProductCardProps) {
                     </div>
                   </div>
 
+                  {/* Selector de unidades */}
                   <div className="relative">
                     {units.length > 3 && (
                       <button
@@ -275,6 +316,7 @@ function ProductCard({ product, onDetail, onDelete,}: ProductCardProps) {
                         </svg>
                       </button>
                     )}
+
                     <div
                       ref={unitsRef}
                       className={`
@@ -288,13 +330,16 @@ function ProductCard({ product, onDetail, onDelete,}: ProductCardProps) {
                       `}
                     >
                       {units.map((unit) => {
-                        const isSelected = selectedUnit?.id === unit.id;
+                        const isSelected =
+                          selectedUnit?.id === unit.id;
 
                         return (
                           <button
                             key={unit.id}
                             type="button"
-                            onClick={() => setSelectedUnitId(unit.id)}
+                            onClick={() =>
+                              setSelectedUnitId(unit.id)
+                            }
                             className={`
                               shrink-0 rounded-full
                               px-3.5 py-2
@@ -342,7 +387,7 @@ function ProductCard({ product, onDetail, onDelete,}: ProductCardProps) {
                         >
                           <path
                             fillRule="evenodd"
-                            d="M7.21 14.77a.75.75 0 0 1 .02-1.06L10.94 10 7.23 6.29a.75.75 0 1 1 1.06 1.06l4.24 4.24a.75.75 0 0 1 0 1.06l-4.24 4.24a.75.75 0 0 1-1.06.02Z"
+                            d="M7.21 14.77a.75.75 0 0 1-.02-1.06L10.94 10 7.23 6.29a.75.75 0 1 1 1.06 1.06l-4.24-4.24a.75.75 0 0 1 0-1.06l4.24-4.24a.75.75 0 0 1 0-1.06l4.24 4.24a.75.75 0 0 1 .02 1.06Z"
                             clipRule="evenodd"
                           />
                         </svg>
@@ -350,11 +395,12 @@ function ProductCard({ product, onDetail, onDelete,}: ProductCardProps) {
                     )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
+        {/* ACCIONES */}
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
@@ -387,6 +433,7 @@ function ProductCard({ product, onDetail, onDelete,}: ProductCardProps) {
           </button>
         </div>
 
+        {/* ESTADO */}
         <span
           className={`absolute bottom-4 left-4 rounded-full px-3 py-1 text-xs font-semibold shadow ${
             product.active

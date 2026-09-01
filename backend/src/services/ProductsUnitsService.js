@@ -3,6 +3,7 @@ import Product from "../models/Products.js";
 import { Op } from "sequelize";
 import InventoryMovService from "./Inventory_MovService.js";
 import { normalizeDate } from "../utils/formatters.js";
+import Branch from "../models/Branch.js";
 
 const generateBarcode = async () => {
     let barcode;
@@ -26,10 +27,22 @@ const generateBarcode = async () => {
 };
 
 export const create = async ({
-    product_id, unit, barcode, price, cost, stock, hasPromotion, promotionPrice,
+    product_id, branch_id, unit, barcode, price, cost, stock, hasPromotion, promotionPrice,
     promotionQuantity, promotionStart, promotionEnd, entryDate, expirationDate,
     active, business_id, transaction
 }) => {
+
+    const branch = await Branch.findOne({
+        where: {
+            id: branch_id,
+            business_id
+        },
+        transaction
+    });
+
+    if (!branch) {
+        throw new Error("La sucursal no existe o no pertenece al negocio.");
+    }
 
     const product = await Product.findOne({
         where: {
@@ -85,6 +98,7 @@ export const create = async ({
     const productUnit = await ProductUnit.create(
         {
             product_id,
+            branch_id,
             unit,
             barcode,
             price,
@@ -113,17 +127,28 @@ export const create = async ({
             tipo: "entrada",
             cantidad: finalStock,
             observacion: null,
-            business_id
+            business_id,
+            branch_id
         }, transaction);
     }
     return productUnit;
 };
 
-export const findById = async (product_unit_id, business_id) => {
+export const findById = async ( product_unit_id, business_id, branch_id, rol ) => {
+    const where = {
+        id: product_unit_id
+    };
+
+    if (rol !== "admin" && rol !== "superAdmin") {
+        if (!branch_id) {
+            throw new Error("El usuario no tiene una sucursal asociada.");
+        }
+
+        where.branch_id = branch_id;
+    }
+
     const productUnit = await ProductUnit.findOne({
-        where: {
-            id: product_unit_id
-        },
+        where,
         include: [
             {
                 model: Product,
@@ -145,8 +170,7 @@ export const findById = async (product_unit_id, business_id) => {
     return productUnit;
 };
 
-export const findByProduct = async (product_id, business_id) => {
-
+export const findByProduct = async ( product_id, business_id, branch_id, rol ) => {
     const product = await Product.findOne({
         where: {
             id: product_id,
@@ -159,10 +183,27 @@ export const findByProduct = async (product_id, business_id) => {
         return null;
     }
 
+    const where = {
+        product_id
+    };
+
+    if (rol !== "admin" && rol !== "superAdmin") {
+        if (!branch_id) {
+            throw new Error("El usuario no tiene una sucursal asociada.");
+        }
+
+        where.branch_id = branch_id;
+    }
+
     const productUnits = await ProductUnit.findAll({
-        where: {
-            product_id
-        },
+        where,
+        include: [
+            {
+                model: Branch,
+                as: "branch",
+                attributes: ["id", "name"]
+            }
+        ],
         order: [["id", "ASC"]]
     });
 
@@ -170,7 +211,6 @@ export const findByProduct = async (product_id, business_id) => {
 };
 
 export const update = async (id, business_id, data, transaction) => {
-    console.log("UPDATE 1 - buscando productUnit", id);
     const productUnit = await ProductUnit.findOne({
         where: {
             id
@@ -191,11 +231,9 @@ export const update = async (id, business_id, data, transaction) => {
         ],
         transaction
     });
-    console.log("UPDATE 2 - productUnit encontrada");
     if (!productUnit) {
         return null;
     }
-    console.log("UPDATE 3 - stock actual", productUnit.stock);
     const {
         unit, barcode, price, cost, stock, stockChangeSource, stockObservation, hasPromotion, promotionPrice, promotionQuantity, promotionStart,
         promotionEnd, entryDate, expirationDate, active
@@ -209,21 +247,13 @@ export const update = async (id, business_id, data, transaction) => {
     if ( productUnit.product.type_item === "Producto" && stock !== undefined && newStock !== oldStock) {
         const diff = newStock - oldStock;
 
-        console.log("UPDATE 4 - cambio de stock", {
-            oldStock,
-            newStock,
-            diff,
-            stockChangeSource
-        });
         if ( diff < 0 && stockChangeSource !== "promotion" && (!stockObservation || stockObservation.trim() === "")) {
-            console.log("UPDATE 5 - falta stockObservation");
             const error = new Error(
                 "Debe ingresar una razón cuando se reduce el inventario."
             );
             error.code = "STOCK_REDUCTION_REASON_REQUIRED";
             throw error;
         }
-        console.log("UPDATE 6 - antes de InventoryMovService.create");
         await InventoryMovService.create({
             product_unit_id: productUnit.id,
             tipo: "ajuste",
@@ -236,13 +266,11 @@ export const update = async (id, business_id, data, transaction) => {
                     : "Aumento manual de stock",
             business_id
         },transaction);
-        console.log("UPDATE 7 - después de InventoryMovService.create");
     }
     const finalStock =
         productUnit.product.type_item === "Servicio"
             ? 0
             : newStock;
-    console.log("UPDATE 8 - antes de productUnit.update");
     await productUnit.update({
         unit:
             unit ?? productUnit.unit,
@@ -277,7 +305,6 @@ export const update = async (id, business_id, data, transaction) => {
     }, {
         transaction
     });
-    console.log("UPDATE 9 - después de productUnit.update");
     return productUnit;
 };
 

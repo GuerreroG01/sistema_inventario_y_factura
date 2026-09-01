@@ -6,6 +6,7 @@ import { Tag, QrCode, Layers, DollarSign, TrendingUp, Package, Scale, Calendar, 
 } from "lucide-react";
 import type { ProductForm as ProductFormType, ProductUnitForm } from "../hooks/useProductForm";
 import PromotionPopover from "./PromotionPopover";
+import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
 
 type Props = {
     formData: ProductFormType;
@@ -38,6 +39,8 @@ type Props = {
 export default function ProductForm({
     formData, updateField, updateUnitField, addUnit, removeUnit, restoreUnit, onSubmit, onCancel, isSubmitting, isEditMode,
 }: Props) {
+    const { user } = useAuth();
+    const showBranchName = isEditMode && (user?.Rol === "superAdmin" || user?.Rol === "admin");
     const [showPromotionPopover, setShowPromotionPopover] = useState<number | null>(null);
     const [expandedUnits, setExpandedUnits] = useState<number[]>([]);
     const isProduct = () => formData.type_item === "Producto";
@@ -318,6 +321,27 @@ export default function ProductForm({
                                                                         ? `Unidad ${originalIndex + 1}`
                                                                         : `Opción ${originalIndex + 1}`}
                                                                 </p>
+
+                                                                {showBranchName && unit.branch && (
+                                                                    <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-600 ring-1 ring-inset ring-indigo-100">
+                                                                        <svg
+                                                                            xmlns="http://www.w3.org/2000/svg"
+                                                                            viewBox="0 0 24 24"
+                                                                            fill="none"
+                                                                            stroke="currentColor"
+                                                                            strokeWidth="1.8"
+                                                                            className="h-3 w-3"
+                                                                        >
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                d="M3 21h18M5 21V6a1 1 0 0 1 1-1h5v16M13 21V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v18M8 9h1M8 12h1M8 15h1M15 6h2M15 9h2M15 12h2M15 15h2"
+                                                                            />
+                                                                        </svg>
+
+                                                                        {unit.branch.name}
+                                                                    </span>
+                                                                )}
 
                                                                 <ChevronDown
                                                                     className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
