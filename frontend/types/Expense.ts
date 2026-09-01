@@ -9,7 +9,7 @@ export type Expense = {
     payment_method?: string;
     business_id: number;
     branch_id: number;
-    branch?: {
+    branch: {
         id: number;
         name: string;
     };
