@@ -385,5 +385,3 @@ export const getBranchStatus = async (businessId, branchId) => {
         active: branch.status === "ACTIVE"
     };
 };
-/*Ya esta el flujo multisucursal y la asignación para usuarios administradores, ahora seguiria el flujo de los modulos
-para que filtren la información por sucursal*/

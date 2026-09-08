@@ -2,6 +2,8 @@ import Business from "../models/Business.js";
 import License from "../models/License.js";
 import { createTrialLicense, getLicenseByBusiness, suspendLicense, reactivateLicense } from "./license/LicenseService.js";
 import { Op, ForeignKeyConstraintError } from "sequelize";
+import { createBranch } from "./BranchService.js";
+
 export const createBusiness = async (data) => {
     const { name } = data;
     if (!name) {
@@ -18,6 +20,15 @@ export const createBusiness = async (data) => {
 
     const business = await Business.create({ name });
 
+    const branch = await createBranch(business.id, {
+        name: "Sucursal Principal",
+        type: "MAIN",
+        country: "Nicaragua",
+        city: "Pendiente",
+        address: null,
+        phone: null
+    });
+
     const license = await createTrialLicense(
         business.id,
         14
@@ -25,10 +36,11 @@ export const createBusiness = async (data) => {
 
     return {
         business,
+        branch,
         license
     };
 };
-
+/* Hay que hacer que al crear un negocio se genere también una sucursal principal */
 export const getBusinesses = async () => {
 
     const businesses = await Business.findAll({
