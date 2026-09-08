@@ -238,7 +238,7 @@ export default function CustomerManager({
                                                     }`}
                                                 >
                                                     {balance.toLocaleString(
-                                                        "es-ES",
+                                                        "es-MX",
                                                         {
                                                             style: "currency",
                                                             currency: "NIO",
@@ -254,7 +254,7 @@ export default function CustomerManager({
 
                                                 <span className="font-semibold text-slate-700">
                                                     {creditLimit > 0 ? (
-                                                        creditLimit.toLocaleString("es-ES", {
+                                                        creditLimit.toLocaleString("es-MX", {
                                                             style: "currency",
                                                             currency: "NIO",
                                                         })

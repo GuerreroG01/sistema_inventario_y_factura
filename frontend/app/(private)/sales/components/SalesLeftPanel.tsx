@@ -332,7 +332,7 @@ export default function SalesLeftPanel({
                                     >
                                         C$
                                         {Number(sale.total).toLocaleString(
-                                            "en-US",
+                                            "es-MX",
                                             {
                                                 minimumFractionDigits: 2,
                                             }

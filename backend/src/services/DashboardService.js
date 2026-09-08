@@ -5,6 +5,7 @@ import Product from "../models/Products.js";
 import ProductUnit from "../models/ProductsUnits.js";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
 import { getMonthDateRange} from "../utils/getMonthDateRange.js"
+import { getTotalSalaries } from "./WorkSheet/Employee/SalaryService.js";
 
 export const getDashboardMetrics = async (businessId) => {
     return cacheService.remember(
@@ -259,11 +260,21 @@ export const getProfitabilityMetrics = async (month, year, businessId) => {
                 type: QueryTypes.SELECT,
             }
         );
+        const salaryDate = new Date(endDate);
+        salaryDate.setDate(salaryDate.getDate() - 1);
+
+        const salaryResult = await getTotalSalaries(
+            businessId,
+            null,
+            salaryDate.toISOString().split("T")[0]
+        );
+
 
         const ventas = Number(salesResult[0]?.ventas || 0);
         const gastos = Number(expensesResult[0]?.gastos || 0);
+        const salarios = Number(salaryResult?.total || 0);
 
-        const costosTotales = gastos;
+        const costosTotales = gastos + salarios;
 
         const ganancia = ventas - costosTotales;
 

@@ -13,9 +13,9 @@ import authRoutes from "./routes/AuthRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import licenseRoutes from "./routes/licenseRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js"
-/*import employeeRoutes from "./routes/Worksheet/Employee/EmployeeRoutes.js"
+import employeeRoutes from "./routes/Worksheet/Employee/EmployeeRoutes.js"
 import employmentRoutes from "./routes/Worksheet/Employee/EmploymentRoutes.js"
-import salaryRoutes from "./routes/Worksheet/Employee/SalaryRoutes.js"*/
+import salaryRoutes from "./routes/Worksheet/Employee/SalaryRoutes.js"
 import { verifyToken } from "./middlewares/authMiddleware.js";
 import { requireRole } from "./middlewares/roleMiddleware.js"
 import { syncSequence } from "./utils/syncSequence.js";
@@ -55,9 +55,9 @@ app.use("/api/business", verifyToken, requireRole("superAdmin"), businessRoutes)
 app.use("/api/branches", verifyToken, requireRole("admin", "superAdmin"), branchRoutes);
 app.use("/api/licenses", verifyToken, licenseRoutes);
 app.use("/api/customers", verifyToken, customerRoutes);
-/*app.use("/api/employee", verifyToken, employeeRoutes);
+app.use("/api/employee", verifyToken, employeeRoutes);
 app.use("/api/employment", verifyToken, employmentRoutes);
-app.use("/api/salary", verifyToken, salaryRoutes);*/
+app.use("/api/salary", verifyToken, salaryRoutes);
 app.use("/api/auth", authRoutes);
 
 export default app;

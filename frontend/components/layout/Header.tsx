@@ -17,6 +17,7 @@ export default function Header() {
         { label: "Clientes", href: "/customer" },
         { label: "Ventas", href: "/sales" },
         { label: "Gastos", href: "/expense" },
+        { label: "Planilla", href: "/employee" },
         //{ label: "Reportes", href: "#" },
     ];
     const { logout, user, businessName } = useAuth();

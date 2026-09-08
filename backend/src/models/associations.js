@@ -8,9 +8,9 @@ import User from "./User.js";
 import License from './License.js';
 import Customer from "./Customers.js";
 import CustomerMarketing from "./CustomerMarketing.js";
-//import Employee from "./Worksheet/Employee/Employee.js"
-//import EmployeeEmployment from "./Worksheet/Employee/EmployeeEmployment.js"
-//import EmployeeSalaryHistory from "./Worksheet/Employee/EmployeeSalaryHistory.js"
+import Employee from "./Worksheet/Employee/Employee.js"
+import EmployeeEmployment from "./Worksheet/Employee/EmployeeEmployment.js"
+import EmployeeSalaryHistory from "./Worksheet/Employee/EmployeeSalaryHistory.js"
 import ProductUnit from "./ProductsUnits.js";
 import Branch from "./Branch.js";
 
@@ -198,7 +198,6 @@ CustomerMarketing.belongsTo(Business,{
     as:"business"
 });
 
-/*
 Business.hasMany(Employee, {
     foreignKey: "business_id",
     as: "employees"
@@ -208,6 +207,17 @@ Employee.belongsTo(Business, {
     foreignKey: "business_id",
     as: "business"
 });
+
+Branch.hasMany(Employee, {
+    foreignKey: "branch_id",
+    as: "employees"
+});
+
+Employee.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
+});
+
 
 Employee.hasMany(EmployeeEmployment, {
     foreignKey: "employee_id",
@@ -219,6 +229,17 @@ EmployeeEmployment.belongsTo(Employee, {
     as: "employee"
 });
 
+Branch.hasMany(EmployeeEmployment, {
+    foreignKey: "branch_id",
+    as: "employeeEmployments"
+});
+
+EmployeeEmployment.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
+});
+
+
 Employee.hasMany(EmployeeSalaryHistory, {
     foreignKey: "employee_id",
     as: "salaryHistory"
@@ -227,7 +248,7 @@ Employee.hasMany(EmployeeSalaryHistory, {
 EmployeeSalaryHistory.belongsTo(Employee, {
     foreignKey: "employee_id",
     as: "employee"
-});*/
+});
 
 Product.hasMany(ProductUnit, {
     foreignKey: "product_id",
