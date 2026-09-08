@@ -5,7 +5,7 @@ import Product from "../models/Products.js";
 import ProductUnit from "../models/ProductsUnits.js";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
 import { getMonthDateRange} from "../utils/getMonthDateRange.js"
-import { getTotalSalaries } from "./WorkSheet/Employee/SalaryService.js";
+import { getTotalSalaries } from "./Worksheet/Employee/SalaryService.js";
 
 export const getDashboardMetrics = async (businessId) => {
     return cacheService.remember(
