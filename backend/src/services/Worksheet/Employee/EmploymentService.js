@@ -6,7 +6,7 @@ import { Op } from "sequelize";
 Hay que revisar el metodo create para ver si de verdad asigna automaticamente del token pero que también pueda asignar de otra
 sucursal desde el frontend y también hay que probar si los modales funcionan y guardan correctamente los datos.
 */
-export const createEmployment = async ( employeeId, data, businessId, branchId, rol ) => {
+export const createEmployment = async ( employeeId, data, businessId, branchId, rol  ) => {
     const isPrivilegedRole = ["admin", "superAdmin"].includes(rol);
 
     const where = {
@@ -31,9 +31,29 @@ export const createEmployment = async ( employeeId, data, businessId, branchId, 
     }
 
     const startDate = data.start_date;
+    const endDate = data.end_date ?? null;
 
     if (!startDate) {
         throw new Error("La fecha de inicio es obligatoria");
+    }
+
+    if (endDate) {
+        const newStartDate = new Date(`${startDate}T00:00:00`);
+        const newEndDate = new Date(`${endDate}T00:00:00`);
+
+        if (Number.isNaN(newStartDate.getTime())) {
+            throw new Error("La fecha de inicio no es válida");
+        }
+
+        if (Number.isNaN(newEndDate.getTime())) {
+            throw new Error("La fecha de finalización no es válida");
+        }
+
+        if (newEndDate < newStartDate) {
+            throw new Error(
+                "La fecha de finalización no puede ser anterior a la fecha de inicio"
+            );
+        }
     }
 
     const employmentBranchId = isPrivilegedRole
@@ -85,7 +105,7 @@ export const createEmployment = async ( employeeId, data, businessId, branchId, 
         department: data.department ?? null,
         employment_type: data.employment_type ?? "FULL_TIME",
         start_date: startDate,
-        end_date: data.end_date ?? null,
+        end_date: endDate,
         status: data.status ?? "ACTIVE"
     });
 

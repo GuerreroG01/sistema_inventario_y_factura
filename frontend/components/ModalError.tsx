@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ModalErrorProps = {
     open: boolean;
@@ -16,23 +16,58 @@ export default function ModalError({
     onClose,
 }: ModalErrorProps) {
     const [show, setShow] = useState(false);
+    const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const autoCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearTimers = () => {
+        if (closeTimeoutRef.current) {
+            clearTimeout(closeTimeoutRef.current);
+            closeTimeoutRef.current = null;
+        }
+
+        if (autoCloseTimeoutRef.current) {
+            clearTimeout(autoCloseTimeoutRef.current);
+            autoCloseTimeoutRef.current = null;
+        }
+    };
+
+    const handleClose = () => {
+        clearTimers();
+
+        setShow(false);
+
+        closeTimeoutRef.current = setTimeout(() => {
+            onClose();
+            closeTimeoutRef.current = null;
+        }, 300);
+    };
 
     useEffect(() => {
-        if (open) {
-            setShow(true);
-
-            const timer = setTimeout(() => {
-                setShow(false);
-                setTimeout(onClose, 250);
-            }, 4000);
-
-            return () => clearTimeout(timer);
-        } else {
+        if (!open) {
+            clearTimers();
             setShow(false);
+            return;
         }
+        setShow(true);
+        clearTimers();
+
+        autoCloseTimeoutRef.current = setTimeout(() => {
+            setShow(false);
+
+            closeTimeoutRef.current = setTimeout(() => {
+                onClose();
+                closeTimeoutRef.current = null;
+            }, 300);
+        }, 4000);
+
+        return () => {
+            clearTimers();
+        };
     }, [open, onClose]);
 
-    if (!open && !show) return null;
+    if (!open && !show) {
+        return null;
+    }
 
     return (
         <div
@@ -61,17 +96,18 @@ export default function ModalError({
                 "
             >
                 <div className="absolute left-0 top-0 h-full w-[3px] bg-red-500" />
+
                 <div className="absolute inset-0 bg-gradient-to-r from-red-50/30 via-transparent to-transparent pointer-events-none" />
 
                 <div className="flex-shrink-0 mt-0.5">
                     <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center border border-red-100 text-red-500">
-                        <svg 
-                            className="w-5 h-5" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2.2" 
-                            strokeLinecap="round" 
+                        <svg
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            strokeLinecap="round"
                             strokeLinejoin="round"
                         >
                             <circle cx="12" cy="12" r="10" />
@@ -85,16 +121,15 @@ export default function ModalError({
                     <p className="text-[14px] font-semibold text-slate-900 tracking-tight">
                         {title}
                     </p>
+
                     <p className="text-[13px] text-slate-500 leading-relaxed mt-0.5 break-words">
                         {message}
                     </p>
                 </div>
 
                 <button
-                    onClick={() => {
-                        setShow(false);
-                        setTimeout(onClose, 250);
-                    }}
+                    type="button"
+                    onClick={handleClose}
                     className="
                         flex-shrink-0 p-1.5 rounded-lg
                         text-slate-400 hover:text-slate-600 hover:bg-slate-100/80
@@ -103,13 +138,13 @@ export default function ModalError({
                     "
                     aria-label="Cerrar"
                 >
-                    <svg 
-                        className="w-4 h-4" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2.5" 
-                        strokeLinecap="round" 
+                    <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                     >
                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -118,11 +153,11 @@ export default function ModalError({
                 </button>
 
                 <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-100">
-                    <div 
-                        className={`h-full bg-red-500 transition-all ease-linear`}
+                    <div
+                        className="h-full bg-red-500 transition-all ease-linear"
                         style={{
-                            width: show ? '0%' : '100%',
-                            transitionDuration: show ? '4000ms' : '0ms'
+                            width: show ? "0%" : "100%",
+                            transitionDuration: show ? "4000ms" : "0ms",
                         }}
                     />
                 </div>

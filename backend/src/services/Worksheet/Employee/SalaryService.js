@@ -1,6 +1,7 @@
 import EmployeeSalaryHistory from "../../../models/Worksheet/Employee/EmployeeSalaryHistory.js";
 import Employee from "../../../models/Worksheet/Employee/Employee.js";
 import { Op } from "sequelize";
+import { cacheService, CacheKeys } from "../../cache/index.js";
 
 const createSalaryHistory = async ( employeeId, data, businessId ) => {
     const employee = await Employee.findOne({
@@ -146,7 +147,7 @@ export const getCurrentSalary = async (employeeId, businessId) => {
         return salaryData[0];
     }
     throw new Error(
-        "El empleado no tiene una relación laboral activa"
+        "El empleado no tiene un salario asignado"
     );
 };
 //Obtener el salario actual por fecha especifica
@@ -228,18 +229,13 @@ const changeSalary = async ( employeeId, data, businessId ) => {
         ? new Date(`${data.effective_to}T00:00:00`)
         : null;
 
-    // No permitir cambios retroactivos
     if (newEffectiveFrom < today) {
         throw new Error(
             "La fecha de inicio no puede ser anterior a la fecha actual"
         );
     }
 
-    // Validar rango
-    if (
-        newEffectiveTo &&
-        newEffectiveTo < newEffectiveFrom
-    ) {
+    if ( newEffectiveTo && newEffectiveTo < newEffectiveFrom ) {
         throw new Error(
             "La fecha de finalización no puede ser anterior a la fecha de inicio"
         );
@@ -416,20 +412,14 @@ export const saveSalary = async ( employeeId, data, businessId ) => {
         });
 
     if (!existingSalary) {
-        const salary = await createSalaryHistory(
-            employeeId,
-            data,
-            businessId
-        );
-
+        const salary = await createSalaryHistory( employeeId, data, businessId );
         return {
             isChange: false,
             data: salary
         };
     }
-
     const salary = await changeSalary(employeeId,data,businessId);
-
+    cacheService.del(CacheKeys.PROFITABILITY, businessId);
     return {
         isChange: true,
         data: salary

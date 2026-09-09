@@ -16,28 +16,27 @@ type SalaryInfoProps = {
 export default function SalaryInfo({ employeeId }: SalaryInfoProps) {
     const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
 
-    const {
-        currentSalary, salaryHistory, loading, error, fetchSalary,
-    } = useSalary(employeeId);
-
-    const { createSalary, loading: loadingCreate } = useCreateSalary(employeeId);
+    const { currentSalary, salaryHistory, loading, error, fetchSalary } = useSalary(employeeId);
+    const { 
+        createSalary, loading: loadingCreate, error: createError, clearError: clearCreateError
+    } = useCreateSalary(employeeId);
 
     const handleCreateSalary = async ( data: Parameters<typeof createSalary>[0] ) => {
-        try {
-            await createSalary(data);
-            await fetchSalary();
-            setIsSalaryModalOpen(false);
-        } catch {
-            console.error("Error al crear salario");
-        }
+        await createSalary(data);
+        await fetchSalary();
+        setIsSalaryModalOpen(false);
     };
 
     if (loading) {
         return <EmployeeInfoSkeleton />;
     }
-    const hasNoSalary = salaryHistory.length === 0;
-    /*Hay problema en estos casos al crear un nuevo salario porque funciona bien al abrir el modal pero al intentar guardar
-    ocurre un error en el caso para employment y para salary. */
+
+    const noActiveEmployment =
+        error === "El empleado no tiene un salario asignado";
+
+    const hasNoSalary =
+        salaryHistory.length === 0 || noActiveEmployment;
+
     if (hasNoSalary) {
         return (
             <>
@@ -58,9 +57,7 @@ export default function SalaryInfo({ employeeId }: SalaryInfoProps) {
 
                     <button
                         type="button"
-                        onClick={() =>
-                            setIsSalaryModalOpen(true)
-                        }
+                        onClick={() => setIsSalaryModalOpen(true)}
                         className="
                             mt-5
                             inline-flex
@@ -87,11 +84,11 @@ export default function SalaryInfo({ employeeId }: SalaryInfoProps) {
                 <EmployeeAssignmentModal
                     open={isSalaryModalOpen}
                     mode="salary"
-                    onClose={() =>
-                        setIsSalaryModalOpen(false)
-                    }
+                    onClose={() => setIsSalaryModalOpen(false)}
                     onSubmit={handleCreateSalary}
                     loading={loadingCreate}
+                    createError={createError}
+                    onClearError={clearCreateError}
                 />
             </>
         );
@@ -154,12 +151,14 @@ export default function SalaryInfo({ employeeId }: SalaryInfoProps) {
             <EmployeeAssignmentModal
                 open={isSalaryModalOpen}
                 mode="salary"
-                onClose={() =>
-                    setIsSalaryModalOpen(false)
-                }
+                onClose={() => setIsSalaryModalOpen(false)}
                 onSubmit={handleCreateSalary}
                 loading={loadingCreate}
+                createError={createError}
+                onClearError={clearCreateError}
             />
         </div>
     );
 }
+/* Falta ver si hay errores para mostrar el modalError en el otro modal de Employment y ver si talves se corrige ese desface
+aparente al cerrar el modalError en el modal de salario que es solo con ese componente que ocurre eso con los demás funciona bien */

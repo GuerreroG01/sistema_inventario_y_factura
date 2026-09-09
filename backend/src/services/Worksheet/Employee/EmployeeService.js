@@ -3,6 +3,7 @@ import Branch from "../../../models/Branch.js";
 import { Op } from "sequelize";
 import EmployeeEmployment from "../../../models/Worksheet/Employee/EmployeeEmployment.js";
 import { getTotalSalaries } from "./SalaryService.js";
+import { cacheService, CacheKeys } from "../../cache/index.js";
 
 export const createEmployee = async ( data, userId, businessId, branchId, rol ) => {
     const isPrivilegedRole = ["admin", "superAdmin"].includes(rol);
@@ -373,7 +374,7 @@ export const changeStatus = async ( id, status, userId, businessId, branchId, ro
         employeeJson.employments?.[0] ?? null;
 
     delete employeeJson.employments;
-
+    cacheService.del(CacheKeys.PROFITABILITY, businessId);
     return {
         ...employeeJson,
         position: currentEmployment?.position ?? null,

@@ -8,7 +8,7 @@ import { useEmployment } from "../../hooks/useEmployment";
 import { CurrentEmployment } from "./CurrentEmployment";
 import { EmploymentHistory } from "./EmploymentHistory";
 import { EmployeeAssignmentModal } from "./EmployeeAsignmentModal";
-import { useCreateEmployment } from "../hooks/useCreateEmployee";
+import { useCreateEmployment } from "../hooks/useCreateEmployment";
 
 type EmploymentInfoProps = {
     employeeId: number;
@@ -21,8 +21,7 @@ export default function EmploymentInfo({ employeeId }: EmploymentInfoProps) {
         currentEmployment, employmentHistory, loading, error, fetchEmployment
     } = useEmployment(employeeId);
 
-    const { createEmployment, loadingCreate } = useCreateEmployment(employeeId);
-
+    const { createEmployment, loadingCreate, error: errorCreate, clearError } = useCreateEmployment(employeeId);
     const handleCreateEmployment = async ( data: Parameters<typeof createEmployment>[0] ) => {
         try {
             await createEmployment(data);
@@ -97,6 +96,8 @@ export default function EmploymentInfo({ employeeId }: EmploymentInfoProps) {
                     }
                     onSubmit={handleCreateEmployment}
                     loading={loadingCreate}
+                    createError={errorCreate}
+                    onClearError={clearError}
                 />
             </>
         );
@@ -163,6 +164,8 @@ export default function EmploymentInfo({ employeeId }: EmploymentInfoProps) {
                 }
                 onSubmit={handleCreateEmployment}
                 loading={loadingCreate}
+                createError={errorCreate}
+                onClearError={clearError}
             />
         </div>
     );

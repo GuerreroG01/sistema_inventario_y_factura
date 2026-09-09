@@ -4,6 +4,7 @@ import { CreateEmploymentData, EmploymentType } from "@/types/worksheet/employee
 import { CreateSalaryData, SalaryType } from "@/types/worksheet/employee/Salary";
 import { employmentTypeOptions } from "../constants/employmentTypeOptions";
 import { salaryTypeOptions } from "../constants/salaryTypeOptions";
+import ModalError from "@/components/ModalError";
 
 type EmploymentFormData = CreateEmploymentData;
 type SalaryFormData = CreateSalaryData;
@@ -16,7 +17,9 @@ type EmployeeAssignmentModalProps =
         onSubmit: (data: EmploymentFormData) => Promise<void>;
         loading?: boolean;
         initialData?: Partial<EmploymentFormData>;
-      }
+        createError?: string | null;
+        onClearError?: () => void;
+    }
     | {
         open: boolean;
         mode: "salary";
@@ -24,6 +27,8 @@ type EmployeeAssignmentModalProps =
         onSubmit: (data: SalaryFormData) => Promise<void>;
         loading?: boolean;
         initialData?: Partial<SalaryFormData>;
+        createError?: string | null;
+        onClearError?: () => void;
     };
 
 export function EmployeeAssignmentModal(
@@ -40,7 +45,7 @@ export function EmployeeAssignmentModal(
     return <SalaryForm {...props} />;
 }
 
-function EmploymentForm({ onClose, onSubmit, loading = false, initialData }: Extract<EmployeeAssignmentModalProps, { mode: "employment" }>) {
+function EmploymentForm({ onClose, onSubmit, loading = false, initialData, createError: serverError, onClearError }: Extract<EmployeeAssignmentModalProps, { mode: "employment" }>) {
     const [form, setForm] = useState<EmploymentFormData>({
         position: initialData?.position ?? "",
         department: initialData?.department ?? "",
@@ -115,8 +120,19 @@ function EmploymentForm({ onClose, onSubmit, loading = false, initialData }: Ext
             onClose={onClose}
         >
             <form onSubmit={handleSubmit} className="space-y-5">
-                {error && <FormError message={error} />}
+                {error && (
+                    <FormError
+                        message={error}
+                        onClose={() => setError(null)}
+                    />
+                )}
 
+                {serverError && (
+                    <FormError
+                        message={serverError}
+                        onClose={() => onClearError?.()}
+                    />
+                )}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Input
                         label="Cargo"
@@ -181,7 +197,7 @@ function EmploymentForm({ onClose, onSubmit, loading = false, initialData }: Ext
     );
 }
 
-function SalaryForm({ onClose, onSubmit, loading = false, initialData
+function SalaryForm({ onClose, onSubmit, loading = false, initialData, createError: serverError, onClearError,
 }: Extract<EmployeeAssignmentModalProps, { mode: "salary" }>) {
     const [form, setForm] = useState<SalaryFormData>({
         salary: initialData?.salary ?? 0,
@@ -191,7 +207,6 @@ function SalaryForm({ onClose, onSubmit, loading = false, initialData
         effective_to: initialData?.effective_to ?? null,
         reason: initialData?.reason ?? "",
     });
-
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -215,6 +230,9 @@ function SalaryForm({ onClose, onSubmit, loading = false, initialData
             ...prev,
             [field]: value,
         }));
+        if (error) {
+            setError(null);
+        }
     };
 
     const handleSubmit = async (
@@ -253,104 +271,106 @@ function SalaryForm({ onClose, onSubmit, loading = false, initialData
     };
 
     return (
-        <ModalShell
-            title="Asignar nuevo salario"
-            description="Registra el nuevo salario del empleado."
-            icon={<CircleDollarSign className="h-5 w-5" />}
-            iconClassName="bg-emerald-50 text-emerald-600"
-            onClose={onClose}
-        >
-            <form onSubmit={handleSubmit} className="space-y-5">
-                {error && <FormError message={error} />}
+        <>
+            <ModalShell
+                title="Asignar nuevo salario"
+                description="Registra el nuevo salario del empleado."
+                icon={<CircleDollarSign className="h-5 w-5" />}
+                iconClassName="bg-emerald-50 text-emerald-600"
+                onClose={onClose}
+            >
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    {error && <FormError message={error} onClose={() => setError(null)} />}
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                            Salario <span className="text-red-500">*</span>
-                        </label>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                                Salario <span className="text-red-500">*</span>
+                            </label>
 
-                        <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={form.salary}
-                            onChange={(event) =>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={form.salary}
+                                onChange={(event) =>
+                                    handleChange(
+                                        "salary",
+                                        Number(event.target.value)
+                                    )
+                                }
+                                placeholder="16000"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+                            />
+                        </div>
+
+                        <Select
+                            label="Tipo de salario"
+                            value={form.salary_type ?? "MONTHLY"}
+                            options={salaryTypeOptions}
+                            onChange={(value) =>
                                 handleChange(
-                                    "salary",
-                                    Number(event.target.value)
+                                    "salary_type",
+                                    value
                                 )
                             }
-                            placeholder="16000"
-                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
                         />
                     </div>
 
-                    <Select
-                        label="Tipo de salario"
-                        value={form.salary_type ?? "MONTHLY"}
-                        options={salaryTypeOptions}
-                        onChange={(value) =>
-                            handleChange(
-                                "salary_type",
-                                value
-                            )
-                        }
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Input
+                            type="date"
+                            label="Vigente desde"
+                            required
+                            value={form.effective_from}
+                            onChange={(value) =>
+                                handleChange(
+                                    "effective_from",
+                                    value
+                                )
+                            }
+                        />
+
+                        <Input
+                            type="date"
+                            label="Vigente hasta"
+                            value={form.effective_to ?? ""}
+                            onChange={(value) =>
+                                handleChange(
+                                    "effective_to",
+                                    value
+                                )
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                            Motivo del cambio
+                        </label>
+
+                        <textarea
+                            value={form.reason ?? ""}
+                            onChange={(event) =>
+                                handleChange(
+                                    "reason",
+                                    event.target.value
+                                )
+                            }
+                            rows={3}
+                            placeholder="Ej. Aumento salarial por promoción"
+                            className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+                        />
+                    </div>
+
+                    <ModalActions
+                        onClose={onClose}
+                        loading={loading}
+                        submitLabel="Asignar salario"
                     />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Input
-                        type="date"
-                        label="Vigente desde"
-                        required
-                        value={form.effective_from}
-                        onChange={(value) =>
-                            handleChange(
-                                "effective_from",
-                                value
-                            )
-                        }
-                    />
-
-                    <Input
-                        type="date"
-                        label="Vigente hasta"
-                        value={form.effective_to ?? ""}
-                        onChange={(value) =>
-                            handleChange(
-                                "effective_to",
-                                value
-                            )
-                        }
-                    />
-                </div>
-
-                <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                        Motivo del cambio
-                    </label>
-
-                    <textarea
-                        value={form.reason ?? ""}
-                        onChange={(event) =>
-                            handleChange(
-                                "reason",
-                                event.target.value
-                            )
-                        }
-                        rows={3}
-                        placeholder="Ej. Aumento salarial por promoción"
-                        className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
-                    />
-                </div>
-
-                <ModalActions
-                    onClose={onClose}
-                    loading={loading}
-                    submitLabel="Asignar salario"
-                />
-            </form>
-        </ModalShell>
+                </form>
+            </ModalShell>
+        </>
     );
 }
 
@@ -464,11 +484,13 @@ function Select({ label, value, options, onChange }: {
     );
 }
 
-function FormError({ message }: { message: string; }) {
+function FormError({ message, onClose }: { message: string; onClose: () => void; }) {
     return (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-xs text-red-600">
-            {message}
-        </div>
+        <ModalError
+            open={!!message}
+            message={message}
+            onClose={onClose}
+        />
     );
 }
 

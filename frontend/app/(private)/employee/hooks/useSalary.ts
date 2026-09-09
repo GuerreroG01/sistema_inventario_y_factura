@@ -69,7 +69,6 @@ export function useSalary(employeeId: number) {
                 error instanceof Error
                     ? error.message
                     : "Error al obtener información salarial";
-
             setError(message);
         } finally {
             setLoading(false);

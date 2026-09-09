@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { createEmployment } from "@/services/Worksheet/Employee/EmploymentService";
 import { CreateEmploymentData, EmployeeEmployment } from "@/types/worksheet/employee/Employment";
 
@@ -6,6 +6,9 @@ export function useCreateEmployment(employeeId: number) {
     const [loadingCreate, setLoadingCreate] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const clearError = useCallback(() => {
+        setError(null);
+    }, []);
     const handleCreateEmployment = async (
         employment: CreateEmploymentData
     ): Promise<EmployeeEmployment> => {
@@ -35,6 +38,6 @@ export function useCreateEmployment(employeeId: number) {
     return {
         createEmployment: handleCreateEmployment,
         loadingCreate,
-        error,
+        error, clearError
     };
 }

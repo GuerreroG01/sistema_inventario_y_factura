@@ -32,9 +32,14 @@ export function useCreateSalary(employeeId: number) {
         }
     };
 
+    const clearError = () => {
+        setError(null);
+    };
+
     return {
         createSalary: handleCreateSalary,
         loading,
         error,
+        clearError,
     };
 }
