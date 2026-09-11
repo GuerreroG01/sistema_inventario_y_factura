@@ -17,6 +17,8 @@ interface ProductDetailModalProps {
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   isOpen, onClose, product,
 }) => {
+    const { user } = useAuth();
+
     if (!isOpen || !product) return null;
 
     const units = product.units ?? [];
@@ -29,7 +31,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             return dateString;
         }
     };
-    const { user } = useAuth();
     const showBranchName = user?.Rol === "superAdmin" || user?.Rol === "admin";
     const isService = product.type_item === "Servicio";
     const activeUnits = units.filter((unit) => unit.active);

@@ -110,11 +110,24 @@ export function useSales() {
             return;
         }
 
-        setSelected(res.data);
+        setSelected((prev) =>
+            prev
+                ? {
+                    ...prev,
+                    ...res.data,
+                    details: prev.details,
+                }
+                : prev
+        );
 
         setSales((prev) =>
             prev.map((sale) =>
-                sale.id === res.data.id ? res.data : sale
+                sale.id === res.data.id
+                    ? {
+                        ...sale,
+                        ...res.data,
+                    }
+                    : sale
             )
         );
     };
