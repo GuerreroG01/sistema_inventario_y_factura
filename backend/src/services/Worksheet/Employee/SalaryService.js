@@ -426,6 +426,43 @@ export const saveSalary = async ( employeeId, data, businessId ) => {
     };
 };
 
+//Aqui hay que tomar en cuenta para el futuro que no en todos los negocios se manejan horarios de 8 horas
+// y también no en todos se manejan jornadas de 5 dias por semana, también hay de 6 dias como en nicaragua.
+export const getMonthlySalary = ( salary, salaryType,
+    {
+        hoursPerDay = 8,
+        daysPerWeek = 5
+    } = {}
+) => {
+    const amount = Number(salary);
+
+    if (!Number.isFinite(amount)) {
+        throw new Error("El salario proporcionado no es válido");
+    }
+
+    switch (salaryType) {
+        case "MONTHLY":
+            return amount;
+
+        case "WEEKLY":
+            return amount * (52 / 12);
+
+        case "DAILY":
+            return amount * daysPerWeek * (52 / 12);
+
+        case "HOURLY":
+            return amount
+                * hoursPerDay
+                * daysPerWeek
+                * (52 / 12);
+
+        default:
+            throw new Error(
+                `Tipo de salario no soportado: ${salaryType}`
+            );
+    }
+};
+
 export const getTotalSalaries = async ( businessId, branchId = null, date = null ) => {
     const targetDate = date
         ? new Date(`${date}T00:00:00`)
@@ -468,11 +505,9 @@ export const getTotalSalaries = async ( businessId, branchId = null, date = null
         let salary = await EmployeeSalaryHistory.findOne({
             where: {
                 employee_id: employee.id,
-
                 effective_from: {
                     [Op.lte]: targetDate
                 },
-
                 [Op.or]: [
                     {
                         effective_to: null
@@ -484,7 +519,6 @@ export const getTotalSalaries = async ( businessId, branchId = null, date = null
                     }
                 ]
             },
-
             order: [["effective_from", "DESC"]]
         });
 
@@ -505,7 +539,12 @@ export const getTotalSalaries = async ( businessId, branchId = null, date = null
             continue;
         }
 
-        total += Number(salary.salary);
+        const monthlySalary = getMonthlySalary(
+            salary.salary,
+            salary.salary_type
+        );
+
+        total += monthlySalary;
         employeesWithSalary++;
     }
 

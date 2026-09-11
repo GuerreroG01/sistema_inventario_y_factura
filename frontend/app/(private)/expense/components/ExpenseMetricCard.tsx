@@ -20,7 +20,7 @@ export default function ExpenseHeader({
     });
 
     return (
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 shadow-sm md:p-10">
+        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 shadow-sm md:p-4">
 
             <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-violet-100/60 blur-3xl pointer-events-none" />
 

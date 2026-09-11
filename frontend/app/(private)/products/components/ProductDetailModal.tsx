@@ -477,8 +477,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                                             {Number(unit.promotionQuantity)}
                                                             {" "}
-                                                            {unit.unit}
-                                                            {" "}
                                                             en promoción
                                                         </span>
                                                     </div>

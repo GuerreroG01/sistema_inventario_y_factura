@@ -210,7 +210,7 @@ export const findByProduct = async ( product_id, business_id, branch_id, rol ) =
     return productUnits;
 };
 
-export const update = async (id, business_id, data, transaction) => {
+export const update = async (id, business_id, branch_id, data, transaction) => {
     const productUnit = await ProductUnit.findOne({
         where: {
             id
@@ -264,7 +264,8 @@ export const update = async (id, business_id, data, transaction) => {
                         ? `${Math.abs(diff)} unidades puestas en promoción`
                         : stockObservation
                     : "Aumento manual de stock",
-            business_id
+            business_id,
+            branch_id
         },transaction);
     }
     const finalStock =
@@ -364,7 +365,7 @@ export const deactivateByProduct = async (product_id, business_id) => {
 };
 
 export const adjustStock = async (
-    id, business_id, cantidad, observacion = null
+    id, business_id, branch_id, cantidad, observacion = null
 ) => {
 
     const productUnit = await ProductUnit.findOne({
@@ -447,7 +448,8 @@ export const adjustStock = async (
             adjustment < 0
                 ? observacion
                 : observacion ?? "Aumento manual de stock",
-        business_id
+        business_id,
+        branch_id
     });
 
     await productUnit.update({
@@ -457,7 +459,7 @@ export const adjustStock = async (
     return productUnit;
 };
 
-export const resetStockForService = async (product_id, business_id) => {
+export const resetStockForService = async (product_id, business_id, branch_id) => {
     const product = await Product.findOne({
         where: {
             id: product_id,
@@ -486,7 +488,8 @@ export const resetStockForService = async (product_id, business_id) => {
                 tipo: "ajuste",
                 cantidad: -oldStock,
                 observacion: "Cambio de producto a servicio",
-                business_id
+                business_id,
+                branch_id
             });
         }
 

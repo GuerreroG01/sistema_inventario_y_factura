@@ -65,7 +65,7 @@ export default function EmployeeManager({
     };
 
     return (
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 md:p-10 shadow-sm">
+        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 md:p-4 shadow-sm">
             <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-blue-100/60 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-indigo-100/60 blur-3xl pointer-events-none" />
 

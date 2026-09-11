@@ -55,7 +55,7 @@ export default function SalesPage(props: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-4 md:p-8">
+        <div className="min-h-screen bg-slate-50/50 p-4 md:p-2">
         <div className="max-w-7xl mx-auto h-full grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <SalesLeftPanel {...props} />

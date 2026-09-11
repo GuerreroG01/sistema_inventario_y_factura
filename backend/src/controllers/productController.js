@@ -481,6 +481,7 @@ export const updateProduct = async (req, res) => {
                         const updatedUnit = await update(
                             productUnit.product_unit_id,
                             business_id,
+                            branch_id,
                             {
                                 unit: productUnit.unit,
                                 barcode: productUnit.barcode,
@@ -514,6 +515,7 @@ export const updateProduct = async (req, res) => {
                     await resetStockForService(
                         product.id,
                         business_id,
+                        branch_id,
                         transaction
                     );
                 }

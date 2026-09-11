@@ -544,7 +544,7 @@ export const getCategories = async (req, res) => {
 export const updateSaleStatus = async (req, res) => {
     const { id } = req.params;
     const { status, refundObservation } = req.body;
-
+    const { business_id, branch_id } = req.user;
     if (!status) {
         return res.status(400).json({
             error: "validation_error",
@@ -742,7 +742,8 @@ export const updateSaleStatus = async (req, res) => {
                         observacion: wasPromotion
                             ? "Cancelación de venta promocional"
                             : "Cancelación de venta",
-                        business_id: req.user.business_id
+                        business_id: business_id,
+                        branch_id: branch_id
                     }, t);
                 }
             }
@@ -869,7 +870,8 @@ export const updateSaleStatus = async (req, res) => {
                             referencia: sale.id,
                             observacion:
                                 "Reactivación de venta cancelada",
-                            business_id: req.user.business_id
+                            business_id: business_id,
+                            branch_id: branch_id
                         },
                         t
                     );
