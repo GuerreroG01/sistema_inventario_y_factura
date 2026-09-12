@@ -130,7 +130,6 @@ export function useEmployment(employeeId: number) {
     const endEmployment = async ( endDate: string ): Promise<EmployeeEmployment> => {
         try {
             setError(null);
-
             const endedEmployment = await end(employeeId, endDate);
             setEmploymentHistory((current) =>
                 current.map((employment) =>
@@ -139,7 +138,13 @@ export function useEmployment(employeeId: number) {
                         : employment
                 )
             );
-            setCurrentEmployment(null);
+            const today = new Date().toISOString().split("T")[0];
+
+            if ( endedEmployment.end_date && endedEmployment.end_date >= today ) {
+                setCurrentEmployment(endedEmployment);
+            } else {
+                setCurrentEmployment(null);
+            }
 
             return endedEmployment;
         } catch (error) {
@@ -161,6 +166,6 @@ export function useEmployment(employeeId: number) {
     return {
         employmentHistory, currentEmployment, loading, error, fetchEmployment,
         fetchEmploymentHistory, fetchCurrentEmployment, createEmployment, getEmploymentAt,
-        endEmployment,
+        endEmployment
     };
 }

@@ -18,7 +18,7 @@ export default function EmploymentInfo({ employeeId }: EmploymentInfoProps) {
     const [isEmploymentModalOpen, setIsEmploymentModalOpen] = useState(false);
 
     const {
-        currentEmployment, employmentHistory, loading, error, fetchEmployment
+        currentEmployment, employmentHistory, loading, error, fetchEmployment, endEmployment
     } = useEmployment(employeeId);
 
     const { createEmployment, loadingCreate, error: errorCreate, clearError } = useCreateEmployment(employeeId);
@@ -152,6 +152,7 @@ export default function EmploymentInfo({ employeeId }: EmploymentInfoProps) {
                 onOpenCreateEmployment={() =>
                     setIsEmploymentModalOpen(true)
                 }
+                endEmployment={endEmployment}
             />
             <EmploymentHistory
                 employmentHistory={employmentHistory}

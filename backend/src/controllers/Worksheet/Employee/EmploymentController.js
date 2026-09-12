@@ -102,7 +102,6 @@ export const end = async (req, res) => {
         const { employeeId } = req.params;
         const { end_date } = req.body;
         const { business_id, branch_id, rol } = req.user;
-
         const employment = await endEmployment(
             employeeId,
             end_date,

@@ -79,9 +79,8 @@ export async function endEmployment( employeeId: number, endDate: string ): Prom
             message: string;
             data: EmployeeEmployment;
         }>(`/employment/${employeeId}/end`, {
-            endDate,
+            end_date: endDate
         });
-
         return data.data;
     } catch (error: any) {
         throw new Error(

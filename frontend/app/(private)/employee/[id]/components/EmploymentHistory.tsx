@@ -8,7 +8,6 @@ export function EmploymentHistory({ employmentHistory }: {
     employmentHistory: ReturnType<typeof useEmployment>["employmentHistory"];
 }) {
     const [isOpen, setIsOpen] = useState(false);
-    console.log(employmentHistory);
     if (employmentHistory.length === 0) {
         return null;
     }
