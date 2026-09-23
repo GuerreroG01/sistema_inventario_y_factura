@@ -7,7 +7,11 @@ import { ChevronDown, LogOut, Cog } from "lucide-react";
 
 type NavItem = {
     label: string;
-    href: string;
+    href?: string;
+    children?: {
+        label: string;
+        href: string;
+    }[];
 };
 
 export default function Header() {
@@ -17,8 +21,14 @@ export default function Header() {
         { label: "Clientes", href: "/customer" },
         { label: "Ventas", href: "/sales" },
         { label: "Gastos", href: "/expense" },
-        { label: "Planilla", href: "/employee" },
-        //{ label: "Reportes", href: "#" },
+        {
+            label: "Planilla",
+            href: "/employee",
+            children: [
+                { label: "Empleados", href: "/employee" },
+                { label: "Reglas", href: "/payroll/work_rules" },
+            ],
+        },
     ];
     const { logout, user, businessName } = useAuth();
     return (
@@ -89,63 +99,155 @@ export default function Header() {
 
                 <nav className="hidden items-center gap-1 bg-slate-200/40 p-1 rounded-full border border-slate-200/20 md:flex shadow-inner">
                     {navItems.map((item) => (
-                        <a
+                        <div
                             key={item.label}
-                            href={item.href}
-                            className="
-                                group
-                                relative
-                                px-4
-                                py-1.5
-                                text-sm
-                                font-semibold
-                                text-slate-600 
-                                rounded-full
-                                transition-all 
-                                duration-300
-                                hover:text-blue-600
-                                active:scale-95
-                                overflow-hidden
-                            "
+                            className="group relative"
                         >
-                            <span className="relative z-10 block transition-transform duration-300 group-hover:-translate-y-[2px]">
-                                {item.label}
-                            </span>
+                            {item.children ? (
+                                <>
+                                    <button
+                                        className="
+                                            flex
+                                            items-center
+                                            gap-1
+                                            rounded-full
+                                            px-4
+                                            py-1.5
+                                            text-sm
+                                            font-semibold
+                                            text-slate-600
+                                            transition-all
+                                            duration-300
+                                            hover:text-blue-600
+                                            active:scale-95
+                                        "
+                                    >
+                                        <span className="relative z-10 transition-transform duration-300 group-hover:-translate-y-[1px]">
+                                            {item.label}
+                                        </span>
 
-                            <span className="
-                                absolute
-                                inset-x-1
-                                bottom-1
-                                top-1
-                                z-0
-                                rounded-full
-                                bg-white
-                                opacity-0
-                                shadow-sm
-                                transition-all
-                                duration-300
-                                translate-y-full
-                                group-hover:translate-y-0
-                                group-hover:opacity-100
-                            " />
+                                        <ChevronDown
+                                            className="
+                                                h-4
+                                                w-4
+                                                transition-transform
+                                                duration-300
+                                                group-hover:rotate-180
+                                            "
+                                        />
+                                    </button>
 
-                            <span className="
-                                absolute
-                                bottom-1
-                                left-1/2
-                                h-1
-                                w-1
-                                -translate-x-1/2
-                                scale-0
-                                rounded-full
-                                bg-blue-600
-                                opacity-0
-                                transition-all
-                                duration-300
-                                group-hover:scale-100
-                                group-hover:opacity-100
-                            " />
-                        </a>
+                                    <div
+                                        className="
+                                            invisible
+                                            absolute
+                                            left-0
+                                            top-full
+                                            z-50
+                                            flex
+                                            w-48
+                                            flex-col
+                                            gap-1
+                                            pt-2
+                                            opacity-0
+                                            translate-y-2
+                                            transition-all
+                                            duration-300
+                                            group-hover:visible
+                                            group-hover:translate-y-0
+                                            group-hover:opacity-100
+                                        "
+                                    >
+                                        <div className="rounded-xl border border-slate-200/60 bg-white/95 p-1.5 shadow-xl backdrop-blur-xl">
+                                            {item.children.map((child) => (
+                                                <a
+                                                    key={child.label}
+                                                    href={child.href}
+                                                    className="
+                                                        flex
+                                                        items-center
+                                                        rounded-lg
+                                                        px-3
+                                                        py-2.5
+                                                        text-sm
+                                                        font-semibold
+                                                        text-slate-600
+                                                        transition-all
+                                                        duration-200
+                                                        hover:bg-blue-50
+                                                        hover:text-blue-600
+                                                    "
+                                                >
+                                                    {child.label}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <a
+                                    href={item.href}
+                                    className="
+                                        group
+                                        relative
+                                        block
+                                        overflow-hidden
+                                        rounded-full
+                                        px-4
+                                        py-1.5
+                                        text-sm
+                                        font-semibold
+                                        text-slate-600
+                                        transition-all
+                                        duration-300
+                                        hover:text-blue-600
+                                        active:scale-95
+                                    "
+                                >
+                                    <span className="relative z-10 block transition-transform duration-300 group-hover:-translate-y-[2px]">
+                                        {item.label}
+                                    </span>
+
+                                    <span
+                                        className="
+                                            absolute
+                                            inset-x-1
+                                            bottom-1
+                                            top-1
+                                            z-0
+                                            translate-y-full
+                                            rounded-full
+                                            bg-white
+                                            opacity-0
+                                            shadow-sm
+                                            transition-all
+                                            duration-300
+                                            group-hover:translate-y-0
+                                            group-hover:opacity-100
+                                        "
+                                    />
+
+                                    <span
+                                        className="
+                                            absolute
+                                            bottom-1
+                                            left-1/2
+                                            h-1
+                                            w-1
+                                            -translate-x-1/2
+                                            scale-0
+                                            rounded-full
+                                            bg-blue-600
+                                            opacity-0
+                                            transition-all
+                                            duration-300
+                                            group-hover:scale-100
+                                            group-hover:opacity-100
+                                        "
+                                    />
+                                </a>
+                            )}
+                        </div>
                     ))}
                     <div
                         className="

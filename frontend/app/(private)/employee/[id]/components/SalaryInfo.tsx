@@ -16,7 +16,7 @@ type SalaryInfoProps = {
 export default function SalaryInfo({ employeeId }: SalaryInfoProps) {
     const [isSalaryModalOpen, setIsSalaryModalOpen] = useState(false);
 
-    const { currentSalary, salaryHistory, loading, error, fetchSalary } = useSalary(employeeId);
+    const { currentSalary, salaryHistory, payroll, loading, error, fetchSalary } = useSalary(employeeId);
     const { 
         createSalary, loading: loadingCreate, error: createError, clearError: clearCreateError
     } = useCreateSalary(employeeId);
@@ -139,6 +139,7 @@ export default function SalaryInfo({ employeeId }: SalaryInfoProps) {
         <div className="space-y-6">
             <CurrentSalary
                 salary={currentSalary}
+                payroll={payroll}
                 onOpenCreateSalary={() =>
                     setIsSalaryModalOpen(true)
                 }

@@ -15,7 +15,7 @@ export function useProfitability() {
             setLoading(true);
             setError(null);
             const response = await getProfitabilityMetrics();
-
+            console.log("[Profitability]:",response);
 
             if (!response.success) {
                 throw new Error(

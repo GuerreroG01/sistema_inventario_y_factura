@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X, ChevronRight, LogOut, Cog } from "lucide-react";
+import { Menu, X, ChevronRight, LogOut, Cog, ChevronDown } from "lucide-react";
+
 import { User } from "@/types/Auth";
 
 type NavItem = {
     label: string;
-    href: string;
+    href?: string;
+    children?: {
+        label: string;
+        href: string;
+    }[];
 };
 
 type Props = {
@@ -17,6 +22,7 @@ type Props = {
 
 export default function MobileHeader({ navItems, user, logout }: Props) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
     return (
         <>
@@ -36,7 +42,12 @@ export default function MobileHeader({ navItems, user, logout }: Props) {
                     hover:bg-slate-100
                     active:scale-90
                 "
-                onClick={() => setMenuOpen(!menuOpen)}
+                onClick={() => {
+                    setMenuOpen((prev) => !prev);
+                    if (menuOpen) {
+                        setOpenSubmenu(null);
+                    }
+                }}
                 aria-label="Toggle menu"
             >
                 <div className="relative h-6 w-6">
@@ -83,41 +94,228 @@ export default function MobileHeader({ navItems, user, logout }: Props) {
                 `}
             >
                 <nav className="flex flex-col gap-1.5 px-4 py-4">
-                    {navItems.map((item, index) => (
-                        <a
-                            key={item.label}
-                            href={item.href}
-                            style={{ transitionDelay: menuOpen ? `${index * 40}ms` : "0ms" }}
-                            className={`
-                                group
-                                relative
-                                flex
-                                items-center
-                                justify-between
-                                w-full
-                                px-4
-                                py-3.5
-                                text-sm
-                                font-semibold
-                                text-slate-700
-                                rounded-xl
-                                transition-all
-                                duration-300
-                                hover:text-blue-600
-                                active:scale-[0.99]
-                                transform
-                                overflow-hidden
-                                ${menuOpen ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"}
-                            `}
-                            onClick={() => setMenuOpen(false)}
-                        >
-                            <span className="absolute inset-0 z-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                            <span className="relative z-10 transform transition-transform duration-300 group-hover:translate-x-1.5">
-                                {item.label}
-                            </span>
-                            <ChevronRight className="relative z-10 h-4 w-4 text-slate-400 transform transition-all duration-300 cubic-bezier(0.34, 1.56, 0.64, 1) group-hover:translate-x-1 group-hover:text-blue-500" />
-                        </a>
-                    ))}
+                    {navItems.map((item, index) => {
+                        const hasChildren = !!item.children?.length;
+                        const isOpen = openSubmenu === item.label;
+                        return (
+                            <div
+                                key={item.label}
+                                style={{
+                                    transitionDelay: menuOpen
+                                        ? `${index * 40}ms`
+                                        : "0ms",
+                                }}
+                                className={`
+                                    transform
+                                    transition-all
+                                    duration-300
+                                    ${
+                                        menuOpen
+                                            ? "translate-x-0 opacity-100"
+                                            : "-translate-x-4 opacity-0"
+                                    }
+                                `}
+                            >
+                                {hasChildren ? (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setOpenSubmenu(
+                                                    isOpen ? null : item.label
+                                                )
+                                            }
+                                            className="
+                                                group
+                                                relative
+                                                flex
+                                                items-center
+                                                justify-between
+                                                w-full
+                                                px-4
+                                                py-3.5
+                                                text-sm
+                                                font-semibold
+                                                text-slate-700
+                                                rounded-xl
+                                                transition-all
+                                                duration-300
+                                                hover:text-blue-600
+                                                active:scale-[0.99]
+                                                overflow-hidden
+                                            "
+                                        >
+                                            <span
+                                                className="
+                                                    absolute
+                                                    inset-0
+                                                    z-0
+                                                    bg-gradient-to-r
+                                                    from-blue-50/50
+                                                    to-indigo-50/30
+                                                    opacity-0
+                                                    transition-opacity
+                                                    duration-300
+                                                    group-hover:opacity-100
+                                                "
+                                            />
+                                            <span
+                                                className="
+                                                    relative
+                                                    z-10
+                                                    transition-transform
+                                                    duration-300
+                                                    group-hover:translate-x-1.5
+                                                "
+                                            >
+                                                {item.label}
+                                            </span>
+                                            <ChevronDown
+                                                className={`
+                                                    relative
+                                                    z-10
+                                                    h-4
+                                                    w-4
+                                                    text-slate-400
+                                                    transition-transform
+                                                    duration-300
+                                                    ${
+                                                        isOpen
+                                                            ? "rotate-180 text-blue-500"
+                                                            : ""
+                                                    }
+                                                `}
+                                            />
+                                        </button>
+                                        <div
+                                            className={`
+                                                overflow-hidden
+                                                transition-all
+                                                duration-300
+                                                ${
+                                                    isOpen
+                                                        ? "max-h-40 opacity-100"
+                                                        : "max-h-0 opacity-0"
+                                                }
+                                            `}
+                                        >
+                                            <div className="ml-4 mt-1 border-l-2 border-blue-100 pl-2">
+                                                {item.children?.map((child) => (
+                                                    <a
+                                                        key={child.label}
+                                                        href={child.href}
+                                                        onClick={() => {
+                                                            setMenuOpen(false);
+                                                            setOpenSubmenu(null);
+                                                        }}
+                                                        className="
+                                                            group
+                                                            flex
+                                                            items-center
+                                                            justify-between
+                                                            rounded-lg
+                                                            px-4
+                                                            py-3
+                                                            text-sm
+                                                            font-medium
+                                                            text-slate-500
+                                                            transition-all
+                                                            duration-200
+                                                            hover:bg-blue-50
+                                                            hover:text-blue-600
+                                                        "
+                                                    >
+                                                        <span className="transition-transform duration-200 group-hover:translate-x-1">
+                                                            {child.label}
+                                                        </span>
+
+                                                        <ChevronRight
+                                                            className="
+                                                                h-4
+                                                                w-4
+                                                                text-slate-300
+                                                                transition-all
+                                                                duration-200
+                                                                group-hover:translate-x-1
+                                                                group-hover:text-blue-500
+                                                            "
+                                                        />
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <a
+                                        href={item.href}
+                                        onClick={() => {
+                                            setMenuOpen(false);
+                                            setOpenSubmenu(null);
+                                        }}
+                                        className="
+                                            group
+                                            relative
+                                            flex
+                                            items-center
+                                            justify-between
+                                            w-full
+                                            px-4
+                                            py-3.5
+                                            text-sm
+                                            font-semibold
+                                            text-slate-700
+                                            rounded-xl
+                                            transition-all
+                                            duration-300
+                                            hover:text-blue-600
+                                            active:scale-[0.99]
+                                            overflow-hidden
+                                        "
+                                    >
+                                        <span
+                                            className="
+                                                absolute
+                                                inset-0
+                                                z-0
+                                                bg-gradient-to-r
+                                                from-blue-50/50
+                                                to-indigo-50/30
+                                                opacity-0
+                                                transition-opacity
+                                                duration-300
+                                                group-hover:opacity-100
+                                            "
+                                        />
+
+                                        <span
+                                            className="
+                                                relative
+                                                z-10
+                                                transition-transform
+                                                duration-300
+                                                group-hover:translate-x-1.5
+                                            "
+                                        >
+                                            {item.label}
+                                        </span>
+                                        <ChevronRight
+                                            className="
+                                                relative
+                                                z-10
+                                                h-4
+                                                w-4
+                                                text-slate-400
+                                                transition-all
+                                                duration-300
+                                                group-hover:translate-x-1
+                                                group-hover:text-blue-500
+                                            "
+                                        />
+                                    </a>
+                                )}
+                            </div>
+                        );
+                    })}
                     {(user?.Rol?.toLowerCase() === "admin" ||
                         user?.Rol?.toLowerCase() === "superadmin") && (
                         <a

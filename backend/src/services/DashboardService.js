@@ -6,6 +6,7 @@ import ProductUnit from "../models/ProductsUnits.js";
 import { cacheService, CacheKeys, CacheTTL } from "./cache/index.js";
 import { getMonthDateRange} from "../utils/getMonthDateRange.js"
 import { getTotalSalaries } from "./Worksheet/Employee/SalaryService.js";
+import { calculateTotalEmployerCosts } from "./Worksheet/Payroll/EmployerCostService.js";
 
 export const getDashboardMetrics = async (businessId) => {
     return cacheService.remember(
@@ -262,30 +263,37 @@ export const getProfitabilityMetrics = async (month, year, businessId) => {
         );
         const salaryDate = new Date(endDate);
         salaryDate.setDate(salaryDate.getDate() - 1);
-
+        const calculationDate = salaryDate.toISOString().split("T")[0];
         const salaryResult = await getTotalSalaries(
             businessId,
             null,
-            salaryDate.toISOString().split("T")[0]
+            calculationDate
         );
 
+        const employerCostResult =
+            await calculateTotalEmployerCosts({
+                businessId,
+                date: calculationDate,
+                branchId: null,
+                options: {
+                    hoursPerDay: 8,
+                    daysPerWeek: 5
+                }
+            });
 
         const ventas = Number(salesResult[0]?.ventas || 0);
         const gastos = Number(expensesResult[0]?.gastos || 0);
         const salarios = Number(salaryResult?.total || 0);
-
-        const costosTotales = gastos + salarios;
-
+        const employerCosts =  Number(employerCostResult?.total_employer_costs || 0);
+        const costoNomina = salarios + employerCosts;
+        const costosTotales = gastos + salarios + employerCosts;
         const ganancia = ventas - costosTotales;
-
         const margen = ventas > 0
             ? (ganancia / ventas) * 100
             : 0;
-
         const ratioRetornoCosto = costosTotales > 0
             ? ganancia / costosTotales
             : 0;
-
         const roi = costosTotales > 0
             ? (ganancia / costosTotales) * 100
             : 0;
@@ -293,6 +301,9 @@ export const getProfitabilityMetrics = async (month, year, businessId) => {
         response.ventas = Number(ventas.toFixed(2));
         response.costos = Number(costosTotales.toFixed(2));
         response.gastos = Number(gastos.toFixed(2));
+        response.salarios = Number(salarios.toFixed(2));
+        response.employer_costs = Number(employerCosts.toFixed(2));
+        response.costoNomina = Number(costoNomina.toFixed(2));
         response.ganancia = Number(ganancia.toFixed(2));
         response.margen = Number(margen.toFixed(2));
         response.ratioRetornoCosto = Number(ratioRetornoCosto.toFixed(2));

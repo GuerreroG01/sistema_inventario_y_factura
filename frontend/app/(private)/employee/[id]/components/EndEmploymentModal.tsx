@@ -468,5 +468,3 @@ export function EndEmploymentModal({ open, employment, onClose, onConfirm }: End
         </div>
     );
 }
-{/* Hay un error a la hora de intentar finalizar una relación laboral hay que revisar que tipo de error es y se supone que 
-al finalizar la relación laboral lo que deberia hacer es actualizar currentEmployment pero eso debe ser en el hook. */}

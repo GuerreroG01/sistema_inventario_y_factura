@@ -1,5 +1,7 @@
 import api from "../../api";
-import { EmployeeSalaryHistory, CreateSalaryData, ChangeSalaryData } from "../../../types/worksheet/employee/Salary";
+import { EmployeeSalaryHistory, CreateSalaryData, 
+    ChangeSalaryData, EmployeeNIPayroll, CalculateNIPayrollResponse
+} from "../../../types/worksheet/employee/Salary";
 
 export async function createSalary(
     employeeId: number,
@@ -99,6 +101,32 @@ export async function changeSalary(
         error?.response?.data?.message ||
             error.message ||
             "Error al cambiar salario"
+        );
+    }
+}
+
+export async function calculateEmployeePayroll(
+    employeeId: number,
+    periodStart?: string,
+    periodEnd?: string
+): Promise<EmployeeNIPayroll> {
+    try {
+        const { data } = await api.get<CalculateNIPayrollResponse>(
+            `/salary/${employeeId}/payroll`,
+            {
+                params: {
+                    ...(periodStart && { periodStart }),
+                    ...(periodEnd && { periodEnd })
+                }
+            }
+        );
+
+        return data.data;
+    } catch (error: any) {
+        throw new Error(
+            error?.response?.data?.message ||
+            error.message ||
+            "Error al calcular la nómina del empleado"
         );
     }
 }

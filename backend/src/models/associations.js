@@ -11,6 +11,8 @@ import CustomerMarketing from "./CustomerMarketing.js";
 import Employee from "./Worksheet/Employee/Employee.js"
 import EmployeeEmployment from "./Worksheet/Employee/EmployeeEmployment.js"
 import EmployeeSalaryHistory from "./Worksheet/Employee/EmployeeSalaryHistory.js"
+import PayrollRule from "./Worksheet/Payroll/PayrollRules/PayrollRule.js";
+import PayrollRuleTier from "./Worksheet/Payroll/PayrollRules/PayrollRuleTier.js";
 import ProductUnit from "./ProductsUnits.js";
 import Branch from "./Branch.js";
 
@@ -68,6 +70,36 @@ Expense.belongsTo(Business,{
 Branch.hasMany(Expense, {
     foreignKey: "branch_id",
     as: "expenses"
+});
+
+Business.hasMany(PayrollRule, {
+    foreignKey: "business_id",
+    as: "payrollRules"
+});
+
+PayrollRule.belongsTo(Business, {
+    foreignKey: "business_id",
+    as: "business"
+});
+
+Branch.hasMany(PayrollRule, {
+    foreignKey: "branch_id",
+    as: "payrollRules"
+});
+
+PayrollRule.belongsTo(Branch, {
+    foreignKey: "branch_id",
+    as: "branch"
+});
+
+PayrollRule.hasMany(PayrollRuleTier, {
+    foreignKey: "payroll_rule_id",
+    as: "tiers",
+});
+
+PayrollRuleTier.belongsTo(PayrollRule, {
+    foreignKey: "payroll_rule_id",
+    as: "payrollRule",
 });
 
 Expense.belongsTo(Branch, {
@@ -280,4 +312,3 @@ Branch.belongsTo(Business, {
     foreignKey: "business_id",
     as: "business"
 });
-

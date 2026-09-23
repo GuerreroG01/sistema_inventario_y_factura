@@ -11,6 +11,9 @@ interface MetricCardProps {
 
     type:
     | "sales"
+    | "salaries"
+    | "employer_costs"
+    | "costsPayroll"
     | "costs"
     | "profit"
     | "margin"
@@ -42,6 +45,24 @@ export default function MetricCard({
             icon:<SalesIcon className="w-5 h-5 text-blue-600"/>,
             bg:"bg-blue-50 border-blue-100"
         },
+        salaries: {
+            border: "hover:border-cyan-200 hover:bg-cyan-50/20",
+            icon: <CostIcon className="w-5 h-5 text-cyan-600" />,
+            bg: "bg-cyan-50 border-cyan-100"
+        },
+
+        employer_costs: {
+            border: "hover:border-orange-200 hover:bg-orange-50/20",
+            icon: <CostIcon className="w-5 h-5 text-orange-600" />,
+            bg: "bg-orange-50 border-orange-100"
+        },
+
+        costsPayroll: {
+            border: "hover:border-orange-200 hover:bg-orange-50/20",
+            icon: <CostIcon className="w-5 h-5 text-orange-600" />,
+            bg: "bg-orange-50 border-orange-100"
+        },
+
         costs:{
             border:"hover:border-rose-200 hover:bg-rose-50/20",
             icon:<CostIcon className="w-5 h-5 text-rose-600"/>,

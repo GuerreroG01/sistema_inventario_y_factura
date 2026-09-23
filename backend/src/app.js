@@ -16,6 +16,8 @@ import customerRoutes from "./routes/customerRoutes.js"
 import employeeRoutes from "./routes/Worksheet/Employee/EmployeeRoutes.js"
 import employmentRoutes from "./routes/Worksheet/Employee/EmploymentRoutes.js"
 import salaryRoutes from "./routes/Worksheet/Employee/SalaryRoutes.js"
+import payrollRoutes from "./routes/Worksheet/Payroll/PayrollRuleRoutes.js";
+import EmployerCostRoutes from "./routes/Worksheet/Employee/EmployerCostRoutes.js";
 import { verifyToken } from "./middlewares/authMiddleware.js";
 import { requireRole } from "./middlewares/roleMiddleware.js"
 import { syncSequence } from "./utils/syncSequence.js";
@@ -58,6 +60,8 @@ app.use("/api/customers", verifyToken, customerRoutes);
 app.use("/api/employee", verifyToken, employeeRoutes);
 app.use("/api/employment", verifyToken, employmentRoutes);
 app.use("/api/salary", verifyToken, salaryRoutes);
+app.use("/api/rules", verifyToken, payrollRoutes);
+app.use("/api/employerCost", verifyToken, EmployerCostRoutes);
 app.use("/api/auth", authRoutes);
 
 export default app;

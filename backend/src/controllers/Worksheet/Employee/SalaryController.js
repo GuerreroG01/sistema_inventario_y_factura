@@ -1,5 +1,5 @@
 import {
-    saveSalary, getSalaryHistory, getCurrentSalary, getSalaryAtDate, getTotalSalaries
+    saveSalary, getSalaryHistory, getCurrentSalary, getSalaryAtDate, getTotalSalaries, calculateEmployeePayroll
 } from "../../../services/Worksheet/Employee/SalaryService.js";
 
 export const save = async (req, res) => {
@@ -105,6 +105,29 @@ export const getTotal = async (req, res) => {
             data: totalSalaries
         });
 
+    } catch (error) {
+        return res.status(400).json({
+            message: error.message
+        });
+    }
+};
+
+export const calculatePayroll = async (req, res) => {
+    try {
+        const { employeeId } = req.params;
+        const { periodStart, periodEnd } = req.query;
+        const payroll = await calculateEmployeePayroll(
+            employeeId,
+            req.user.business_id,
+            {
+                periodStart,
+                periodEnd
+            }
+        );
+        return res.status(200).json({
+            message: "Nómina calculada correctamente",
+            data: payroll
+        });
     } catch (error) {
         return res.status(400).json({
             message: error.message

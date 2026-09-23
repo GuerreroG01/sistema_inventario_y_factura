@@ -32,6 +32,41 @@ export default function MetricsGrid({
                 change={trend.ventas}
             />
 
+            <MetricCard
+                type="salaries"
+                label="Salarios"
+                subLabel="Salarios brutos de empleados"
+                value={formatCurrency(metric.salarios)}
+                change={{
+                    change: 0,
+                    percentage: null,
+                    direction: "neutral"
+                }}
+            />
+
+            <MetricCard
+                type="employer_costs"
+                label="Costos Patronales"
+                subLabel="Costos asociados a la nómina"
+                value={formatCurrency(metric.employer_costs)}
+                change={{
+                    change: 0,
+                    percentage: null,
+                    direction: "neutral"
+                }}
+            />
+
+            <MetricCard
+                type="costsPayroll"
+                label="Costos Totales de Nómina"
+                subLabel="Costos totales de la nómina"
+                value={formatCurrency(metric.employer_costs)}
+                change={{
+                    change: 0,
+                    percentage: null,
+                    direction: "neutral"
+                }}
+            />
 
             <MetricCard
                 type="costs"

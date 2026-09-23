@@ -1,7 +1,21 @@
 import EmployeeSalaryHistory from "../../../models/Worksheet/Employee/EmployeeSalaryHistory.js";
 import Employee from "../../../models/Worksheet/Employee/Employee.js";
+import PayrollRule from "../../../models/Worksheet/Payroll/PayrollRules/PayrollRule.js";
+import PayrollRuleTier from "../../../models/Worksheet/Payroll/PayrollRules/PayrollRuleTier.js";
+import { calculateNicaraguaPayrollDeductions } from "./NicaraguaPayrollDeductionService.js";
+
 import { Op } from "sequelize";
 import { cacheService, CacheKeys } from "../../cache/index.js";
+
+const getMonthlyPeriod = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    return {
+        periodStart: new Date(year, month, 1),
+        periodEnd: new Date(year, month + 1, 0),
+    };
+};
 
 const createSalaryHistory = async ( employeeId, data, businessId ) => {
     const employee = await Employee.findOne({
@@ -554,5 +568,531 @@ export const getTotalSalaries = async ( businessId, branchId = null, date = null
         employeesWithSalary,
         branch_id: branchId ?? null,
         date: targetDate.toISOString().split("T")[0]
+    };
+};
+
+export const roundMoney = (value) => {
+    return Math.round(
+        (Number(value) + Number.EPSILON) * 100
+    ) / 100;
+};
+
+const resolveRuleBase = ({ rule, context }) => {
+    switch (rule.base_type) {
+        case "GROSS_SALARY":
+            return context.current.grossSalary;
+        case "ANNUAL_GROSS_SALARY":
+            return context.annual.grossSalary;
+        case "NET_SALARY":
+            return context.current.netSalary;
+        case "ANNUAL_NET_SALARY":
+            return context.annual.netSalary;
+        case "CUSTOM":
+            return null;
+        default:
+            return null;
+    }
+};
+
+const calculateFixed = (rule) => {
+    if (rule.value === null || rule.value === undefined) {
+        return 0;
+    }
+    return Number(rule.value);
+};
+
+const calculatePercentage = (rule, base) => {
+    if ( rule.percentage === null || rule.percentage === undefined) {
+        return 0;
+    }
+    const percentage = Number(rule.percentage);
+    return base * (percentage / 100);
+};
+
+const calculateProgressive = (rule, base) => {
+
+    if (
+        !rule.tiers ||
+        rule.tiers.length === 0
+    ) {
+        return 0;
+    }
+
+    /*
+     * Ordenamos los rangos por mínimo.
+     */
+
+    const tiers = [...rule.tiers].sort(
+        (a, b) =>
+            Number(a.min_amount) -
+            Number(b.min_amount)
+    );
+
+
+    /*
+     * Buscamos el rango correspondiente
+     * al salario/base.
+     */
+
+    const tier = tiers.find((tier) => {
+
+        const minAmount =
+            Number(tier.min_amount);
+
+        const maxAmount =
+            tier.max_amount === null
+                ? null
+                : Number(tier.max_amount);
+
+
+        if (base < minAmount) {
+            return false;
+        }
+
+
+        if (maxAmount === null) {
+            return true;
+        }
+
+
+        return base <= maxAmount;
+    });
+
+
+    if (!tier) {
+        return 0;
+    }
+
+
+    /*
+     * Según la estructura actual de tus reglas:
+     *
+     * impuesto = porcentaje sobre TODO el salario
+     *          + cuota fija
+     */
+
+    const fixedAmount =
+        Number(tier.fixed_amount || 0);
+
+    const percentage =
+        Number(tier.percentage || 0);
+
+    const percentageAmount =
+        base * (percentage / 100);
+
+
+    return (
+        fixedAmount +
+        percentageAmount
+    );
+};
+
+const calculateRuleAmount = ({ rule, context }) => {
+
+    /*
+     * CUSTOM todavía no se procesa.
+     */
+
+    if (rule.base_type === "CUSTOM") {
+        return null;
+    }
+
+
+    /*
+     * EARNING todavía no se procesa.
+     */
+
+    if (rule.type === "EARNING") {
+        return null;
+    }
+
+
+    /*
+     * Resolver base de cálculo.
+     */
+
+    const base = resolveRuleBase({
+        rule,
+        context
+    });
+
+
+    if (
+        base === null ||
+        base === undefined
+    ) {
+        return null;
+    }
+
+
+    let calculatedAmount = 0;
+
+
+    /*
+     * Calcular según el tipo de regla.
+     */
+
+    switch (rule.calculation_type) {
+
+        case "FIXED":
+
+            calculatedAmount =
+                calculateFixed(rule);
+
+            break;
+
+
+        case "PERCENTAGE":
+
+            calculatedAmount =
+                calculatePercentage(
+                    rule,
+                    base
+                );
+
+            break;
+
+
+        case "PROGRESSIVE":
+
+            calculatedAmount =
+                calculateProgressive(
+                    rule,
+                    base
+                );
+
+            break;
+
+
+        default:
+
+            return null;
+    }
+
+
+    /*
+     * Determinar si la base y el cálculo
+     * son anuales.
+     */
+
+    const isAnnual =
+        rule.base_type === "ANNUAL_GROSS_SALARY" ||
+        rule.base_type === "ANNUAL_NET_SALARY";
+
+
+    /*
+     * Si la regla es anual pero la nómina
+     * es mensual, convertimos el resultado
+     * anual a mensual.
+     */
+
+    const periodAmount = isAnnual
+        ? calculatedAmount / 12
+        : calculatedAmount;
+
+
+    return {
+
+        rule_id: rule.id,
+
+        code: rule.code,
+
+        name: rule.name,
+
+        type: rule.type,
+
+        calculation_type:
+            rule.calculation_type,
+
+        base_type:
+            rule.base_type,
+
+        base_amount:
+            roundMoney(base),
+
+        annual_amount:
+            isAnnual
+                ? roundMoney(calculatedAmount)
+                : null,
+
+        amount:
+            roundMoney(periodAmount)
+    };
+};
+
+const getApplicablePayrollRules = async ({
+    businessId,
+    branchId,
+    date
+}) => {
+
+    return PayrollRule.findAll({
+
+        where: {
+            business_id: businessId,
+
+            active: true,
+
+            effective_from: {
+                [Op.lte]: date
+            },
+
+            [Op.or]: [
+                {
+                    effective_to: null
+                },
+                {
+                    effective_to: {
+                        [Op.gte]: date
+                    }
+                }
+            ],
+
+            [Op.and]: [
+                {
+                    [Op.or]: [
+                        {
+                            branch_id: null
+                        },
+                        {
+                            branch_id: branchId
+                        }
+                    ]
+                }
+            ]
+        },
+
+        include: [
+            {
+                model: PayrollRuleTier,
+                as: "tiers"
+            }
+        ],
+
+        order: [
+            ["id", "ASC"]
+        ]
+    });
+};
+
+/*Aqui no se esta tomando en cuenta el tema de las reglas de tipo ingresos ya que no hay forma actualmente de saber las 
+horas extras realizadas por un empleado o el tema de si fueran comisiones por ventas.*/
+export const calculateEmployeePayroll = async (employeeId, businessId, options = {}) => {
+    const employee = await Employee.findOne({
+        where: {
+            id: employeeId,
+            business_id: businessId
+        }
+    });
+
+    if (!employee) {
+        throw new Error("Empleado no encontrado");
+    }
+
+    let periodStart;
+    let periodEnd;
+
+    if (options.periodStart || options.periodEnd) {
+        if (!options.periodStart || !options.periodEnd) {
+            throw new Error("periodStart y periodEnd deben proporcionarse juntos");
+        }
+        periodStart = new Date(options.periodStart);
+        periodEnd = new Date(options.periodEnd);
+    } else {
+        const period = getMonthlyPeriod();
+        periodStart = period.periodStart;
+        periodEnd = period.periodEnd;
+    }
+
+    if (Number.isNaN(periodStart.getTime()) || Number.isNaN(periodEnd.getTime())) {
+        throw new Error("El período de nómina no es válido");
+    }
+
+    if (periodStart > periodEnd) {
+        throw new Error("La fecha inicial no puede ser mayor que la fecha final");
+    }
+
+    const salary = await getSalaryAtDate(employeeId, periodEnd, businessId);
+
+    if (!salary) {
+        throw new Error("El empleado no tiene un salario vigente para el período");
+    }
+
+    const originalSalary = Number(salary.salary);
+
+    if (!Number.isFinite(originalSalary)) {
+        throw new Error("El salario del empleado no es válido");
+    }
+
+    const rules = await getApplicablePayrollRules({
+        businessId,
+        branchId: employee.branch_id,
+        date: periodEnd
+    });
+
+    const nicaraguaRules = rules.filter(
+        rule => rule.code === "INSS_LABORAL" || rule.code === "IR"
+    );
+
+    const generalRules = rules.filter(
+        rule => rule.code !== "INSS_LABORAL" && rule.code !== "IR"
+    );
+
+    let nicaraguaPayroll = null;
+
+    if (nicaraguaRules.length > 0) {
+        nicaraguaPayroll = await calculateNicaraguaPayrollDeductions({
+            salary: originalSalary,
+            salaryType: salary.salary_type,
+            businessId,
+            branchId: employee.branch_id,
+            date: periodEnd
+        });
+    }
+
+    let grossMonthlySalary;
+
+    if (nicaraguaPayroll) {
+        grossMonthlySalary = nicaraguaPayroll.salary.monthly_gross;
+    } else {
+        grossMonthlySalary = getMonthlySalary(
+            originalSalary,
+            salary.salary_type
+        );
+    }
+
+    const context = {
+        employee,
+        period: {
+            start: periodStart,
+            end: periodEnd,
+            type: "MONTHLY"
+        },
+        salary: {
+            id: salary.id,
+            amount: originalSalary,
+            monthlyAmount: grossMonthlySalary,
+            type: salary.salary_type,
+            effective_from: salary.effective_from,
+            effective_to: salary.effective_to
+        },
+        current: {
+            grossSalary: grossMonthlySalary,
+            netSalary: null
+        },
+        annual: {
+            grossSalary: grossMonthlySalary * 12,
+            netSalary: null
+        }
+    };
+
+    const deductions = [];
+    let totalDeductions = 0;
+
+    if (nicaraguaPayroll) {
+        const nicaraguaDeductions = nicaraguaPayroll.deductions;
+
+        if (nicaraguaDeductions.inss_laboral) {
+            const inss = nicaraguaDeductions.inss_laboral;
+            deductions.push({
+                rule_id: inss.rule_id,
+                code: inss.code,
+                name: inss.name,
+                type: inss.type,
+                calculation_type: inss.calculation_type,
+                base_type: inss.base_type,
+                base_amount: inss.base_amount,
+                percentage: inss.percentage,
+                amount: inss.amount
+            });
+            totalDeductions += inss.amount;
+        }
+
+        if (nicaraguaDeductions.ir) {
+            const ir = nicaraguaDeductions.ir;
+            deductions.push({
+                rule_id: ir.rule_id,
+                code: ir.code,
+                name: ir.name,
+                type: ir.type,
+                calculation_type: ir.calculation_type,
+                base_type: ir.base_type,
+                base_amount: ir.annual_base,
+                monthly_base: ir.monthly_base,
+                annual_base: ir.annual_base,
+                tier: ir.tier,
+                excess: ir.excess,
+                fixed_amount: ir.fixed_amount,
+                percentage: ir.tier ? ir.tier.percentage : 0,
+                percentage_amount: ir.percentage_amount,
+                annual_amount: ir.annual_amount,
+                amount: ir.amount
+            });
+            totalDeductions += ir.amount;
+        }
+    }
+
+    const generalDeductionRules = generalRules.filter(
+        rule => rule.type === "DEDUCTION"
+    );
+
+    for (const rule of generalDeductionRules) {
+        const result = calculateRuleAmount({ rule, context });
+
+        if (result === null) {
+            continue;
+        }
+
+        deductions.push(result);
+        totalDeductions += result.amount;
+    }
+
+    const netSalary = roundMoney(
+        context.current.grossSalary - totalDeductions
+    );
+
+    context.current.netSalary = netSalary;
+
+    context.annual.netSalary = roundMoney(
+        netSalary * 12
+    );
+
+    const employerCostRules = generalRules.filter(
+        rule => rule.type === "EMPLOYER_COST"
+    );
+
+    const employerCosts = [];
+    let totalEmployerCosts = 0;
+
+    for (const rule of employerCostRules) {
+        const result = calculateRuleAmount({ rule, context });
+
+        if (result === null) {
+            continue;
+        }
+
+        employerCosts.push(result);
+        totalEmployerCosts += result.amount;
+    }
+
+    const grossSalary = roundMoney(context.current.grossSalary);
+    const deductionsTotal = roundMoney(totalDeductions);
+    const finalNetSalary = roundMoney(grossSalary - deductionsTotal);
+
+    const dynamicDeductions = Object.fromEntries(
+        deductions.map(deduction => [
+            deduction.code,
+            {
+                name: deduction.name,
+                amount: roundMoney(deduction.amount)
+            }
+        ])
+    );
+
+    return {
+        gross_salary: grossSalary,
+        ...dynamicDeductions,
+        total_deductions: deductionsTotal,
+        net_salary: finalNetSalary
     };
 };

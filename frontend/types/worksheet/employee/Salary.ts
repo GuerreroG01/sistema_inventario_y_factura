@@ -31,3 +31,20 @@ export type ChangeSalaryData = {
     effective_to?: string | null;
     reason?: string;
 };
+
+export interface PayrollDeduction {
+    name: string;
+    amount: number;
+}
+
+export interface EmployeeNIPayroll {
+    gross_salary: number;
+    deductions: Record<string, PayrollDeduction>;
+    total_deductions: number;
+    net_salary: number;
+}
+
+export interface CalculateNIPayrollResponse {
+    message: string;
+    data: EmployeeNIPayroll;
+}
