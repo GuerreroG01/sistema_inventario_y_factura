@@ -116,7 +116,7 @@ const findProgressiveTier = ({ tiers, annualBase }) => {
     }) || null;
 };
 
-const calculateIR = ({ netMonthlyAfterINSS, rule }) => {
+export const calculateIR = ({ netMonthlyAfterINSS, rule }) => {
     if (!rule) {
         throw new Error("No existe una regla activa IR");
     }

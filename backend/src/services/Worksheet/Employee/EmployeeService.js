@@ -439,3 +439,42 @@ export const getEmployeeSummary = async ( businessId, branchId = null, date = nu
         }
     };
 };
+
+export const getActiveEmployeesInPeriod = async ({
+    businessId, startDate, endDate, branchId = null,
+} = {}) => {
+    if (!businessId) {
+        throw new Error("business_id_required");
+    }
+    if (!startDate || !endDate) {
+        throw new Error("date_range_required");
+    }
+
+    const where = {
+        business_id: businessId,
+        hire_date: {
+            [Op.lte]: endDate,
+        },
+        [Op.or]: [
+            { termination_date: null },
+            {
+                termination_date: {
+                    [Op.gte]: startDate,
+                },
+            },
+        ],
+    };
+
+    if (branchId) {
+        where.branch_id = branchId;
+    }
+
+    const employees = await Employee.findAll({
+        where,
+        attributes: ["id"],
+        order: [["id", "ASC"]],
+        raw: true,
+    });
+
+    return employees.map(e => e.id);
+};

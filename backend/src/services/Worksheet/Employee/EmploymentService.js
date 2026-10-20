@@ -344,3 +344,56 @@ export const endEmployment = async ( employeeId, endDate, businessId, branchId, 
 
     return employment;
 };
+
+export const getActiveEmploymentsInPeriod = async ({
+    businessId, startDate, endDate, branchId = null
+} = {}) => {
+    if (!businessId) {
+        throw new Error("business_id_required");
+    }
+
+    if (!startDate || !endDate) {
+        throw new Error("date_range_required");
+    }
+
+    const where = {
+        start_date: {
+            [Op.lte]: endDate,
+        },
+        [Op.or]: [
+            { end_date: null },
+            {
+                end_date: {
+                    [Op.gte]: startDate,
+                },
+            },
+        ],
+    };
+
+    if (branchId) {
+        where.branch_id = branchId;
+    }
+
+    const employments = await EmployeeEmployment.findAll({
+        where,
+        attributes: ["id", "employee_id"],
+        include: [
+            {
+                model: Employee,
+                as: "employee",
+                attributes: [],
+                where: {
+                    business_id: businessId,
+                },
+                required: true,
+            },
+        ],
+        order: [["id", "ASC"]],
+        raw: true,
+    });
+
+    return employments.map((employment) => ({
+        employment_id: employment.id,
+        employee_id: employment.employee_id,
+    }));
+};

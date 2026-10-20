@@ -3,7 +3,6 @@ import Employee from "../../../models/Worksheet/Employee/Employee.js";
 import PayrollRule from "../../../models/Worksheet/Payroll/PayrollRules/PayrollRule.js";
 import PayrollRuleTier from "../../../models/Worksheet/Payroll/PayrollRules/PayrollRuleTier.js";
 import { calculateNicaraguaPayrollDeductions } from "./NicaraguaPayrollDeductionService.js";
-
 import { Op } from "sequelize";
 import { cacheService, CacheKeys } from "../../cache/index.js";
 
@@ -1094,5 +1093,66 @@ export const calculateEmployeePayroll = async (employeeId, businessId, options =
         ...dynamicDeductions,
         total_deductions: deductionsTotal,
         net_salary: finalNetSalary
+    };
+};
+
+//http://localhost:5000/api/salary/3/current-salary
+export const getCurrentSalaryByEmployeeId = async (employeeId, businessId) => {
+    if (!employeeId) {
+        throw new Error("employee_id_required");
+    }
+
+    if (!businessId) {
+        throw new Error("business_id_required");
+    }
+
+    // 1. Verificar que el empleado pertenece al business
+    const employee = await Employee.findOne({
+        where: {
+            id: employeeId,
+            business_id: businessId,
+        },
+        attributes: ["id"],
+    });
+
+    if (!employee) {
+        throw new Error(
+            "Empleado no encontrado o no tienes permiso para acceder a esta información"
+        );
+    }
+
+    // 2. Obtener únicamente el salario vigente y su tipo
+    const today = new Date().toLocaleDateString("en-CA", {
+        timeZone: "America/Managua",
+    });
+
+    const salaryHistory = await EmployeeSalaryHistory.findOne({
+        where: {
+            employee_id: employeeId,
+            effective_from: {
+                [Op.lte]: today,
+            },
+            [Op.or]: [
+                { effective_to: null },
+                {
+                    effective_to: {
+                        [Op.gte]: today,
+                    },
+                },
+            ],
+        },
+        attributes: ["salary", "salary_type"],
+        order: [["effective_from", "DESC"]],
+    });
+
+    if (!salaryHistory) {
+        throw new Error(
+            "No se encontró un salario vigente para este empleado"
+        );
+    }
+
+    return {
+        salary: salaryHistory.salary,
+        salary_type: salaryHistory.salary_type,
     };
 };

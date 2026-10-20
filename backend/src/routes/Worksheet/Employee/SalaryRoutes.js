@@ -1,5 +1,7 @@
 import express from "express";
-import { save, getHistory, getCurrent, getAtDate, getTotal, calculatePayroll } from "../../../controllers/Worksheet/Employee/SalaryController.js";
+import { save, getHistory, getCurrent, getAtDate, getTotal, calculatePayroll,
+    getCurrentSalary2
+} from "../../../controllers/Worksheet/Employee/SalaryController.js";
 import licenseMiddleware from "../../../middlewares/licenseMiddleware.js";
 
 const router = express.Router();
@@ -7,6 +9,7 @@ router.use(licenseMiddleware);
 
 router.get("/total", getTotal);
 router.post("/:employeeId", save);
+router.get("/:employeeId/current-salary",getCurrentSalary2);
 router.get("/:employeeId/history", getHistory);
 router.get("/:employeeId/current", getCurrent);
 router.get("/:employeeId/atDate", getAtDate);

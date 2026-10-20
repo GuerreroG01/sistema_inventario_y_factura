@@ -469,3 +469,57 @@ export const activatePayrollRule = async ( id, businessId, branchId, rol ) => {
     });
     return payrollRule;
 };
+
+export const getActivePayrollRulesInPeriod = async ({
+    businessId, startDate, endDate, branchId = null,
+} = {}) => {
+    if (!businessId) throw new Error("business_id_required");
+    if (!startDate || !endDate) throw new Error("date_range_required");
+
+    const where = {
+        business_id: businessId,
+        active: true,
+        type: { [Op.ne]: "EARNING" },
+        effective_from: { [Op.lte]: endDate },
+        [Op.or]: [
+            { effective_to: null },
+            { effective_to: { [Op.gte]: startDate } },
+        ],
+    };
+
+    if (branchId) {
+        where[Op.or] = [
+            { branch_id: branchId },
+            { branch_id: null },
+        ];
+    }
+
+    const rules = await PayrollRule.findAll({
+        where,
+        include: [
+            {
+                model: PayrollRuleTier,
+                as: "tiers",
+                required: false,
+                attributes: [
+                    "id",
+                    "min_amount",
+                    "max_amount",
+                    "fixed_amount",
+                    "percentage",
+                ],
+                order: [["min_amount", "ASC"]],
+            },
+        ],
+        attributes: {
+            exclude: ["createdAt", "updatedAt"],
+        },
+        order: [
+            ["type", "ASC"],
+            ["code", "ASC"],
+            ["effective_from", "ASC"],
+        ],
+    });
+
+    return rules.map((rule) => rule.toJSON());
+};

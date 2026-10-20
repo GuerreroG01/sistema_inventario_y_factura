@@ -1,5 +1,5 @@
 import express from "express";
-import { 
+import {
     getRules, getRuleById, createRule, createRuleVersion, deleteRule, activeRule
 } from "../../../controllers/Worksheet/Payroll/PayrollRuleController.js";
 import licenseMiddleware from "../../../middlewares/licenseMiddleware.js";

@@ -1,5 +1,6 @@
 import {
-    saveSalary, getSalaryHistory, getCurrentSalary, getSalaryAtDate, getTotalSalaries, calculateEmployeePayroll
+    saveSalary, getSalaryHistory, getCurrentSalary, getSalaryAtDate, getTotalSalaries, 
+    calculateEmployeePayroll, getCurrentSalaryByEmployeeId
 } from "../../../services/Worksheet/Employee/SalaryService.js";
 
 export const save = async (req, res) => {
@@ -131,6 +132,27 @@ export const calculatePayroll = async (req, res) => {
     } catch (error) {
         return res.status(400).json({
             message: error.message
+        });
+    }
+};
+
+export const getCurrentSalary2 = async (req, res) => {
+    try {
+        const { employeeId } = req.params;
+        const { business_id } = req.user; 
+
+        const result = await getCurrentSalaryByEmployeeId(
+            Number(employeeId),
+            business_id
+        );
+
+        return res.status(200).json({
+            message: "Salario actual del empleado obtenido correctamente",
+            data: result,
+        });
+    } catch (error) {
+        return res.status(404).json({
+            message: error.message,
         });
     }
 };

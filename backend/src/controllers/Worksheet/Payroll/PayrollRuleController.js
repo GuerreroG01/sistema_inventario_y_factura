@@ -1,6 +1,6 @@
 import { 
     getPayrollRules, getPayrollRuleById, createPayrollRule, createPayrollRuleVersion, 
-    deletePayrollRule, activatePayrollRule
+    deletePayrollRule, activatePayrollRule, getActivePayrollRulesInPeriod
 } from "../../../services/Worksheet/Payroll/PayrollRuleService.js";
 
 export const getRules = async (req, res) => {
