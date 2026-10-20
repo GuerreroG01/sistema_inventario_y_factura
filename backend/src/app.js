@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import sequelize from "./config/database.js";
-import Product from "./models/Products.js";
 import productRoutes from "./routes/productRoutes.js";
 import salesRoutes from "./routes/salesRoutes.js"
 import dashboardRoutes from "./routes/dashboardRoutes.js"
@@ -17,6 +16,9 @@ import employeeRoutes from "./routes/Worksheet/Employee/EmployeeRoutes.js"
 import employmentRoutes from "./routes/Worksheet/Employee/EmploymentRoutes.js"
 import salaryRoutes from "./routes/Worksheet/Employee/SalaryRoutes.js"
 import payrollRoutes from "./routes/Worksheet/Payroll/PayrollRuleRoutes.js";
+import PayrollPeriodRoutes from "./routes/Worksheet/Payroll/PayrollPeriodRoutes.js";
+import PayrollEmployeeRoutes from "./routes/Worksheet/Payroll/PayrollEmployeeRoutes.js";
+import PayrollItemRoutes from "./routes/Worksheet/Payroll/PayrollItemRoutes.js";
 import EmployerCostRoutes from "./routes/Worksheet/Employee/EmployerCostRoutes.js";
 import { verifyToken } from "./middlewares/authMiddleware.js";
 import { requireRole } from "./middlewares/roleMiddleware.js"
@@ -61,6 +63,9 @@ app.use("/api/employee", verifyToken, employeeRoutes);
 app.use("/api/employment", verifyToken, employmentRoutes);
 app.use("/api/salary", verifyToken, salaryRoutes);
 app.use("/api/rules", verifyToken, payrollRoutes);
+app.use("/api/payroll-periods", verifyToken, PayrollPeriodRoutes);
+app.use("/api/payroll-employee", verifyToken, PayrollEmployeeRoutes);
+app.use("/api/payroll-items", verifyToken, PayrollItemRoutes);
 app.use("/api/employerCost", verifyToken, EmployerCostRoutes);
 app.use("/api/auth", authRoutes);
 

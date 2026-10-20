@@ -15,6 +15,9 @@ import PayrollRule from "./Worksheet/Payroll/PayrollRules/PayrollRule.js";
 import PayrollRuleTier from "./Worksheet/Payroll/PayrollRules/PayrollRuleTier.js";
 import ProductUnit from "./ProductsUnits.js";
 import Branch from "./Branch.js";
+import PayrollPeriod from "./Worksheet/Payroll/PayrollPeriod.js";
+import PayrollEmployee from "./Worksheet/Payroll/PayrollEmployee.js";
+import PayrollItem from "./Worksheet/Payroll/PayrollItem.js";
 
 Business.hasMany(User,{
     foreignKey:"business_id",
@@ -311,4 +314,64 @@ Business.hasMany(Branch, {
 Branch.belongsTo(Business, {
     foreignKey: "business_id",
     as: "business"
+});
+
+Business.hasMany(PayrollPeriod, {
+    foreignKey: "business_id",
+    as: "payrollPeriods",
+});
+
+PayrollPeriod.belongsTo(Business, {
+    foreignKey: "business_id",
+    as: "business",
+});
+
+PayrollPeriod.hasMany(PayrollEmployee, {
+    foreignKey: "payroll_period_id",
+    as: "employees",
+});
+
+PayrollEmployee.belongsTo(PayrollPeriod, {
+    foreignKey: "payroll_period_id",
+    as: "payrollPeriod",
+});
+
+Employee.hasMany(PayrollEmployee, {
+    foreignKey: "employee_id",
+    as: "payrollRecords",
+});
+
+PayrollEmployee.belongsTo(Employee, {
+    foreignKey: "employee_id",
+    as: "employee",
+});
+
+PayrollEmployee.hasMany(PayrollItem, {
+    foreignKey: "payroll_employee_id",
+    as: "items",
+});
+
+PayrollItem.belongsTo(PayrollEmployee, {
+    foreignKey: "payroll_employee_id",
+    as: "payrollEmployee",
+});
+
+PayrollRule.hasMany(PayrollItem, {
+    foreignKey: "payroll_rule_id",
+    as: "payrollItems",
+});
+
+PayrollItem.belongsTo(PayrollRule, {
+    foreignKey: "payroll_rule_id",
+    as: "payrollRule",
+});
+
+PayrollEmployee.belongsTo(EmployeeEmployment, {
+    foreignKey: "employment_id",
+    as: "employment",
+});
+
+EmployeeEmployment.hasMany(PayrollEmployee, {
+    foreignKey: "employment_id",
+    as: "payrollRecords",
 });
