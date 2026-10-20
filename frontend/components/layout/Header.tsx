@@ -27,6 +27,7 @@ export default function Header() {
             children: [
                 { label: "Empleados", href: "/employee" },
                 { label: "Reglas", href: "/payroll/work_rules" },
+                { label: "Periodos", href: "/payroll/periods" },
             ],
         },
     ];
