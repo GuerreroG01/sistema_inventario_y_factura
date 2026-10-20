@@ -75,7 +75,9 @@ export default function MobileHeader({ navItems, user, logout }: Props) {
                     top-full
                     z-40
                     w-full
-                    overflow-hidden
+                    overflow-x-hidden
+                    overflow-y-auto
+                    overscroll-contain
                     border-b
                     border-slate-200/60
                     bg-white/95
@@ -88,7 +90,7 @@ export default function MobileHeader({ navItems, user, logout }: Props) {
                     md:hidden
                     ${
                         menuOpen
-                            ? "max-h-80 opacity-100 translate-y-0"
+                            ? "max-h-[calc(100dvh-5rem)] opacity-100 translate-y-0"
                             : "max-h-0 opacity-0 -translate-y-2 pointer-events-none"
                     }
                 `}
