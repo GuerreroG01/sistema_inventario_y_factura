@@ -4,13 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+    "dev": "concurrently -k -n BACKEND,FRONTEND \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:backend:all": "npm run dev:all --prefix backend",
+    "dev:full": "concurrently -k -n BACKEND,FRONTEND \"npm run dev:all --prefix backend\" \"npm run dev --prefix frontend\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
-  "devDependencies": {
-    "concurrently": "^10.0.3"
-  }
+  "type": "commonjs"
 }

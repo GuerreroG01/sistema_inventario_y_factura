@@ -20,6 +20,10 @@ import PayrollPeriodRoutes from "./routes/Worksheet/Payroll/PayrollPeriodRoutes.
 import PayrollEmployeeRoutes from "./routes/Worksheet/Payroll/PayrollEmployeeRoutes.js";
 import PayrollItemRoutes from "./routes/Worksheet/Payroll/PayrollItemRoutes.js";
 import EmployerCostRoutes from "./routes/Worksheet/Employee/EmployerCostRoutes.js";
+import BenefitRuleRoutes from "./routes/Worksheet/Benefit/BenefitRuleRoutes.js";
+import EmployeeBenefitRoute from "./routes/Worksheet/Benefit/EmployeeBenefitRoute.js";
+import BenefitTransactionRoute from "./routes/Worksheet/Benefit/BenefitTransactionRoute.js";
+import NicaraguaLaborBenefitsRoutes from "./routes/Worksheet/Benefit/NicaraguaLaborBenefitsRoutes.js"; 
 import { verifyToken } from "./middlewares/authMiddleware.js";
 import { requireRole } from "./middlewares/roleMiddleware.js"
 import { syncSequence } from "./utils/syncSequence.js";
@@ -30,6 +34,7 @@ const app = express();
 
 const allowedOrigins = [
     "http://localhost:3000",
+    "http://192.168.1.21:3000",
     "https://09tvrbf2-3000.use2.devtunnels.ms",
     "https://lynwood-unperfidious-abdullah.ngrok-free.dev",
     "https://sistema-inventario-y-factura.vercel.app"
@@ -67,13 +72,17 @@ app.use("/api/payroll-periods", verifyToken, PayrollPeriodRoutes);
 app.use("/api/payroll-employee", verifyToken, PayrollEmployeeRoutes);
 app.use("/api/payroll-items", verifyToken, PayrollItemRoutes);
 app.use("/api/employerCost", verifyToken, EmployerCostRoutes);
+app.use("/api/benefit-rules", verifyToken, BenefitRuleRoutes);
+app.use("/api/benefit-employee", verifyToken, EmployeeBenefitRoute);
+app.use("/api/benefit-transaction", verifyToken, BenefitTransactionRoute);
+app.use("/api/nic_benefit", verifyToken, NicaraguaLaborBenefitsRoutes);
 app.use("/api/auth", authRoutes);
 
 export default app;
 
 export const startServer = async (PORT = 5000) => {
     try {
-        await sequelize.sync();
+        //await sequelize.sync();
 
         await syncSequence("Products");
 
