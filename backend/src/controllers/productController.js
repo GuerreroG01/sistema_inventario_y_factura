@@ -19,6 +19,21 @@ export const createProduct = async (req, res) => {
         } = req.body;
 
         const business_id = req.user.business_id;
+        const branch_id = req.user.branch_id;
+
+        if (!business_id || !req.user.id) {
+            return res.status(400).json({
+                error: "validation_error",
+                message: "No se pudo identificar el usuario o el negocio."
+            });
+        }
+
+        if (!branch_id) {
+            return res.status(400).json({
+                error: "validation_error",
+                message: "No se pudo identificar la sucursal del usuario."
+            });
+        }
 
         if (!name || name.trim() === "") {
             return res.status(400).json({
@@ -98,6 +113,7 @@ export const createProduct = async (req, res) => {
                 await create({
                     product_id: product.id,
                     business_id,
+                    branch_id,
                     unit: unitData.unit,
                     barcode: unitData.barcode,
                     price: unitData.price,
