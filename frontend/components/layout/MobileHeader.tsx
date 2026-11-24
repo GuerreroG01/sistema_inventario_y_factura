@@ -95,7 +95,7 @@ export default function MobileHeader({ navItems, user, logout }: Props) {
                     }
                 `}
             >
-                <nav className="flex flex-col gap-1.5 px-4 py-4">
+                <nav className="flex flex-col gap-1.5 px-4 py-4 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
                     {navItems.map((item, index) => {
                         const hasChildren = !!item.children?.length;
                         const isOpen = openSubmenu === item.label;
@@ -196,12 +196,21 @@ export default function MobileHeader({ navItems, user, logout }: Props) {
                                                 duration-300
                                                 ${
                                                     isOpen
-                                                        ? "max-h-40 opacity-100"
+                                                        ? "max-h-[60vh] opacity-100"
                                                         : "max-h-0 opacity-0"
                                                 }
                                             `}
                                         >
-                                            <div className="ml-4 mt-1 border-l-2 border-blue-100 pl-2">
+                                            <div className="
+                                                ml-4
+                                                mt-1
+                                                border-l-2
+                                                border-blue-100
+                                                pl-2
+                                                max-h-[60vh]
+                                                overflow-y-auto
+                                                overscroll-contain
+                                            ">
                                                 {item.children?.map((child) => (
                                                     <a
                                                         key={child.label}

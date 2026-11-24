@@ -13,7 +13,6 @@ type CurrentSalaryProps = {
 };
 
 export function CurrentSalary({ salary, payroll, onOpenCreateSalary }: CurrentSalaryProps) {
-    console.log("[PAYROLL]:",payroll);
     if (!salary) {
         return (
             <div className="relative overflow-hidden rounded-3xl border border-dashed border-emerald-200/80 bg-gradient-to-b from-emerald-50/40 via-white to-white p-8 text-center shadow-sm transition-all hover:border-emerald-300">

@@ -28,6 +28,7 @@ export default function Header() {
                 { label: "Empleados", href: "/employee" },
                 { label: "Reglas", href: "/payroll/work_rules" },
                 { label: "Periodos", href: "/payroll/periods" },
+                { label: "Beneficios Generales", href: "/payroll/benefit/benefit_rules" }
             ],
         },
     ];

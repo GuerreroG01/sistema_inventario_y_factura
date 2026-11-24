@@ -1,10 +1,13 @@
+
 "use client";
 
 import { ArrowLeft, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/(public)/auth/login/hooks/useAuth";
 import EmployeeInfo from "./EmployeeInfo";
 import EmploymentInfo from "./EmploymentInfo";
 import EmployeeSalaryInfo from "./SalaryInfo";
+import { EmployeeBenefits } from "../../../payroll/benefit/employee/components/EmployeeBenefits";
 
 type EmployeeProps = {
     employeeId: number;
@@ -12,11 +15,12 @@ type EmployeeProps = {
 
 export default function EmployeeManagerDetail({ employeeId }: EmployeeProps) {
     const router = useRouter();
+    const { user } = useAuth();
+    const business_id = user?.Business_id;
     return (
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 md:p-2 shadow-sm">
-            <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full bg-blue-100/60 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-indigo-100/60 blur-3xl pointer-events-none" />
-
+        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-b from-slate-50/50 to-white p-6 shadow-sm md:p-2">
+            <div className="pointer-events-none absolute -left-40 -top-40 h-80 w-80 rounded-full bg-blue-100/60 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-indigo-100/60 blur-3xl" />
             <div className="relative z-10 space-y-8">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -41,37 +45,17 @@ export default function EmployeeManagerDetail({ employeeId }: EmployeeProps) {
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="
-                            inline-flex
-                            items-center
-                            justify-center
-                            gap-2
-                            rounded-2xl
-                            border
-                            border-slate-200
-                            bg-white
-                            px-5
-                            py-3
-                            text-sm
-                            font-semibold
-                            text-slate-700
-                            shadow-sm
-                            transition-all
-                            hover:bg-slate-50
-                            hover:border-slate-300
-                        "
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Volver
                     </button>
                 </div>
-
                 <EmployeeInfo employeeId={employeeId} />
                 <EmploymentInfo employeeId={employeeId} />
                 <EmployeeSalaryInfo employeeId={employeeId} />
+                <EmployeeBenefits employeeId={employeeId} businessId={business_id} />
             </div>
         </section>
     );
 }
-{/*Falta agregar los botones que abran modales para ya sea cambiar el salario o el puesto
-    Y botones para terminar una relación laboral */}
