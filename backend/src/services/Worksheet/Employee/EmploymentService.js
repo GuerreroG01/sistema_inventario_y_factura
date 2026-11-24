@@ -2,10 +2,7 @@ import EmployeeEmployment from "../../../models/Worksheet/Employee/EmployeeEmplo
 import Employee from "../../../models/Worksheet/Employee/Employee.js";
 import { updateEmployee } from "./EmployeeService.js";
 import { Op } from "sequelize";
-/*
-Hay que revisar el metodo create para ver si de verdad asigna automaticamente del token pero que también pueda asignar de otra
-sucursal desde el frontend y también hay que probar si los modales funcionan y guardan correctamente los datos.
-*/
+
 export const createEmployment = async ( employeeId, data, businessId, branchId, rol  ) => {
     const isPrivilegedRole = ["admin", "superAdmin"].includes(rol);
 
@@ -396,4 +393,51 @@ export const getActiveEmploymentsInPeriod = async ({
         employment_id: employment.id,
         employee_id: employment.employee_id,
     }));
+};
+//Para el servicio que calcula los beneficios
+export const getEmployeeEmploymentContext = async (employee_id) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    const employments = await EmployeeEmployment.findAll({
+        where: {
+            employee_id,
+        },
+        attributes: [
+            "id",
+            "employment_type",
+            "start_date",
+            "end_date",
+            "status",
+        ],
+        order: [["start_date", "ASC"]],
+        raw: true,
+    });
+
+    const activeEmployments = employments.filter(
+        (employment) =>
+            employment.status === "ACTIVE" &&
+            employment.start_date <= today &&
+            (!employment.end_date || employment.end_date >= today)
+    );
+
+    const currentEmployment =
+        activeEmployments.length === 1
+            ? activeEmployments[0]
+            : null;
+
+    const isEligibleForBenefits =
+        currentEmployment &&
+        ["FULL_TIME", "PART_TIME"].includes(
+            currentEmployment.employment_type
+        )
+            ? currentEmployment
+            : null;
+
+    return {
+        has_employment: employments.length > 0,
+        current_employment: currentEmployment,
+        is_full_time_or_part_time: !!isEligibleForBenefits,
+        eligible_employment: isEligibleForBenefits,
+        employment_history: employments,
+    };
 };

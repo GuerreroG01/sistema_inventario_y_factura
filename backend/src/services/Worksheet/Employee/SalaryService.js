@@ -631,7 +631,7 @@ const calculateProgressive = (rule, base) => {
     /*
      * Buscamos el rango correspondiente
      * al salario/base.
-     */
+    */
 
     const tier = tiers.find((tier) => {
 
@@ -1096,7 +1096,6 @@ export const calculateEmployeePayroll = async (employeeId, businessId, options =
     };
 };
 
-//http://localhost:5000/api/salary/3/current-salary
 export const getCurrentSalaryByEmployeeId = async (employeeId, businessId) => {
     if (!employeeId) {
         throw new Error("employee_id_required");
@@ -1154,5 +1153,122 @@ export const getCurrentSalaryByEmployeeId = async (employeeId, businessId) => {
     return {
         salary: salaryHistory.salary,
         salary_type: salaryHistory.salary_type,
+    };
+};
+//Para el motor de calculo de los beneficios
+export const getEmployeeSalaryContext = async (
+    employee_id,
+    { transaction = null } = {}
+) => {
+    const salaryHistory = await EmployeeSalaryHistory.findAll({
+        where: {
+            employee_id,
+        },
+        attributes: [
+            "id",
+            "employee_id",
+            "salary",
+            "salary_type",
+            "effective_from",
+            "effective_to",
+            "reason",
+        ],
+        order: [
+            ["effective_from", "ASC"],
+            ["id", "ASC"],
+        ],
+        raw: true,
+    });
+
+    const normalizedSalaryHistory = salaryHistory.map((record) => {
+        const monthlySalary = getMonthlySalary(
+            record.salary,
+            record.salary_type
+        );
+
+        return {
+            ...record,
+            salary: Number(record.salary),
+            monthly_salary: Number(monthlySalary.toFixed(2)),
+        };
+    });
+
+    return {
+        has_salary_history: normalizedSalaryHistory.length > 0,
+        salary_history: normalizedSalaryHistory,
+    };
+};
+
+//Reutilizable para obtener salario según fecha establecida
+export const getSalaryByEmployeeIdAtDate = async ({ employee_id, business_id, calculation_date }) => {
+    if (!employee_id) {
+        throw new Error("employee_id_required");
+    }
+
+    if (!business_id) {
+        throw new Error("business_id_required");
+    }
+
+    if (!calculation_date) {
+        throw new Error("calculation_date_required");
+    }
+
+    const effectiveDate = calculation_date instanceof Date
+        ? calculation_date.toLocaleDateString("en-CA", {
+            timeZone: "America/Managua",
+        })
+        : String(calculation_date).slice(0, 10);
+
+    const employee = await Employee.findOne({
+        where: {
+            id: employee_id,
+            business_id,
+        },
+        attributes: ["id"],
+    });
+
+    if (!employee) {
+        throw new Error(
+            "employee_not_found_or_access_denied"
+        );
+    }
+
+    const salaryHistory = await EmployeeSalaryHistory.findOne({
+        where: {
+            employee_id,
+            effective_from: {
+                [Op.lte]: effectiveDate,
+            },
+            [Op.or]: [
+                { effective_to: null },
+                {
+                    effective_to: {
+                        [Op.gte]: effectiveDate,
+                    },
+                },
+            ],
+        },
+        attributes: [
+            "salary",
+            "salary_type",
+            "effective_from",
+            "effective_to",
+        ],
+        order: [
+            ["effective_from", "DESC"],
+        ],
+    });
+
+    if (!salaryHistory) {
+        throw new Error(
+            "employee_salary_not_found_for_calculation_date"
+        );
+    }
+
+    return {
+        salary: Number(salaryHistory.salary),
+        salary_type: salaryHistory.salary_type,
+        effective_from: salaryHistory.effective_from,
+        effective_to: salaryHistory.effective_to,
     };
 };

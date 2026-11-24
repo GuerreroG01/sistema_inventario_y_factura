@@ -478,3 +478,15 @@ export const getActiveEmployeesInPeriod = async ({
 
     return employees.map(e => e.id);
 };
+/* Para el motor de calculo */
+export const employeeBelongsToBusiness = async (business_id, employee_id) => {
+    const employee = await Employee.findOne({
+        where: {
+            business_id,
+            id: employee_id
+        },
+        attributes: ["id"]
+    });
+
+    return employee !== null;
+};
